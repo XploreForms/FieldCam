@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Xplore Field Cam</title>
+<meta name="theme-color" content="#0A1211">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Field Cam">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+/* Layout: full-screen camera. Top bar (job + GPS), 4:3 viewfinder with HUD, bottom deck (categories, shutter). Sheets slide up over it. */
+:root{
+  --ink:#0A1211;        /* green-biased near black */
+  --ink-2:#121D1B;      /* sheet surface */
+  --ink-3:#1B2926;      /* inputs, chips */
+  --line:rgba(234,242,238,.12);
+  --fg:#EAF2EE;
+  --muted:#8FA59D;
+  --accent:#58C774;     /* Superior Green */
+  --signal:#00FF57;     /* Solar Wind, used only for "locked" states */
+  --brand:#002B2B;      /* North Shore Green */
+  --warn:#F2B84B;
+  --bad:#FF6B5E;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --r:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--ink);color:var(--fg);font:15px/1.4 var(--sans);overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--ink-3);border:1px solid transparent;border-radius:10px;padding:11px 12px;width:100%}
+input:focus,textarea:focus{border-color:var(--accent);outline:none}
+label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr)}
+#app>*{min-width:0}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));z-index:5}
+.pill{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:999px;background:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job{flex:1;min-width:0;justify-content:flex-start}
+.job b{font-family:var(--mono);font-weight:600}
+.job span{color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.gps{font-family:var(--mono);font-size:13px;padding:0 12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad);flex:none}
+.gps.ok .dot{background:var(--signal);box-shadow:0 0 8px var(--signal)}
+.gps.meh .dot{background:var(--warn)}
+.iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--ink-3);flex:none}
+.iconbtn svg{width:20px;height:20px}
+
+/* viewfinder */
+.vf{position:relative;overflow:hidden;background:#000;min-height:0;touch-action:none}
+.vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:center}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.flash.go{animation:flash .28s ease-out}
+@keyframes flash{0%{opacity:.85}100%{opacity:0}}
+
+.hud{position:absolute;inset:0;pointer-events:none;font-family:var(--mono);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.heading{position:absolute;top:10px;left:50%;transform:translateX(-50%);text-align:center}
+.heading .deg{font-size:26px;font-weight:600;letter-spacing:-.02em}
+.heading .sub{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.level{position:absolute;left:50%;top:50%;width:min(56%,260px);height:0;transform:translate(-50%,-50%)}
+.level i{position:absolute;left:0;right:0;top:-1px;height:2px;background:rgba(255,255,255,.75);border-radius:2px;transition:background .15s}
+.level i::before,.level i::after{content:"";position:absolute;top:-5px;width:2px;height:12px;background:inherit}
+.level i::before{left:0}.level i::after{right:0}
+.level.flat i{background:var(--signal)}
+.reticle{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid rgba(255,255,255,.8);border-radius:50%}
+.tilt{position:absolute;right:10px;top:50%;transform:translateY(-50%);text-align:right}
+.tilt .deg{font-size:18px;font-weight:600}
+.tilt .sub{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.live{position:absolute;left:10px;bottom:10px;right:96px;font-size:11.5px;line-height:1.45;color:rgba(234,242,238,.92)}
+.live div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live .pending{color:var(--warn)}
+.vfctl{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.vfctl button{width:40px;height:40px;border-radius:50%;background:rgba(10,18,17,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font:600 13px var(--mono);display:grid;place-items:center}
+.vfctl button.on{background:var(--accent);color:var(--ink)}
+.vfctl svg{width:18px;height:18px}
+.vfmsg{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
+
+/* zoom */
+.zoombar{display:flex;justify-content:center;align-items:center;gap:6px;min-height:36px}
+.zoombar button{min-width:44px;height:36px;padding:0 10px;border-radius:18px;background:var(--ink-3);font:600 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.zoombar button[aria-pressed="true"]{background:var(--brand);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);min-width:52px}
+.zoomread{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);padding:6px 16px;border-radius:999px;background:rgba(10,18,17,.72);font-size:22px;font-weight:600;opacity:0;transition:opacity .25s}
+.zoomread.show{opacity:1}
+
+/* bottom deck */
+.deck{padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 12px);display:grid;gap:12px;background:var(--ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:0 max(12px,env(safe-area-inset-left,0px));scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding-inline:12px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 14px;border-radius:999px;background:var(--ink-3);font-size:14px;color:var(--muted);scroll-snap-align:start}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--ink);font-weight:600}
+.row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 max(20px,env(safe-area-inset-left,0px))}
+.thumbbtn{justify-self:start;position:relative;width:54px;height:54px;border-radius:12px;background:var(--ink-3) center/cover no-repeat;border:2px solid var(--line)}
+.thumbbtn .n{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--accent);color:var(--ink);font:700 12px/22px var(--mono);text-align:center}
+.thumbbtn .n:empty{display:none}
+.shutter{width:76px;height:76px;border-radius:50%;border:4px solid var(--fg);display:grid;place-items:center}
+.shutter i{width:60px;height:60px;border-radius:50%;background:var(--fg);transition:transform .1s,background .2s}
+.shutter:active i{transform:scale(.88)}
+.shutter.busy i{background:var(--accent);animation:pulse .9s infinite}
+@keyframes pulse{50%{transform:scale(.85)}}
+.shutter:disabled{opacity:.4}
+.preset{justify-self:end;text-align:right;padding:6px 4px}
+.preset b{display:block;font-size:14px}
+.preset span{font:12px var(--mono);color:var(--muted)}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-height:88%;display:flex;flex-direction:column;background:var(--ink-2);border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.sheet.open{transform:none}
+.sheet header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px max(18px,env(safe-area-inset-right,0px)) 10px max(18px,env(safe-area-inset-left,0px))}
+.sheet h2{margin:0;font-size:18px;text-wrap:balance}
+.sheet .body{overflow-y:auto;padding:4px max(18px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 18px) max(18px,env(safe-area-inset-left,0px));display:grid;gap:16px;-webkit-overflow-scrolling:touch}
+.hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.btn{min-height:46px;padding:0 18px;border-radius:12px;background:var(--ink-3);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--ink)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.4}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.btnrow .btn{flex:1}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--ink-3);padding:4px;border-radius:12px}
+.seg button{padding:9px 4px;border-radius:9px;text-align:center;font-size:13px;color:var(--muted)}
+.seg button b{display:block;color:var(--fg);font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--fg);box-shadow:inset 0 0 0 1px var(--accent)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0}
+.toggle input{width:48px;height:28px;appearance:none;-webkit-appearance:none;background:var(--ink-3);border-radius:14px;position:relative;padding:0;flex:none;transition:background .2s}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--fg);transition:transform .2s}
+.toggle input:checked{background:var(--accent)}
+.toggle input:checked::after{transform:translateX(20px)}
+.stats{font:13px var(--mono);color:var(--muted)}
+
+/* gallery */
+.gtools{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.tile{position:relative;aspect-ratio:1;max-width:100%;border-radius:10px;overflow:hidden;background:var(--ink-3)}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile .sz{position:absolute;left:4px;bottom:4px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.65);font:11px var(--mono)}
+.tile .sel{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);display:grid;place-items:center}
+.tile.selected{outline:3px solid var(--accent);outline-offset:-3px}
+.tile.selected .sel{background:var(--accent);border-color:var(--accent)}
+.tile.selected .sel::after{content:"";width:6px;height:11px;border:solid var(--ink);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.tile .shared{position:absolute;left:4px;top:4px;padding:1px 6px;border-radius:6px;background:var(--brand);color:var(--accent);font:600 10px var(--mono);letter-spacing:.04em}
+.empty{padding:30px 10px;text-align:center;color:var(--muted)}
+
+/* viewer */
+.viewer{position:fixed;inset:0;z-index:30;background:#000;display:none;flex-direction:column}
+.viewer.open{display:flex}
+.vstage{flex:1;position:relative;overflow:hidden;touch-action:none}
+.vstage img{position:absolute;left:50%;top:50%;max-width:100%;max-height:100%;transform-origin:center;will-change:transform;user-select:none;-webkit-user-drag:none}
+.vbar{display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(14px,env(safe-area-inset-left,0px));background:var(--ink)}
+.vtop{padding:calc(env(safe-area-inset-top,0px) + 8px) max(14px,env(safe-area-inset-right,0px)) 8px max(14px,env(safe-area-inset-left,0px));display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--ink)}
+.vtop .meta{font:12px var(--mono);color:var(--muted);min-width:0;overflow:hidden}
+.vtop .meta b{color:var(--fg);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* start */
+.start{position:fixed;inset:0;z-index:40;background:radial-gradient(120% 70% at 50% 0%,#0F3A35 0%,var(--brand) 45%,var(--ink) 100%);display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 24px) max(24px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(24px,env(safe-area-inset-left,0px));overflow-y:auto}
+.start .inner{width:100%;max-width:420px;margin:0 auto;display:grid;gap:18px}
+.mark{width:64px;height:64px}
+.start h1{margin:0;font-size:30px;letter-spacing:-.02em;text-wrap:balance}
+.start p{margin:0;color:var(--muted)}
+.start ul{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px;color:var(--fg)}
+.start li{display:flex;gap:10px}
+.start li span{font-family:var(--mono);color:var(--accent);width:20px;flex:none}
+.install{font-size:13px;background:rgba(0,0,0,.25);border-radius:12px;padding:12px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translate(-50%,-20px);z-index:50;background:var(--ink-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast b{font-family:var(--mono);color:var(--accent)}
+
+@media (orientation:landscape) and (max-height:500px){
+  #app{grid-template-columns:1fr auto;grid-template-rows:auto 1fr}
+  .top{grid-column:1/3}
+  .deck{grid-row:2;grid-column:2;width:150px;align-content:center;padding:8px max(10px,env(safe-area-inset-right,0px)) 8px 10px}
+  .zoombar{flex-wrap:wrap}
+  .row{grid-template-columns:1fr;justify-items:center;gap:10px;padding:0}
+  .thumbbtn,.preset{justify-self:center;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="top">
+    <button class="pill job" id="jobBtn" aria-label="Edit work order"><b id="jobWo">No WO</b><span id="jobSite"></span></button>
+    <div class="pill gps" id="gpsChip"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
+    <button class="iconbtn" id="setBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+
+  <div class="vf" id="vf">
+    <video id="video" playsinline muted autoplay></video>
+    <div class="vfmsg" id="vfMsg" hidden></div>
+    <div class="hud" id="hud">
+      <div class="zoomread" id="zoomRead">1×</div>
+      <div class="heading"><div class="deg" id="hHead">—</div><div class="sub" id="hHeadSub">facing</div></div>
+      <div class="reticle"></div>
+      <div class="level" id="level"><i id="levelBar"></i></div>
+      <div class="tilt"><div class="deg" id="hTilt">—</div><div class="sub">tilt</div></div>
+      <div class="live" id="live"></div>
+    </div>
+    <div class="vfctl">
+      <button id="torchBtn" aria-label="Flashlight" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></button>
+      <button id="importBtn" aria-label="Import photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></button>
+    </div>
+    <div class="flash" id="flash"></div>
+  </div>
+
+  <div class="deck">
+    <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
+    <div class="row">
+      <button class="thumbbtn" id="galBtn" aria-label="Open photos"><span class="n" id="galCount"></span></button>
+      <button class="shutter" id="shutter" aria-label="Take photo"><i></i></button>
+      <span aria-hidden="true"></span>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileIn" accept="image/*" multiple hidden>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- Job sheet -->
+<section class="sheet" id="jobSheet" aria-label="Job">
+  <header><h2>Job details</h2><button class="btn" data-close>Done</button></header>
+  <div class="body">
+    <div><label for="inWo">Work order #</label><input id="inWo" inputmode="numeric" autocomplete="off" placeholder="e.g. 00482913"></div>
+    <div><label for="inSite">Site address <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inSite" autocomplete="off" placeholder="Customer address from the WO"><p class="hint">Stamped as “Site:” in addition to the GPS address.</p></div>
+    <div><label for="inNote">Note for next photos <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inNote" autocomplete="off" placeholder="e.g. Tower 2 sector B, NID side wall"><p class="hint">Stays on until you clear it.</p></div>
+    <button class="btn" id="newJobBtn">Start new job (clears WO, site, note)</button>
+  </div>
+</section>
+
+<!-- Settings sheet -->
+<section class="sheet" id="setSheet" aria-label="Settings">
+  <header><h2>Settings</h2><button class="btn" data-close>Done</button></header>
+  <div class="body">
+    <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"></div>
+    <div class="stats" id="storageStats"></div>
+    <div class="install" id="installHelp"></div>
+    <p class="stats">Field Cam v1.2.0 · compass reads magnetic north</p>
+  </div>
+</section>
+
+<!-- Gallery sheet -->
+<section class="sheet" id="galSheet" aria-label="Photos">
+  <header><h2 id="galTitle">Photos</h2><button class="btn" data-close>Done</button></header>
+  <div class="body">
+    <div class="gtools"><span class="stats" id="galStats"></span><button class="btn" id="selAllBtn" style="min-height:36px;padding:0 12px">Select all</button></div>
+    <div class="grid" id="grid"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="shareBtn">Share</button>
+      <button class="btn danger" id="delBtn">Delete</button>
+    </div>
+    <p class="hint">Share opens the iPhone share sheet: pick OneDrive, Save to Files, Save Images, Mail or Teams. Photos stay here until you delete them.</p>
+    <div class="btnrow" id="delConfirm" hidden>
+      <button class="btn danger" id="delYes">Delete <span id="delN"></span></button>
+      <button class="btn" id="delNo">Keep</button>
+    </div>
+  </div>
+</section>
+
+<!-- Viewer -->
+<div class="viewer" id="viewer">
+  <div class="vtop"><div class="meta" id="vMeta"></div><button class="btn" id="vClose">Close</button></div>
+  <div class="vstage" id="vStage"><img id="vImg" alt="Photo preview"></div>
+  <div class="vbar"><button class="btn primary" id="vShare" style="flex:1">Share</button><button class="btn danger" id="vDel">Delete</button></div>
+</div>
+
+<!-- Start -->
+<div class="start" id="start">
+  <div class="inner">
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#002B2B"/><circle cx="32" cy="32" r="17" fill="none" stroke="#58C774" stroke-width="5"/><circle cx="32" cy="32" r="5" fill="#00FF57"/><path d="M32 6v9M32 49v9M6 32h9M49 32h9" stroke="#58C774" stroke-width="4" stroke-linecap="round"/></svg>
+    <h1>Field Cam</h1>
+    <p>Job-site photos stamped with time, location, direction and tilt, compressed small enough to upload on one bar of signal.</p>
+    <div><label for="inName0">Your name</label><input id="inName0" autocomplete="name" placeholder="First Last"></div>
+    <ul>
+      <li><span>01</span>Allow the camera</li>
+      <li><span>02</span>Allow location (for coordinates and elevation)</li>
+      <li><span>03</span>Allow motion &amp; orientation (for direction and tilt)</li>
+    </ul>
+    <button class="btn primary" id="startBtn" style="min-height:54px;font-size:17px">Start camera</button>
+    <div class="install" id="installTip" hidden></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const VERSION = "1.2.0";
+const $ = id => document.getElementById(id);
+
+/* ---------------- settings ---------------- */
+// Every photo: 2048 px long edge, highest JPEG quality that fits in 350 KB.
+const OUTPUT = { edge: 2048, target: 350 * 1024 };
+
+const DEFAULTS = { name:"", wo:"", site:"", note:"", geocode:true, exif:true, seq:{} };
+let settings = (() => { try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem("fieldcam.settings") || "{}")); } catch { return { ...DEFAULTS }; } })();
+settings.geocode = true; settings.exif = true;   // always on
+function save() { try { localStorage.setItem("fieldcam.settings", JSON.stringify(settings)); } catch {} }
+
+/* ---------------- live state ---------------- */
+const S = {
+  stream:null, track:null, caps:{}, zoom:1, digitalZoom:1, torch:false, deviceId:null, lens:"wide", lenses:{}, lensesScanned:false, switching:false,
+  heading:null, headingSrc:"", hx:null, hy:null, pitch:null, roll:0, rollQ:0, levelDev:null,
+  pos:null, posAt:0, addr:null, addrPos:null, addrAt:0, geoBusy:false, lastGeoTry:0,
+  busy:false, photos:[], selected:new Set(), viewing:null, wake:null
+};
+
+/* ---------------- helpers ---------------- */
+const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const CARD = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const cardinal = h => CARD[Math.round(h / 22.5) % 16];
+const kb = b => b < 1024 * 1024 ? Math.round(b / 1024) + " KB" : (b / 1048576).toFixed(1) + " MB";
+const pad = n => String(n).padStart(2, "0");
+function tzAbbr(d) { try { return new Intl.DateTimeFormat("en-CA", { timeZoneName: "short" }).formatToParts(d).find(p => p.type === "timeZoneName").value; } catch { return ""; } }
+function tzOffset(d) { const m = -d.getTimezoneOffset(), s = m >= 0 ? "+" : "-", a = Math.abs(m); return s + pad(Math.floor(a / 60)) + ":" + pad(a % 60); }
+function fmtTime(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${tzAbbr(d)}`.trim(); }
+function distM(a, b) { const R = 6371000, dLa = rad(b.latitude - a.latitude), dLo = rad(b.longitude - a.longitude); const x = Math.sin(dLa/2)**2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLo/2)**2; return 2 * R * Math.asin(Math.sqrt(x)); }
+let toastT;
+function toast(html, ms = 2200) { const t = $("toast"); t.innerHTML = html; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+
+/* ---------------- IndexedDB ---------------- */
+const DB = {
+  db:null,
+  open() { return new Promise((res, rej) => { const r = indexedDB.open("fieldcam", 1); r.onupgradeneeded = () => r.result.createObjectStore("photos", { keyPath: "id" }); r.onsuccess = () => { this.db = r.result; res(); }; r.onerror = () => rej(r.error); }); },
+  tx(mode) { return this.db.transaction("photos", mode).objectStore("photos"); },
+  all() { return new Promise((res, rej) => { const r = this.tx("readonly").getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  put(o) { return new Promise((res, rej) => { const r = this.tx("readwrite").put(o); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); },
+  del(id) { return new Promise((res, rej) => { const r = this.tx("readwrite").delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+};
+
+/* ---------------- camera ---------------- */
+async function startCamera(deviceId) {
+  const v = $("video");
+  deviceId = typeof deviceId === "string" ? deviceId : S.deviceId;
+  try {
+    if (S.stream) S.stream.getTracks().forEach(t => t.stop());
+    const size = { width:{ ideal:4032 }, height:{ ideal:3024 } };
+    S.stream = await navigator.mediaDevices.getUserMedia({ audio:false, video: deviceId ? { deviceId:{ exact:deviceId }, ...size } : { facingMode:{ ideal:"environment" }, ...size } });
+    v.srcObject = S.stream;
+    await v.play().catch(() => {});
+    S.track = S.stream.getVideoTracks()[0];
+    S.deviceId = (S.track.getSettings && S.track.getSettings().deviceId) || deviceId || null;
+    S.caps = (S.track.getCapabilities && S.track.getCapabilities()) || {};
+    if (S.caps.zoom && !(S.caps.zoom.max > S.caps.zoom.min)) S.caps.zoom = null;   // reported but not adjustable
+    $("torchBtn").hidden = !S.caps.torch;
+    S.zoom = S.caps.zoom ? Math.max(1, S.caps.zoom.min || 1) : 1; S.digitalZoom = 1; S.torch = false;
+    $("torchBtn").classList.remove("on");
+    $("vfMsg").hidden = true;
+    S.track.addEventListener("ended", () => { if (document.visibilityState === "visible" && !S.switching) startCamera(); });
+    if (!S.lensesScanned) await detectLenses();
+    applyZoomUI();
+  } catch (e) {
+    if (deviceId && S.deviceId === deviceId && e && e.name === "OverconstrainedError") { S.deviceId = null; return startCamera(""); }
+    showVfMsg(window.top !== window
+      ? "The camera isn’t available in this preview. Tap the picture button to import photos from your phone and test the stamp and compression."
+      : e && e.name === "NotAllowedError"
+      ? "Camera access is blocked. On iPhone: Settings › Safari › Camera › Allow, then reopen Field Cam."
+      : "Couldn’t start the camera (" + (e && e.name || "error") + "). Close other camera apps and tap here to retry.");
+  }
+}
+function showVfMsg(t) { const m = $("vfMsg"); m.textContent = t; m.hidden = false; }
+$("vfMsg").addEventListener("click", () => startCamera());
+
+/* ---------------- zoom: real lenses + pinch ---------------- */
+// iPhones expose each back lens to web apps once camera access is granted
+// ("Back Ultra Wide Camera", "Back Camera", "Back Telephoto Camera"). Use the real glass where we can,
+// and crop (digital zoom) on top of whichever lens is active.
+const MAX_DIGITAL = 5;
+async function detectLenses() {
+  S.lensesScanned = true; S.lens = "wide"; S.lenses = { wide:S.deviceId };
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    for (const d of devs) {
+      const L = (d.label || "").toLowerCase();
+      if (!L || /front|user|facetime/.test(L)) continue;
+      if (/ultra ?wide/.test(L)) S.lenses.ultra = d.deviceId;
+      else if (/tele/.test(L)) S.lenses.tele = d.deviceId;
+      else if (/^back camera$/.test(L.trim())) S.lenses.wide = d.deviceId;
+    }
+  } catch {}
+}
+function curZoom() { return S.caps.zoom ? S.zoom : S.digitalZoom; }
+function zoomRange() {
+  return S.caps.zoom ? [Math.max(1, S.caps.zoom.min || 1), Math.min(S.caps.zoom.max || 1, 10)] : [1, MAX_DIGITAL];
+}
+let hwBusy = false, hwQueued = false;
+function pushHwZoom() {
+  if (!S.track || !S.caps.zoom) return;
+  if (hwBusy) { hwQueued = true; return; }
+  hwBusy = true;
+  S.track.applyConstraints({ advanced:[{ zoom:S.zoom }] }).catch(() => {}).finally(() => { hwBusy = false; if (hwQueued) { hwQueued = false; pushHwZoom(); } });
+}
+function setZoom(z) {
+  const [lo, hi] = zoomRange(); z = clamp(z, lo, hi);
+  if (S.caps.zoom) { S.zoom = z; pushHwZoom(); } else S.digitalZoom = z;
+  applyZoomUI();
+}
+async function selectLens(name, z = 1) {
+  if (!S.lenses[name]) return;
+  if (S.lens !== name) { S.switching = true; S.lens = name; await startCamera(S.lenses[name]); S.switching = false; }
+  setZoom(z);
+  flashZoomRead();
+}
+function fmtZ(z) { return (Math.round(z * 10) / 10).toString().replace(/^0\./, ".") + "×"; }
+function zoomLabel() {
+  const z = curZoom();
+  if (S.lens === "tele") return z > 1.05 ? "Tele " + fmtZ(z) : "Tele";
+  return fmtZ((S.lens === "ultra" ? 0.5 : 1) * z);
+}
+function applyZoomUI() {
+  $("video").style.transform = S.digitalZoom > 1 ? `scale(${S.digitalZoom})` : "";
+  const z = curZoom(), btns = [];
+  if (S.lenses && S.lenses.ultra) btns.push({ k:"ultra", t:S.lens === "ultra" ? fmtZ(0.5 * z) : ".5×", on:S.lens === "ultra" });
+  const wide = S.lens === "wide";
+  btns.push({ k:"w1", t:wide && z < 1.5 ? fmtZ(z) : "1×", on:wide && z < 1.5 });
+  btns.push({ k:"w2", t:wide && z >= 1.5 && z < 3 ? fmtZ(z) : "2×", on:wide && z >= 1.5 && z < 3 });
+  if (S.lenses && S.lenses.tele) btns.push({ k:"tele", t:zoomLabel().replace("Tele ", "T "), on:S.lens === "tele" });
+  else btns.push({ k:"w3", t:wide && z >= 3 ? fmtZ(z) : "3×", on:wide && z >= 3 });
+  const bar = $("zoomBar");
+  bar.innerHTML = btns.filter(b => !b.hide).map(b => `<button data-z="${b.k}" aria-pressed="${b.on}">${b.t}</button>`).join("");
+  $("zoomRead").textContent = zoomLabel();
+}
+$("zoomBar").addEventListener("click", e => {
+  const b = e.target.closest("[data-z]"); if (!b) return;
+  const k = b.dataset.z;
+  if (k === "ultra") selectLens("ultra", 1);
+  else if (k === "tele") selectLens("tele", 1);
+  else selectLens("wide", k === "w2" ? 2 : k === "w3" ? 3 : 1).then(() => { if (!S.lenses.wide || S.lens === "wide") { setZoom(k === "w2" ? 2 : k === "w3" ? 3 : 1); flashZoomRead(); } });
+});
+let zrT;
+function flashZoomRead() { const r = $("zoomRead"); r.classList.add("show"); clearTimeout(zrT); zrT = setTimeout(() => r.classList.remove("show"), 900); }
+// pinch anywhere on the viewfinder
+const vfPts = new Map(); let vfPinch = null;
+const vfEl = $("vf");
+vfEl.addEventListener("pointerdown", e => {
+  if (e.pointerType !== "touch" || e.target.closest(".vfctl")) return;
+  vfPts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (vfPts.size === 2) { const [a, b] = [...vfPts.values()]; vfPinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, z:curZoom() }; }
+});
+vfEl.addEventListener("pointermove", e => {
+  if (!vfPts.has(e.pointerId)) return;
+  vfPts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (vfPinch && vfPts.size === 2) { const [a, b] = [...vfPts.values()]; setZoom(vfPinch.z * Math.hypot(a.x - b.x, a.y - b.y) / vfPinch.d); flashZoomRead(); }
+});
+const vfEnd = e => { vfPts.delete(e.pointerId); if (vfPts.size < 2) vfPinch = null; };
+vfEl.addEventListener("pointerup", vfEnd); vfEl.addEventListener("pointercancel", vfEnd);
+document.addEventListener("gesturestart", e => e.preventDefault());
+$("torchBtn").addEventListener("click", async () => {
+  if (!S.track) return;
+  S.torch = !S.torch;
+  try { await S.track.applyConstraints({ advanced:[{ torch:S.torch }] }); } catch { S.torch = false; }
+  $("torchBtn").classList.toggle("on", S.torch);
+});
+
+async function keepAwake() { try { if ("wakeLock" in navigator && document.visibilityState === "visible") S.wake = await navigator.wakeLock.request("screen"); } catch {} }
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && $("start").hidden) {
+    if (!S.track || S.track.readyState === "ended") startCamera();
+    keepAwake();
+  }
+});
+
+/* ---------------- orientation: heading, tilt, roll ---------------- */
+function onOrient(e) {
+  if (e.beta == null || e.gamma == null) return;
+  const b = rad(e.beta), g = rad(e.gamma), cb = Math.cos(b), sb = Math.sin(b), cg = Math.cos(g), sg = Math.sin(g);
+  // world "up" expressed in the device frame (from R = Rz(a)·Rx(b)·Ry(g))
+  const ux = -cb * sg, uy = sb, uz = cb * cg;
+  S.pitch = deg(Math.asin(clamp(-uz, -1, 1)));            // + = camera pointing up
+  const m = Math.hypot(ux, uy);
+  if (m > 0.35) {                                          // phone not flat: roll is meaningful
+    S.roll = deg(Math.atan2(ux, uy));                      // 0 portrait, 90 = top of phone to the left
+    const q = Math.round(S.roll / 90) * 90;
+    if (Math.abs(S.roll - q) < 35) S.rollQ = ((q % 360) + 360) % 360; // hysteresis band
+    S.levelDev = S.roll - Math.round(S.roll / 90) * 90;
+  } else S.levelDev = null;
+
+  let h = null;
+  if (typeof e.webkitCompassHeading === "number" && e.webkitCompassHeading >= 0) {
+    h = e.webkitCompassHeading; S.headingSrc = "ios";
+  } else if (e.absolute && e.alpha != null) {
+    const a = rad(e.alpha), ca = Math.cos(a), sa = Math.sin(a);
+    let vx = -(ca * sg + sa * sb * cg), vy = ca * sb * cg - sa * sg;   // back-camera direction (east, north)
+    if (Math.hypot(vx, vy) < 0.25) { vx = -sa * cb; vy = ca * cb; }  // camera straight down: use top of phone
+    h = (deg(Math.atan2(vx, vy)) + 360) % 360; S.headingSrc = "abs";
+  }
+  if (h != null) {
+    const x = Math.sin(rad(h)), y = Math.cos(rad(h));
+    S.hx = S.hx == null ? x : S.hx * 0.75 + x * 0.25;
+    S.hy = S.hy == null ? y : S.hy * 0.75 + y * 0.25;
+    S.heading = (deg(Math.atan2(S.hx, S.hy)) + 360) % 360;
+  }
+}
+function startOrientation() {
+  if ("ondeviceorientationabsolute" in window) window.addEventListener("deviceorientationabsolute", onOrient);
+  window.addEventListener("deviceorientation", e => { if (S.headingSrc !== "abs" || e.webkitCompassHeading != null) onOrient(e); });
+}
+
+/* ---------------- location ---------------- */
+function startGeo() {
+  if (!("geolocation" in navigator)) return;
+  navigator.geolocation.watchPosition(p => {
+    S.pos = { latitude:p.coords.latitude, longitude:p.coords.longitude, accuracy:p.coords.accuracy, altitude:p.coords.altitude, altitudeAccuracy:p.coords.altitudeAccuracy };
+    S.posAt = Date.now();
+    maybeGeocode();
+  }, err => {
+    if (err.code === 1) toast("Location is blocked. Photos will be stamped without coordinates.", 3500);
+  }, { enableHighAccuracy:true, maximumAge:3000, timeout:30000 });
+}
+async function maybeGeocode() {
+  if (!settings.geocode || !S.pos || S.geoBusy || !navigator.onLine) return;
+  const now = Date.now();
+  if (S.addrPos && distM(S.addrPos, S.pos) < 40) return;
+  if (now - S.lastGeoTry < 15000 || S.pos.accuracy > 150) return;
+  S.lastGeoTry = now; S.geoBusy = true;
+  const at = { ...S.pos };
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${at.latitude.toFixed(6)}&lon=${at.longitude.toFixed(6)}`, { signal:ctl.signal, headers:{ "Accept-Language":"en-CA,en" } });
+    if (!r.ok) throw 0;
+    const j = await r.json(), a = j.address || {};
+    const street = [a.house_number, a.road].filter(Boolean).join(" ");
+    const place = a.city || a.town || a.village || a.hamlet || a.municipality || a.county || "";
+    const prov = (a["ISO3166-2-lvl4"] || "").split("-")[1] || a.state || "";
+    const s = [street, place, prov].filter(Boolean).join(", ");
+    if (s) { S.addr = (a.house_number ? "" : "Near ") + s; S.addrPos = at; S.addrAt = now; }
+  } catch {} finally { clearTimeout(t); S.geoBusy = false; }
+}
+window.addEventListener("online", maybeGeocode);
+
+/* ---------------- HUD ---------------- */
+function gpsFresh() { return S.pos && Date.now() - S.posAt < 60000; }
+function hudTick() {
+  $("hHead").textContent = S.heading == null ? "—" : `${Math.round(S.heading)}° ${cardinal(S.heading)}`;
+  $("hHeadSub").textContent = S.heading == null ? "no compass" : "facing · mag";
+  $("hTilt").textContent = S.pitch == null ? "—" : (S.pitch >= 0 ? "+" : "") + Math.round(S.pitch) + "°";
+  const lv = $("level");
+  if (S.levelDev == null) { lv.style.opacity = 0; }
+  else { lv.style.opacity = 1; lv.style.transform = `translate(-50%,-50%) rotate(${-S.levelDev}deg)`; lv.classList.toggle("flat", Math.abs(S.levelDev) < 1.5); }
+
+  const chip = $("gpsChip");
+  chip.classList.remove("ok", "meh");
+  if (gpsFresh()) {
+    const acc = Math.round(S.pos.accuracy);
+    chip.classList.add(acc <= 15 ? "ok" : acc <= 50 ? "meh" : "x");
+    $("gpsTxt").textContent = "±" + acc + " m";
+  } else $("gpsTxt").textContent = S.pos ? "GPS old" : "GPS…";
+
+  const L = stampLines(snapshot(), true);
+  $("live").innerHTML = L.map((l, i) => `<div${l.pending ? ' class="pending"' : ""}>${esc(l.t)}</div>`).join("");
+  requestAnimationFrame(() => setTimeout(hudTick, 200));
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+/* ---------------- stamp content ---------------- */
+function snapshot(extra = {}) {
+  return Object.assign({
+    when:new Date(), pos:gpsFresh() ? { ...S.pos } : null, addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
+    heading:S.heading, pitch:S.pitch, wo:settings.wo.trim(), site:settings.site.trim(), note:settings.note.trim(),
+    tech:settings.name.trim(), imported:false
+  }, extra);
+}
+function stampLines(m, live = false) {
+  const L = [];
+  if (m.wo && !live) L.push({ t:"WO " + m.wo, strong:true });
+  L.push({ t:fmtTime(m.when) + (m.imported ? " (photo time)" : "") });
+  if (m.pos) L.push({ t:`${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` });
+  else L.push({ t:"No GPS fix", pending:true });
+  if (m.addr) L.push({ t:m.addr });
+  else if (live && settings.geocode && m.pos) L.push({ t:navigator.onLine ? "Looking up address…" : "Address: offline (coordinates only)", pending:true });
+  if (m.site && !live) L.push({ t:"Site: " + m.site });
+  const parts = [];
+  if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
+  if (m.pitch != null) parts.push(`Tilt ${m.pitch >= 0 ? "+" : ""}${Math.round(m.pitch)}°`);
+  if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
+  if (parts.length) L.push({ t:parts.join(" · ") });
+  if (!live) {
+    const tail = [m.tech ? "Tech: " + m.tech : null, m.note || null].filter(Boolean).join(" · ");
+    if (tail) L.push({ t:tail });
+    if (m.imported) L.push({ t:"Imported from photo library" });
+  }
+  return L;
+}
+
+/* ---------------- image pipeline ---------------- */
+function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+function downscale(src, sw, sh, tw, th) {
+  // halve repeatedly for a sharper, alias-free result, then one final resample
+  let cur = src, cw = sw, ch = sh;
+  while (cw / 2 >= tw && ch / 2 >= th) {
+    const n = canvas(Math.round(cw / 2), Math.round(ch / 2)), x = n.getContext("2d");
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
+    x.drawImage(cur, 0, 0, cw, ch, 0, 0, n.width, n.height);
+    cur = n; cw = n.width; ch = n.height;
+  }
+  const out = canvas(tw, th), o = out.getContext("2d");
+  o.imageSmoothingEnabled = true; o.imageSmoothingQuality = "high";
+  o.drawImage(cur, 0, 0, cw, ch, 0, 0, tw, th);
+  return out;
+}
+function rotate(c, angle) {
+  if (!angle) return c;
+  const sw = angle % 180 !== 0, r = canvas(sw ? c.height : c.width, sw ? c.width : c.height), x = r.getContext("2d");
+  x.translate(r.width / 2, r.height / 2); x.rotate(rad(angle)); x.drawImage(c, -c.width / 2, -c.height / 2);
+  return r;
+}
+function drawStamp(c, lines) {
+  const x = c.getContext("2d"), W = c.width, H = c.height;
+  const fs = Math.max(13, Math.round(Math.min(W, H) * 0.024)), lh = Math.round(fs * 1.32), padd = Math.round(fs * 0.7);
+  const maxW = W - padd * 4;
+  const fit = (t, f) => { x.font = f; if (x.measureText(t).width <= maxW) return t; while (t.length > 4 && x.measureText(t + "…").width > maxW) t = t.slice(0, -1); return t + "…"; };
+  const rows = lines.map(l => { const f = `${l.strong ? 700 : 500} ${fs}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`; const t = fit(l.t, f); x.font = f; return { t, f, w:x.measureText(t).width, strong:l.strong }; });
+  const bw = Math.min(W - padd * 2, Math.max(...rows.map(r => r.w)) + padd * 2), bh = rows.length * lh + padd * 1.4;
+  const bx = padd, by = H - bh - padd;
+  x.fillStyle = "rgba(0,0,0,0.58)";
+  if (x.roundRect) { x.beginPath(); x.roundRect(bx, by, bw, bh, fs * 0.45); x.fill(); } else x.fillRect(bx, by, bw, bh);
+  x.fillStyle = "#58C774"; x.fillRect(bx, by + fs * 0.45, Math.max(3, fs * 0.16), bh - fs * 0.9);
+  x.textBaseline = "top";
+  rows.forEach((r, i) => { x.font = r.f; x.fillStyle = r.strong ? "#58C774" : "#FFFFFF"; x.fillText(r.t, bx + padd, by + padd * 0.7 + i * lh + (lh - fs) / 2); });
+}
+const toBlob = (c, q) => new Promise(r => c.toBlob(r, "image/jpeg", q));
+async function encodeToTarget(c, target) {
+  let b = await toBlob(c, 0.9);
+  if (b.size <= target) return { blob:b, q:0.9, canvas:c };
+  let lo = 0.32, hi = 0.9, best = null;
+  for (let i = 0; i < 6; i++) {
+    const mid = (lo + hi) / 2; b = await toBlob(c, mid);
+    if (b.size <= target) { best = { blob:b, q:mid, canvas:c }; lo = mid; } else hi = mid;
+  }
+  if (best) return best;
+  // very busy scene: shrink 15% and accept the floor quality
+  const s = downscale(c, c.width, c.height, Math.round(c.width * 0.85), Math.round(c.height * 0.85));
+  b = await toBlob(s, 0.45);
+  return { blob:b, q:0.45, canvas:s };
+}
+async function makeThumb(c) { const t = downscale(c, c.width, c.height, ...fitBox(c.width, c.height, 320)); return toBlob(t, 0.7); }
+function fitBox(w, h, edge) { const s = Math.min(1, edge / Math.max(w, h)); return [Math.round(w * s), Math.round(h * s)]; }
+
+async function processFrame(src, sw, sh, crop, rotation, meta) {
+  const P = OUTPUT;
+  let { sx, sy, cw, ch } = crop;
+  const full = canvas(cw, ch); full.getContext("2d").drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
+  const [tw, th] = fitBox(cw, ch, P.edge);
+  let c = downscale(full, cw, ch, tw, th);
+  full.width = full.height = 0;
+  c = rotate(c, rotation);
+  drawStamp(c, stampLines(meta));
+  const enc = await encodeToTarget(c, P.target);
+  let blob = enc.blob;
+  if (settings.exif) { try { blob = await addExif(blob, meta, enc.canvas.width, enc.canvas.height); } catch (e) { console.warn("exif", e); } }
+  const thumb = await makeThumb(enc.canvas);
+  return { blob, thumb, w:enc.canvas.width, h:enc.canvas.height, q:enc.q };
+}
+
+function fileName(meta) {
+  const d = meta.when, key = meta.wo || "noWO";
+  settings.seq[key] = (settings.seq[key] || 0) + 1; save();
+  return `${meta.wo ? "WO" + meta.wo.replace(/[^A-Za-z0-9-]/g, "") : "Photo"}_${pad(settings.seq[key])}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.jpg`;
+}
+
+/* ---------------- capture ---------------- */
+function outputRotation() {
+  // how far the image must turn (clockwise) so "up" in the photo is up in the world
+  const ui = (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (typeof window.orientation === "number" ? (window.orientation + 360) % 360 : 0);
+  const need = ((S.rollQ - ui) % 360 + 360) % 360;   // physical roll not already handled by the UI rotating
+  return (360 - need) % 360;
+}
+async function capture() {
+  const v = $("video");
+  if (S.busy || !v.videoWidth) { if (!v.videoWidth) toast("Camera isn’t ready yet."); return; }
+  S.busy = true; $("shutter").classList.add("busy");
+  const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+  try { navigator.vibrate && navigator.vibrate(15); } catch {}
+  const meta = snapshot();
+  const vw = v.videoWidth, vh = v.videoHeight, z = S.caps.zoom ? 1 : S.digitalZoom;
+  const cw = Math.round(vw / z), ch = Math.round(vh / z);
+  const crop = { sx:Math.round((vw - cw) / 2), sy:Math.round((vh - ch) / 2), cw, ch };
+  // grab the frame immediately so the moment matches the sensor snapshot
+  const grab = canvas(vw, vh); grab.getContext("2d").drawImage(v, 0, 0, vw, vh);
+  try {
+    const out = await processFrame(grab, vw, vh, crop, outputRotation(), meta);
+    grab.width = grab.height = 0;
+    await storePhoto(out, meta);
+    toast(`Saved · <b>${kb(out.blob.size)}</b> · ${out.w}×${out.h}`);
+  } catch (e) {
+    console.error(e); toast("Couldn’t save that photo. Try again.");
+  } finally { S.busy = false; $("shutter").classList.remove("busy"); }
+}
+async function storePhoto(out, meta) {
+  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), filename:fileName(meta), blob:out.blob, thumb:out.thumb, w:out.w, h:out.h, q:Math.round(out.q * 100), created:meta.when.getTime(), wo:meta.wo, shared:false };
+  await DB.put(rec);
+  S.photos.unshift(rec);
+  refreshGalleryButton();
+  if ($("galSheet").classList.contains("open")) renderGallery();
+}
+$("shutter").addEventListener("click", capture);
+document.addEventListener("keydown", e => { if ((e.key === " " || e.key === "AudioVolumeUp") && $("start").hidden && !document.querySelector(".sheet.open")) { e.preventDefault(); capture(); } });
+
+/* ---------------- import from library ---------------- */
+$("importBtn").addEventListener("click", () => $("fileIn").click());
+$("fileIn").addEventListener("change", async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if (!files.length) return;
+  S.busy = true; $("shutter").classList.add("busy");
+  let done = 0, total = 0;
+  for (const file of files) {
+    try {
+      const buf = await file.arrayBuffer();
+      const ex = readExif(buf);
+      const url = URL.createObjectURL(file), img = new Image();
+      img.src = url; await img.decode();
+      const meta = snapshot({ imported:true, heading:ex.dir ?? null, pitch:null,
+        when:ex.date || new Date(file.lastModified || Date.now()),
+        pos:ex.lat != null ? { latitude:ex.lat, longitude:ex.lon, accuracy:ex.acc ?? 10, altitude:ex.alt ?? null } : null, addr:null });
+      if (meta.pos && S.addr && S.addrPos && distM(S.addrPos, meta.pos) < 150) meta.addr = S.addr;
+      const w = img.naturalWidth, h = img.naturalHeight;
+      const out = await processFrame(img, w, h, { sx:0, sy:0, cw:w, ch:h }, 0, meta);
+      URL.revokeObjectURL(url);
+      await storePhoto(out, meta); done++; total += out.blob.size;
+    } catch (err) { console.error(err); }
+  }
+  S.busy = false; $("shutter").classList.remove("busy");
+  toast(done ? `Imported ${done} · <b>${kb(total)}</b> total` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
+});
+
+/* ---------------- EXIF write (minimal TIFF: IFD0 + Exif + GPS) ---------------- */
+function asciiBytes(s) { s = String(s).replace(/·/g, "-").replace(/±/g, "+/-").replace(/°/g, " deg").replace(/…/g, "...").replace(/[‘’]/g, "'").replace(/[“”]/g, '"').normalize("NFD").replace(/[̀-ͯ]/g, ""); const out = []; for (const ch of s) { const c = ch.charCodeAt(0); out.push(c < 128 ? c : 63); } out.push(0); return out; }
+function u16(n) { return [(n >> 8) & 255, n & 255]; }
+function u32(n) { return [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]; }
+function rat(v, den = 1000000) { return [...u32(Math.round(v * den)), ...u32(den)]; }
+function dms(v) { v = Math.abs(v); const d = Math.floor(v), mf = (v - d) * 60, m = Math.floor(mf), s = (mf - m) * 60; return [...rat(d, 1), ...rat(m, 1), ...rat(s, 10000)]; }
+function buildIFD(entries, start, nextPtrs) {
+  // entries: {tag,type,count,bytes}; types 1 BYTE 2 ASCII 4 LONG 5 RATIONAL 7 UNDEFINED
+  entries.sort((a, b) => a.tag - b.tag);
+  const head = 2 + entries.length * 12 + 4; let dataOff = start + head;
+  const dir = [...u16(entries.length)], data = [];
+  for (const e of entries) {
+    dir.push(...u16(e.tag), ...u16(e.type), ...u32(e.count));
+    if (e.ptr) { dir.push(...u32(nextPtrs[e.ptr])); continue; }
+    if (e.bytes.length <= 4) { const b = e.bytes.slice(); while (b.length < 4) b.push(0); dir.push(...b); }
+    else { dir.push(...u32(dataOff + data.length)); data.push(...e.bytes); if (data.length % 2) data.push(0); }
+  }
+  dir.push(...u32(0));
+  return dir.concat(data);
+}
+function ifdSize(entries) { let n = 2 + entries.length * 12 + 4; for (const e of entries) if (!e.ptr && e.bytes.length > 4) n += e.bytes.length + (e.bytes.length % 2); return n; }
+async function addExif(blob, m, w, h) {
+  const d = m.when, dt = `${d.getFullYear()}:${pad(d.getMonth()+1)}:${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const A = (tag, s) => { const b = asciiBytes(s); return { tag, type:2, count:b.length, bytes:b }; };
+  const desc = stampLines(m).map(l => l.t).join(" | ");
+  const ifd0 = [A(0x010E, desc), A(0x010F, "Xplore Field Cam"), A(0x0131, "Field Cam " + VERSION), A(0x0132, dt), { tag:0x8769, type:4, count:1, ptr:"exif" }];
+  if (m.tech) ifd0.push(A(0x013B, m.tech));
+  const uc = [65,83,67,73,73,0,0,0, ...asciiBytes(desc).slice(0, -1)];
+  const exif = [A(0x9003, dt), A(0x9004, dt), A(0x9011, tzOffset(d)), { tag:0x9286, type:7, count:uc.length, bytes:uc },
+    { tag:0xA002, type:4, count:1, bytes:u32(w) }, { tag:0xA003, type:4, count:1, bytes:u32(h) }];
+  let gps = null;
+  if (m.pos || m.heading != null) {
+    gps = [{ tag:0x0000, type:1, count:4, bytes:[2,3,0,0] }];
+    if (m.pos) {
+      gps.push(A(0x0001, m.pos.latitude >= 0 ? "N" : "S"), { tag:0x0002, type:5, count:3, bytes:dms(m.pos.latitude) },
+               A(0x0003, m.pos.longitude >= 0 ? "E" : "W"), { tag:0x0004, type:5, count:3, bytes:dms(m.pos.longitude) });
+      if (m.pos.altitude != null) gps.push({ tag:0x0005, type:1, count:1, bytes:[m.pos.altitude < 0 ? 1 : 0] }, { tag:0x0006, type:5, count:1, bytes:rat(Math.abs(m.pos.altitude), 100) });
+      if (m.pos.accuracy != null) gps.push({ tag:0x001F, type:5, count:1, bytes:rat(m.pos.accuracy, 100) });
+    }
+    if (m.heading != null) gps.push(A(0x0010, "M"), { tag:0x0011, type:5, count:1, bytes:rat(m.heading, 100) });
+    ifd0.push({ tag:0x8825, type:4, count:1, ptr:"gps" });
+  }
+  const o0 = 8, oE = o0 + ifdSize(ifd0), oG = oE + ifdSize(exif);
+  const ptrs = { exif:oE, gps:oG };
+  const tiff = [0x4D,0x4D,0,42, ...u32(8), ...buildIFD(ifd0, o0, ptrs), ...buildIFD(exif, oE, ptrs), ...(gps ? buildIFD(gps, oG, ptrs) : [])];
+  const app1 = [0xFF,0xE1, ...u16(tiff.length + 8), 0x45,0x78,0x69,0x66,0,0, ...tiff];
+  const src = new Uint8Array(await blob.arrayBuffer());
+  let rest = 2;                                     // skip SOI
+  if (src[2] === 0xFF && src[3] === 0xE0) rest = 4 + ((src[4] << 8) | src[5]); // drop JFIF APP0
+  return new Blob([new Uint8Array([0xFF,0xD8]), new Uint8Array(app1), src.subarray(rest)], { type:"image/jpeg" });
+}
+
+/* ---------------- EXIF read (for imported photos) ---------------- */
+function readExif(buf) {
+  const out = {};
+  try {
+    const v = new DataView(buf); if (v.getUint16(0) !== 0xFFD8) return out;
+    let p = 2;
+    while (p < v.byteLength - 4) {
+      const mk = v.getUint16(p), len = v.getUint16(p + 2);
+      if (mk === 0xFFE1 && v.getUint32(p + 4) === 0x45786966) { parseTiff(v, p + 10, out); break; }
+      if ((mk & 0xFF00) !== 0xFF00 || mk === 0xFFDA) break;
+      p += 2 + len;
+    }
+  } catch {}
+  return out;
+}
+function parseTiff(v, t, out) {
+  const le = v.getUint16(t) === 0x4949;
+  const g16 = o => v.getUint16(t + o, le), g32 = o => v.getUint32(t + o, le);
+  const rd = (o, n) => { const r = []; for (let i = 0; i < n; i++) r.push(g32(o + i * 8) / (g32(o + i * 8 + 4) || 1)); return r; };
+  const str = (o, n) => { let s = ""; for (let i = 0; i < n - 1; i++) s += String.fromCharCode(v.getUint8(t + o + i)); return s; };
+  const ifd = (o, cb) => { const n = g16(o); for (let i = 0; i < n; i++) { const e = o + 2 + i * 12; cb(g16(e), g16(e + 2), g32(e + 4), e + 8); } };
+  let exifPtr = 0, gpsPtr = 0;
+  ifd(g32(4), (tag, type, cnt, vo) => { if (tag === 0x8769) exifPtr = g32(vo); if (tag === 0x8825) gpsPtr = g32(vo); });
+  if (exifPtr) ifd(exifPtr, (tag, type, cnt, vo) => {
+    if (tag === 0x9003) { const s = str(cnt > 4 ? g32(vo) : vo, cnt), m = s.match(/(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/); if (m) out.date = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]); }
+  });
+  if (gpsPtr) { const G = {}; ifd(gpsPtr, (tag, type, cnt, vo) => { G[tag] = { type, cnt, vo }; });
+    const val = tg => { const e = G[tg]; if (!e) return null; if (e.type === 2) return str(e.cnt > 4 ? g32(e.vo) : e.vo, e.cnt); if (e.type === 5) return rd(g32(e.vo), e.cnt); if (e.type === 1) return v.getUint8(t + e.vo); return null; };
+    const la = val(2), lo = val(4);
+    if (la && lo) { out.lat = (la[0] + la[1] / 60 + la[2] / 3600) * (val(1) === "S" ? -1 : 1); out.lon = (lo[0] + lo[1] / 60 + lo[2] / 3600) * (val(3) === "W" ? -1 : 1); }
+    const al = val(6); if (al) out.alt = al[0] * (val(5) === 1 ? -1 : 1);
+    const di = val(0x11); if (di) out.dir = di[0];
+    const he = val(0x1F); if (he) out.acc = he[0];
+  }
+}
+
+/* ---------------- gallery ---------------- */
+const urls = new Map();
+const thumbURL = p => { if (!urls.has(p.id)) urls.set(p.id, URL.createObjectURL(p.thumb)); return urls.get(p.id); };
+function refreshGalleryButton() {
+  const b = $("galBtn"), p = S.photos[0];
+  b.style.backgroundImage = p ? `url(${thumbURL(p)})` : "";
+  $("galCount").textContent = S.photos.length || "";
+}
+function renderGallery() {
+  const g = $("grid"), total = S.photos.reduce((a, p) => a + p.blob.size, 0);
+  $("galTitle").textContent = S.selected.size ? `${S.selected.size} selected` : "Photos";
+  $("galStats").textContent = S.photos.length ? `${S.photos.length} photo${S.photos.length > 1 ? "s" : ""} · ${kb(total)}` : "";
+  $("selAllBtn").textContent = S.selected.size === S.photos.length && S.photos.length ? "Clear" : "Select all";
+  $("shareBtn").textContent = S.selected.size ? `Share ${S.selected.size}` : `Share all`;
+  $("shareBtn").disabled = !S.photos.length;
+  $("delBtn").disabled = !S.selected.size;
+  if (!S.photos.length) { g.innerHTML = `<div class="empty" style="grid-column:1/-1">No photos yet. Photos you take are kept here until you delete them.</div>`; return; }
+  g.innerHTML = S.photos.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(p.filename)}" loading="lazy">${p.shared ? '<span class="shared">SENT</span>' : ""}<span class="sz">${kb(p.blob.size)}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("");
+}
+$("grid").addEventListener("click", e => {
+  const sel = e.target.closest("[data-sel]");
+  if (sel) { const id = sel.dataset.sel; S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); renderGallery(); return; }
+  const t = e.target.closest(".tile"); if (t) openViewer(t.dataset.id);
+});
+$("selAllBtn").addEventListener("click", () => { if (S.selected.size === S.photos.length) S.selected.clear(); else S.photos.forEach(p => S.selected.add(p.id)); renderGallery(); });
+$("shareBtn").addEventListener("click", () => share(S.selected.size ? S.photos.filter(p => S.selected.has(p.id)) : S.photos));
+$("delBtn").addEventListener("click", () => { $("delN").textContent = S.selected.size; $("delConfirm").hidden = false; });
+$("delNo").addEventListener("click", () => $("delConfirm").hidden = true);
+$("delYes").addEventListener("click", async () => { await removePhotos([...S.selected]); S.selected.clear(); $("delConfirm").hidden = true; renderGallery(); });
+async function removePhotos(ids) {
+  for (const id of ids) { await DB.del(id); if (urls.has(id)) { URL.revokeObjectURL(urls.get(id)); urls.delete(id); } }
+  S.photos = S.photos.filter(p => !ids.includes(p.id));
+  refreshGalleryButton();
+}
+async function share(items) {
+  if (!items.length) return;
+  const files = items.map(p => new File([p.blob], p.filename, { type:"image/jpeg", lastModified:p.created }));
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try {
+      await navigator.share({ files, title:items[0].wo ? "WO " + items[0].wo + " photos" : "Field photos" });
+      for (const p of items) { p.shared = true; await DB.put(p); }
+      renderGallery();
+    } catch (e) { if (e.name !== "AbortError") toast("Sharing failed. Try fewer photos at a time."); }
+    return;
+  }
+  for (const f of files) { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+}
+
+/* ---------------- viewer with pinch zoom ---------------- */
+let vURL = null, Z = { s:1, x:0, y:0 }, pts = new Map(), pinch = null, lastTap = 0;
+function openViewer(id) {
+  const p = S.photos.find(x => x.id === id); if (!p) return;
+  S.viewing = p; if (vURL) URL.revokeObjectURL(vURL);
+  vURL = URL.createObjectURL(p.blob); $("vImg").src = vURL;
+  $("vMeta").innerHTML = `<b>${esc(p.filename)}</b>${kb(p.blob.size)} · ${p.w}×${p.h} · q${p.q}`;
+  Z = { s:1, x:0, y:0 }; applyZ();
+  $("viewer").classList.add("open");
+}
+function applyZ() { $("vImg").style.transform = `translate(-50%,-50%) translate(${Z.x}px,${Z.y}px) scale(${Z.s})`; }
+const st = $("vStage");
+st.addEventListener("pointerdown", e => {
+  st.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d:Math.hypot(a.x - b.x, a.y - b.y), s:Z.s }; }
+  if (pts.size === 1) { const now = Date.now(); if (now - lastTap < 280) { Z = Z.s > 1 ? { s:1, x:0, y:0 } : { s:3, x:0, y:0 }; applyZ(); } lastTap = now; }
+});
+st.addEventListener("pointermove", e => {
+  if (!pts.has(e.pointerId)) return;
+  const prev = pts.get(e.pointerId); pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; Z.s = clamp(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, 1, 8); }
+  else if (pts.size === 1 && Z.s > 1) { Z.x += e.clientX - prev.x; Z.y += e.clientY - prev.y; }
+  if (Z.s === 1) { Z.x = 0; Z.y = 0; }
+  applyZ();
+});
+const endPt = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
+st.addEventListener("pointerup", endPt); st.addEventListener("pointercancel", endPt);
+$("vClose").addEventListener("click", () => $("viewer").classList.remove("open"));
+$("vShare").addEventListener("click", () => S.viewing && share([S.viewing]));
+$("vDel").addEventListener("click", async () => {
+  if (!S.viewing) return;
+  if ($("vDel").dataset.armed !== "1") { $("vDel").dataset.armed = "1"; $("vDel").textContent = "Tap again to delete"; setTimeout(() => { $("vDel").dataset.armed = ""; $("vDel").textContent = "Delete"; }, 2500); return; }
+  $("vDel").dataset.armed = ""; $("vDel").textContent = "Delete";
+  await removePhotos([S.viewing.id]); S.selected.delete(S.viewing.id);
+  $("viewer").classList.remove("open"); renderGallery();
+});
+
+/* ---------------- sheets ---------------- */
+function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
+function closeSheets() { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $("scrim").classList.remove("open"); $("delConfirm").hidden = true; renderTop(); }
+$("scrim").addEventListener("click", closeSheets);
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeSheets));
+$("jobBtn").addEventListener("click", () => { $("inWo").value = settings.wo; $("inSite").value = settings.site; $("inNote").value = settings.note; openSheet("jobSheet"); });
+$("setBtn").addEventListener("click", async () => { $("inName").value = settings.name; openSheet("setSheet"); renderStorage(); });
+$("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
+["inWo","inSite","inNote"].forEach(id => $(id).addEventListener("input", () => { settings.wo = $("inWo").value; settings.site = $("inSite").value; settings.note = $("inNote").value; save(); }));
+$("newJobBtn").addEventListener("click", () => { settings.wo = settings.site = settings.note = ""; save(); $("inWo").value = $("inSite").value = $("inNote").value = ""; $("inWo").focus(); });
+$("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
+
+function renderTop() {
+  $("jobWo").textContent = settings.wo.trim() ? "WO " + settings.wo.trim() : "Add WO #";
+  $("jobSite").textContent = settings.note.trim() || settings.site.trim() || "";
+}
+async function renderStorage() {
+  const total = S.photos.reduce((a, p) => a + p.blob.size + p.thumb.size, 0);
+  let txt = `${S.photos.length} photos stored · ${kb(total)}`;
+  try { const e = await navigator.storage.estimate(); if (e.quota) txt += ` · ${kb(e.quota)} available`; } catch {}
+  $("storageStats").textContent = txt;
+}
+function installText() {
+  if (standalone) return "Installed on this phone. Photos are kept on the device until you delete them.";
+  if (isIOS) return "Install: tap the Share button in Safari, then “Add to Home Screen”. It then opens full-screen and works with no signal.";
+  return "Install: open your browser menu and choose “Install app” or “Add to Home screen”.";
+}
+
+/* ---------------- start ---------------- */
+$("startBtn").addEventListener("click", () => {
+  const n = $("inName0").value.trim(); if (n) { settings.name = n; save(); }
+  // iOS needs the motion permission request inside this tap, before any await
+  let perm = Promise.resolve("granted");
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") perm = DeviceOrientationEvent.requestPermission().catch(() => "denied");
+  perm.then(() => {
+    startOrientation();
+    setTimeout(() => { if (S.pitch == null) toast("No motion data: direction and tilt won’t be stamped. Check Motion &amp; Orientation access.", 4000); }, 3500);
+  });
+  startCamera(); startGeo(); keepAwake();
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  $("start").hidden = true;
+  hudTick();
+});
+
+(async function boot() {
+  $("inName0").value = settings.name;
+  if (!standalone) { $("installTip").hidden = false; $("installTip").textContent = installText(); }
+  $("installHelp").textContent = installText();
+  renderTop();
+  try { await DB.open(); S.photos = (await DB.all()).sort((a, b) => b.created - a.created); refreshGalleryButton(); }
+  catch { toast("Photo storage is unavailable in this browser mode. Photos can still be shared right after taking them.", 4000); }
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("startBtn").disabled = true; $("startBtn").textContent = "Camera not supported here"; }
+})();
+</script>
+</body>
+</html>
