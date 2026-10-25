@@ -47,7 +47,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 /* top bar */
 .top{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));z-index:5}
 .pill{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:999px;background:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.job{flex:1;min-width:0;justify-content:flex-start}
+.brand{flex:1;min-width:0;font-weight:700;font-size:17px;letter-spacing:-.01em;padding-left:4px}
 .job b{font-family:var(--mono);font-weight:600}
 .job span{color:var(--muted);overflow:hidden;text-overflow:ellipsis}
 .gps{font-family:var(--mono);font-size:13px;padding:0 12px}
@@ -192,7 +192,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <div id="app">
   <div class="top">
-    <button class="pill job" id="jobBtn" aria-label="Edit work order"><b id="jobWo">No WO</b><span id="jobSite"></span></button>
+    <div class="brand">Field Cam</div>
     <div class="pill gps" id="gpsChip"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
     <button class="iconbtn" id="setBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
@@ -229,17 +229,6 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <div class="scrim" id="scrim"></div>
 
-<!-- Job sheet -->
-<section class="sheet" id="jobSheet" aria-label="Job">
-  <header><h2>Job details</h2><button class="btn" data-close>Done</button></header>
-  <div class="body">
-    <div><label for="inWo">Work order #</label><input id="inWo" inputmode="numeric" autocomplete="off" placeholder="e.g. 00482913"></div>
-    <div><label for="inSite">Site address <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inSite" autocomplete="off" placeholder="Customer address from the WO"><p class="hint">Stamped as “Site:” in addition to the GPS address.</p></div>
-    <div><label for="inNote">Note for next photos <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inNote" autocomplete="off" placeholder="e.g. Tower 2 sector B, NID side wall"><p class="hint">Stays on until you clear it.</p></div>
-    <button class="btn" id="newJobBtn">Start new job (clears WO, site, note)</button>
-  </div>
-</section>
-
 <!-- Settings sheet -->
 <section class="sheet" id="setSheet" aria-label="Settings">
   <header><h2>Settings</h2><button class="btn" data-close>Done</button></header>
@@ -247,7 +236,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v1.2.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v1.3.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -297,14 +286,14 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 const $ = id => document.getElementById(id);
 
 /* ---------------- settings ---------------- */
 // Every photo: 2048 px long edge, highest JPEG quality that fits in 350 KB.
 const OUTPUT = { edge: 2048, target: 350 * 1024 };
 
-const DEFAULTS = { name:"", wo:"", site:"", note:"", geocode:true, exif:true, seq:{} };
+const DEFAULTS = { name:"", geocode:true, exif:true };
 let settings = (() => { try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem("fieldcam.settings") || "{}")); } catch { return { ...DEFAULTS }; } })();
 settings.geocode = true; settings.exif = true;   // always on
 function save() { try { localStorage.setItem("fieldcam.settings", JSON.stringify(settings)); } catch {} }
@@ -350,7 +339,13 @@ async function startCamera(deviceId) {
   try {
     if (S.stream) S.stream.getTracks().forEach(t => t.stop());
     const size = { width:{ ideal:4032 }, height:{ ideal:3024 } };
-    S.stream = await navigator.mediaDevices.getUserMedia({ audio:false, video: deviceId ? { deviceId:{ exact:deviceId }, ...size } : { facingMode:{ ideal:"environment" }, ...size } });
+    // Rear camera only: "exact" means the browser must refuse rather than fall back to the selfie camera.
+    S.stream = await navigator.mediaDevices.getUserMedia({ audio:false, video: deviceId ? { deviceId:{ exact:deviceId }, ...size } : { facingMode:{ exact:"environment" }, ...size } });
+    const t0 = S.stream.getVideoTracks()[0], st0 = (t0.getSettings && t0.getSettings()) || {};
+    if (st0.facingMode === "user" || /front|facetime|user/i.test(t0.label || "")) {
+      S.stream.getTracks().forEach(t => t.stop()); S.stream = null;
+      throw Object.assign(new Error("front"), { name:"FrontOnly" });
+    }
     v.srcObject = S.stream;
     await v.play().catch(() => {});
     S.track = S.stream.getVideoTracks()[0];
@@ -366,6 +361,15 @@ async function startCamera(deviceId) {
     applyZoomUI();
   } catch (e) {
     if (deviceId && S.deviceId === deviceId && e && e.name === "OverconstrainedError") { S.deviceId = null; return startCamera(""); }
+    if (!deviceId && e && e.name === "OverconstrainedError" && !S.rearRetry) {
+      // Some browsers don't support facingMode "exact": look for a back-facing camera by name instead
+      S.rearRetry = true;
+      try {
+        const back = (await navigator.mediaDevices.enumerateDevices()).find(d => d.kind === "videoinput" && /back|rear|environment/i.test(d.label || ""));
+        if (back) return startCamera(back.deviceId);
+      } catch {}
+    }
+    if (e && (e.name === "FrontOnly" || e.name === "OverconstrainedError")) { showVfMsg("Field Cam only uses the rear camera, and none was found on this device."); return; }
     showVfMsg(window.top !== window
       ? "The camera isn’t available in this preview. Tap the picture button to import photos from your phone and test the stamp and compression."
       : e && e.name === "NotAllowedError"
@@ -571,27 +575,24 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", "
 function snapshot(extra = {}) {
   return Object.assign({
     when:new Date(), pos:gpsFresh() ? { ...S.pos } : null, addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
-    heading:S.heading, pitch:S.pitch, wo:settings.wo.trim(), site:settings.site.trim(), note:settings.note.trim(),
+    heading:S.heading, pitch:S.pitch,
     tech:settings.name.trim(), imported:false
   }, extra);
 }
 function stampLines(m, live = false) {
   const L = [];
-  if (m.wo && !live) L.push({ t:"WO " + m.wo, strong:true });
   L.push({ t:fmtTime(m.when) + (m.imported ? " (photo time)" : "") });
   if (m.pos) L.push({ t:`${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` });
   else L.push({ t:"No GPS fix", pending:true });
   if (m.addr) L.push({ t:m.addr });
   else if (live && settings.geocode && m.pos) L.push({ t:navigator.onLine ? "Looking up address…" : "Address: offline (coordinates only)", pending:true });
-  if (m.site && !live) L.push({ t:"Site: " + m.site });
   const parts = [];
   if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
   if (m.pitch != null) parts.push(`Tilt ${m.pitch >= 0 ? "+" : ""}${Math.round(m.pitch)}°`);
   if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
   if (parts.length) L.push({ t:parts.join(" · ") });
   if (!live) {
-    const tail = [m.tech ? "Tech: " + m.tech : null, m.note || null].filter(Boolean).join(" · ");
-    if (tail) L.push({ t:tail });
+    if (m.tech) L.push({ t:"Tech: " + m.tech });
     if (m.imported) L.push({ t:"Imported from photo library" });
   }
   return L;
@@ -668,9 +669,12 @@ async function processFrame(src, sw, sh, crop, rotation, meta) {
 }
 
 function fileName(meta) {
-  const d = meta.when, key = meta.wo || "noWO";
-  settings.seq[key] = (settings.seq[key] || 0) + 1; save();
-  return `${meta.wo ? "WO" + meta.wo.replace(/[^A-Za-z0-9-]/g, "") : "Photo"}_${pad(settings.seq[key])}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.jpg`;
+  // Photo_YYYYMMDD-HHMMSS.jpg, with _2, _3… if two photos land in the same second
+  const d = meta.when;
+  const base = `Photo_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  let name = base + ".jpg", n = 2;
+  while (S.photos.some(p => p.filename === name)) name = `${base}_${n++}.jpg`;
+  return name;
 }
 
 /* ---------------- capture ---------------- */
@@ -702,7 +706,7 @@ async function capture() {
   } finally { S.busy = false; $("shutter").classList.remove("busy"); }
 }
 async function storePhoto(out, meta) {
-  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), filename:fileName(meta), blob:out.blob, thumb:out.thumb, w:out.w, h:out.h, q:Math.round(out.q * 100), created:meta.when.getTime(), wo:meta.wo, shared:false };
+  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), filename:fileName(meta), blob:out.blob, thumb:out.thumb, w:out.w, h:out.h, q:Math.round(out.q * 100), created:meta.when.getTime(), shared:false };
   await DB.put(rec);
   S.photos.unshift(rec);
   refreshGalleryButton();
@@ -865,7 +869,7 @@ async function share(items) {
   const files = items.map(p => new File([p.blob], p.filename, { type:"image/jpeg", lastModified:p.created }));
   if (navigator.canShare && navigator.canShare({ files })) {
     try {
-      await navigator.share({ files, title:items[0].wo ? "WO " + items[0].wo + " photos" : "Field photos" });
+      await navigator.share({ files, title:"Field photos" });
       for (const p of items) { p.shared = true; await DB.put(p); }
       renderGallery();
     } catch (e) { if (e.name !== "AbortError") toast("Sharing failed. Try fewer photos at a time."); }
@@ -913,20 +917,13 @@ $("vDel").addEventListener("click", async () => {
 
 /* ---------------- sheets ---------------- */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
-function closeSheets() { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $("scrim").classList.remove("open"); $("delConfirm").hidden = true; renderTop(); }
+function closeSheets() { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $("scrim").classList.remove("open"); $("delConfirm").hidden = true; }
 $("scrim").addEventListener("click", closeSheets);
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeSheets));
-$("jobBtn").addEventListener("click", () => { $("inWo").value = settings.wo; $("inSite").value = settings.site; $("inNote").value = settings.note; openSheet("jobSheet"); });
 $("setBtn").addEventListener("click", async () => { $("inName").value = settings.name; openSheet("setSheet"); renderStorage(); });
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
-["inWo","inSite","inNote"].forEach(id => $(id).addEventListener("input", () => { settings.wo = $("inWo").value; settings.site = $("inSite").value; settings.note = $("inNote").value; save(); }));
-$("newJobBtn").addEventListener("click", () => { settings.wo = settings.site = settings.note = ""; save(); $("inWo").value = $("inSite").value = $("inNote").value = ""; $("inWo").focus(); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
 
-function renderTop() {
-  $("jobWo").textContent = settings.wo.trim() ? "WO " + settings.wo.trim() : "Add WO #";
-  $("jobSite").textContent = settings.note.trim() || settings.site.trim() || "";
-}
 async function renderStorage() {
   const total = S.photos.reduce((a, p) => a + p.blob.size + p.thumb.size, 0);
   let txt = `${S.photos.length} photos stored · ${kb(total)}`;
@@ -959,7 +956,6 @@ $("startBtn").addEventListener("click", () => {
   $("inName0").value = settings.name;
   if (!standalone) { $("installTip").hidden = false; $("installTip").textContent = installText(); }
   $("installHelp").textContent = installText();
-  renderTop();
   try { await DB.open(); S.photos = (await DB.all()).sort((a, b) => b.created - a.created); refreshGalleryButton(); }
   catch { toast("Photo storage is unavailable in this browser mode. Photos can still be shared right after taking them.", 4000); }
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

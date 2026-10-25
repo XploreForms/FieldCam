@@ -1,7 +1,7 @@
-# Xplore Field Cam (v1.2.0)
+# Xplore Field Cam (v1.3.0)
 
-Installable web app for job-site photos. Each photo is stamped with WO #, date/time,
-GPS coordinates (± accuracy), street address, site address, compass direction, camera tilt,
+Installable web app for job-site photos. Each photo is stamped with date/time,
+GPS coordinates (± accuracy), street address, compass direction, camera tilt,
 elevation and tech name, then compressed to a target file size for low-signal uploads.
 
 ## Files
@@ -33,8 +33,12 @@ Apple rule for web apps; the Start camera tap handles it.
 Nothing to choose. Every photo is saved at 2048 px on the long edge (2048 × 1536 for a normal
 4:3 shot), at the highest JPEG quality that fits in 350 KB. Simple scenes come out well under
 that. Tested on a deliberately worst-case 12 MP image (4.75 MB source): 352 KB.
-Address lookup and GPS-in-file are always on. The only things a tech ever types are their name
-(once) and, optionally, the WO #.
+Address lookup and GPS-in-file are always on. The only thing a tech ever types is their name,
+once, on first launch.
+
+## Camera
+Always the rear camera. It never falls back to the selfie camera; a device with no rear camera
+shows a message instead.
 
 ## Zoom
 Zoom buttons above the shutter, plus pinch-to-zoom on the viewfinder (up to 5×).
@@ -45,7 +49,8 @@ reduces detail: at 3× the saved photo is about 1340 px wide. Stepping closer be
 ## Sending photos
 Gallery → **Share** opens the iPhone share sheet (OneDrive, Save to Files, Save Images, Mail,
 Teams). Photos stay on the phone until deleted; sent ones are tagged SENT.
-File names: `WO00482913_03_20261024-143207.jpg`.
+File names: `Photo_20261024-143207.jpg` (date and time taken; `_2`, `_3` added if two photos
+land in the same second).
 
 ## Notes
 - **Compass is magnetic north** (about 10° off true north in Southern Ontario). Verify against
@@ -59,5 +64,5 @@ File names: `WO00482913_03_20261024-143207.jpg`.
   Camera app, using the GPS and time saved in those photos.
 
 ## Updating
-Edit files, bump `VERSION` in `sw.js` (e.g. `fieldcam-v1.0.1`) and in `index.html`, upload.
+Edit files, bump `VERSION` in `sw.js` (e.g. `fieldcam-v1.3.1`) and in `index.html`, upload.
 Phones get the update the next time the app opens with signal.
