@@ -1,68 +1,74 @@
-# Xplore Field Cam (v1.3.0)
+# Xplore Field Cam (v1.8.1)
 
-Installable web app for job-site photos. Each photo is stamped with date/time,
-GPS coordinates (± accuracy), street address, compass direction, camera tilt,
-elevation and tech name, then compressed to a target file size for low-signal uploads.
+Installable web app for job-site photos. One session = one work order. The tech picks the job
+type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
+
+Each photo is stamped with its label, platform and work order type, date/time, GPS coordinates
+(± accuracy), street address, tilt, compass direction, elevation and tech name, then compressed
+to 2048 px / 350 KB max for low-signal uploads.
 
 ## Files
 | File | Purpose |
 |---|---|
-| `index.html` | The whole app (camera, sensors, stamping, compression, gallery, sharing) |
+| `index.html` | The whole app |
 | `sw.js` | Offline support: the app opens and works with no signal once installed |
 | `manifest.webmanifest` | Lets it install to the home screen as "Field Cam" |
 | `icons/` | Home-screen icons |
 
-## Hosting on GitHub Pages (same as the Work Order Description tool)
-1. In the `xploreforms` GitHub account, create a new public repository, e.g. `FieldCam`.
+## Hosting on GitHub Pages
+1. In the `xploreforms` GitHub account, create a public repository, e.g. `FieldCam`.
 2. Upload every file in this folder (keep the `icons` folder).
 3. Repository **Settings → Pages → Branch: main / root → Save**.
-4. After a minute it's live at `https://xploreforms.github.io/FieldCam/`.
+4. Live at `https://xploreforms.github.io/FieldCam/` after a minute. Must be https.
 
-It must be served over **https** for the camera, GPS and compass to work.
+## Tech workflow
+1. First launch only: enter name.
+2. Each work order: optionally enter the **Account ID or SA-#**, pick **Platform** (Fixed Wireless / Fibre / Satellite), **Work order**
+   (Install / Conversion / Repair) and **Outcome** (Complete / Cannot Complete = reschedule / Not Required = e.g. no LOS),
+   then **Start job**. These can be changed mid-job from the top bar.
+3. Pick a label (Radio POV, Mount, Cabling…) and shoot as many as needed; the label stays
+   selected and its count goes up. The top bar shows how many labels are covered (e.g. 4/10).
+4. Tap the **download button** (right of the shutter): every new photo saves as its own file.
+   On iPhone they go to **Files › Downloads**.
+5. In FSL, attach the photos from Files.
+6. Top bar → **Finish job and start a new one**.
 
-## Installing on a tech's iPhone
-1. Open the link in **Safari**.
-2. Tap **Share → Add to Home Screen → Add**.
-3. Open **Field Cam** from the home screen, enter name, tap **Start camera**, and allow
-   Camera, Location and Motion & Orientation.
+Previous jobs stay on the phone (gallery › Previous jobs) until deleted.
 
-iPhone asks for Motion & Orientation again each time the app is fully reopened. That is an
-Apple rule for web apps; the Start camera tap handles it.
+## File names
+`20261026-185233_SA-01234567_FW-Install-Complete_Radio-POV-01_43.36010_-80.31230.jpg`
+= date-time taken _ Account ID or SA-# _ platform-work order-outcome _ photo name-number _ latitude_longitude.
+No SA-# entered: that part is left out. No GPS fix: ends in `noGPS`.
+Names are built at download time, so they reflect the SA-# and job type as last set.
+`sa 01234567` is tidied to `SA-01234567`.
 
-## Photo size
-Nothing to choose. Every photo is saved at 2048 px on the long edge (2048 × 1536 for a normal
-4:3 shot), at the highest JPEG quality that fits in 350 KB. Simple scenes come out well under
-that. Tested on a deliberately worst-case 12 MP image (4.75 MB source): 352 KB.
-Address lookup and GPS-in-file are always on. The only thing a tech ever types is their name,
-once, on first launch.
+## Editing the photo labels
+Near the top of the script in `index.html`: `SHOTS` (completed work, per platform and work
+order type) and `SHOTS_CANNOT_COMPLETE` (reschedules, per platform) and `SHOTS_NOT_REQUIRED` (e.g. no LOS, per platform). "Other" is always
+added. Current lists are placeholders.
 
-## Camera
-Always the rear camera. It never falls back to the selfie camera; a device with no rear camera
-shows a message instead.
+## Photo checks
+- **POV level lock:** for any label with "POV" in it, the shutter turns amber and won't fire unless
+  tilt is within ±3°. Press and hold the shutter (0.8 s) to take it anyway; the stamp then
+  says `(not level)`.
+- **Blurry / dark warning:** after each shot the app checks sharpness and brightness and offers
+  Retake or Keep. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
+  adjust after field use if it warns too often or not enough.
+- **Note:** the pencil button adds a note to the next photo (stamped as `Note: …`), then clears.
+- **Missing shots:** Finish job lists labels with no photo yet and photos not downloaded.
 
-## Zoom
-Zoom buttons above the shutter, plus pinch-to-zoom on the viewfinder (up to 5×).
-On iPhones that expose them, **.5×** uses the real ultra-wide lens and **Tele** uses the real
-telephoto lens, so those shots keep full detail. 2× and 3× (and pinch) crop the image, which
-reduces detail: at 3× the saved photo is about 1340 px wide. Stepping closer beats zooming.
-
-## Sending photos
-Gallery → **Share** opens the iPhone share sheet (OneDrive, Save to Files, Save Images, Mail,
-Teams). Photos stay on the phone until deleted; sent ones are tagged SENT.
-File names: `Photo_20261024-143207.jpg` (date and time taken; `_2`, `_3` added if two photos
-land in the same second).
+## Tilt
+The big readout at the top is camera tilt above/below the horizon (+ = aimed up). Within ±3°
+it turns green and says LEVEL; the moving horizon line lines up with the side marks. Tilt is
+stamped on every photo, e.g. `Tilt +0.4° (level)`. Skew (sideways roll) is shown small.
 
 ## Notes
-- **Compass is magnetic north** (about 10° off true north in Southern Ontario). Verify against
-  a real compass on first field use; iPhone compass needs a figure-8 calibration if it drifts.
-- **Address lookup** uses OpenStreetMap's free service. Light use by a team is fine; for heavy
-  use, swap in a paid geocoder later. With no data, photos still get coordinates.
-- **Elevation** comes from the phone's GPS and is typically ±5–15 m.
-- The app also writes location, time and direction into the JPEG
-  metadata so photos land on a map in Photos/OneDrive.
-- Import (picture icon on the viewfinder) re-compresses photos already taken with the iPhone
-  Camera app, using the GPS and time saved in those photos.
+- Rear camera only; never falls back to the selfie camera.
+- Zoom: .5× / Tele use the real lenses where the iPhone exposes them; 2× / 3× / pinch crop.
+- Compass is magnetic north (about 10° off true north in Southern Ontario).
+- Address lookup uses OpenStreetMap's free service; with no data, coordinates are still stamped.
+- Location, time and direction are also written into the JPEG metadata.
 
 ## Updating
-Edit files, bump `VERSION` in `sw.js` (e.g. `fieldcam-v1.3.1`) and in `index.html`, upload.
-Phones get the update the next time the app opens with signal.
+Edit files, bump `VERSION` in `sw.js` and `index.html`, upload. Phones update next time the
+app opens with signal.
