@@ -125,8 +125,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;background:var(--ink-3);font-size:14px;color:var(--muted)}
 .chip.done{color:var(--fg)}
-.chip.multi{border:1px dashed var(--muted);background:transparent;color:var(--fg)}
-.chip.multi[aria-pressed="true"]{border:1px solid var(--accent);background:var(--brand);color:var(--accent)}
+
 .chip .c{min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--brand);color:var(--accent);font:700 11px/19px var(--mono);text-align:center}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--ink);font-weight:600}
 .chip[aria-pressed="true"] .c{background:var(--ink);color:var(--accent)}
@@ -311,7 +310,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.3.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.3.1 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -368,7 +367,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.3.0";
+const VERSION = "2.3.1";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -454,7 +453,7 @@ const S = {
   stream:null, track:null, caps:{}, zoom:1, digitalZoom:1, torch:false, deviceId:null, lens:"wide", lenses:{}, lensesScanned:false, switching:false, rearRetry:false,
   heading:null, headingSrc:"", hx:null, hy:null, pitch:null, roll:0, rollQ:0, levelDev:null,
   pos:null, posAt:0, addr:null, addrPos:null, geoBusy:false, lastGeoTry:0,
-  note:"", busy:false, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
+  note:"", fresh:true, busy:false, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
 };
 const jobPhotos = sid => S.photos.filter(p => p.sessionId === sid);
 const curPhotos = () => current ? jobPhotos(current.id) : [];
@@ -471,7 +470,8 @@ const LEVEL_TOL = 3;   // degrees either side of the horizon that count as "leve
 // Labels that get the full tilt check (big readout, horizon line, level lock): radio/dish POV and LOS shots.
 // Every other label just shows a small tilt number.
 const isPOV = l => isLevelShot(l);
-// One photo can cover several checklist items: "Multiple" mode selects more than one label for the next shot.
+// One photo can cover several checklist items: tap a second label to add it to the selection.
+// S.fresh = the selection was made by the app (start, after a shot, Next), so the tech's next tap replaces it.
 const selLabels = () => S.multi && S.multi.length ? S.multi : [S.label || OTHER];
 const labelsOf = p => p.labels && p.labels.length ? p.labels : [p.label || "Photo"];
 const labelText = ls => ls.join(" + ");
@@ -955,7 +955,7 @@ $("qKeep").addEventListener("click", () => { const r = qRec; hideRetake(); if (r
 $("qRetake").addEventListener("click", async () => {
   if (!qRec) return hideRetake();
   const rec = qRec; hideRetake();
-  const ls = labelsOf(rec); S.label = ls[0]; S.multi = ls.length > 1 ? [...ls] : null; if (current) { current.label = S.label; save(); }
+  const ls = labelsOf(rec); S.label = ls[0]; S.multi = ls.length > 1 ? [...ls] : null; S.fresh = false; if (current) { current.label = S.label; save(); }
   if (rec.note) { S.note = rec.note; $("inNote").value = rec.note; }
   await removePhotos([rec.id]);
   toast("Deleted. Take it again.");
@@ -992,7 +992,7 @@ $("fileIn").addEventListener("change", async e => {
     } catch (err) { console.error(err); }
   }
   S.busy = false; $("shutter").classList.remove("busy");
-  if (S.multi) { S.multi = null; renderChips(); renderGuide(); }
+  if (S.multi) { S.multi = null; S.fresh = true; renderChips(); renderGuide(); }
   toast(done ? `Imported ${done} as <b>${esc(labelText(selLabels()))}</b> · ${kb(total)}` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
 });
 
@@ -1267,31 +1267,28 @@ function renderTop() {
 }
 function renderChips() {
   const j = curJob(), counts = countLabels(), custom = (j && j.custom) || [];
-  if (S.label === OTHER || !shotList(j).includes(S.label)) { S.label = shotList(j)[0]; if (current) { current.label = S.label; save(); } }
+  if (S.label === OTHER || !shotList(j).includes(S.label)) { S.label = nextMissing(null) || shotList(j)[0]; S.multi = null; S.fresh = true; if (current) { current.label = S.label; save(); } }
   // custom labels only stay in the row once they have a photo (or are selected), so typos drop away
   const sel = selLabels();
   const list = shotList(j).filter(l => !custom.includes(l) || counts[l] || sel.includes(l));
-  $("chips").innerHTML = `<button class="chip multi" data-multi="1" aria-pressed="${!!S.multi}">${S.multi ? "✓ Multiple" : "＋ Multiple"}</button>` +
-    list.map(l => { const n = counts[l] || 0; return `<button class="chip${n ? " done" : ""}" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(l)}${n ? `<span class="c">${n}</span>` : ""}</button>`; }).join("");
+  $("chips").innerHTML = list.map(l => { const n = counts[l] || 0; return `<button class="chip${n ? " done" : ""}" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(l)}${n ? `<span class="c">✓${n > 1 ? n : ""}</span>` : ""}</button>`; }).join("");
   const on = $("chips").querySelector('[aria-pressed="true"]');
   if (on) { const c = $("chips"); const L = on.offsetLeft - 12, R = on.offsetLeft + on.offsetWidth + 12; if (L < c.scrollLeft) c.scrollLeft = L; else if (R > c.scrollLeft + c.clientWidth) c.scrollLeft = R - c.clientWidth; }
 }
 $("chips").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b || !current) return;
-  if (b.dataset.multi) {
-    if (S.multi) { S.label = S.multi[0]; S.multi = null; }
-    else { S.multi = [S.label]; toast("Tap every item this photo shows", 2400); }
-    current.label = S.label; save(); renderChips(); renderGuide(); return;
-  }
   if (b.dataset.l === OTHER) { openOther(); return; }
-  const l = b.dataset.l;
-  if (S.multi) {
-    if (S.multi.includes(l)) { if (S.multi.length > 1) S.multi = S.multi.filter(x => x !== l); }
-    else S.multi = [...S.multi, l];
-    S.label = S.multi[0];
-  } else S.label = l;
-  current.label = S.label; save(); renderChips(); renderGuide();
+  selectLabel(b.dataset.l);
 });
+// First tap after the app picked an item replaces it; further taps add or remove items for one photo.
+function selectLabel(l) {
+  let sel = S.fresh ? [] : [...selLabels()];
+  if (sel.includes(l)) { if (sel.length > 1) sel = sel.filter(x => x !== l); }
+  else sel.push(l);
+  S.fresh = false;
+  S.label = sel[0]; S.multi = sel.length > 1 ? sel : null;
+  current.label = S.label; save(); renderChips(); renderGuide();
+}
 /* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
 function openOther() {
   hideRetake(); $("noteBar").hidden = true;
@@ -1304,9 +1301,7 @@ function useOther() {
   const j = curJob(), match = shotList(j).find(l => l !== OTHER && l.toLowerCase() === t.toLowerCase());
   const l = match || t;
   if (!match) j.custom = [...(j.custom || []), t];
-  if (S.multi) { if (!S.multi.includes(l)) S.multi = [...S.multi, l]; S.label = S.multi[0]; }
-  else S.label = l;
-  current.label = S.label; save(); renderChips(); renderGuide();
+  if (!selLabels().includes(l) || S.fresh) selectLabel(l);
   toast(`Label set: <b>${esc(labelText(selLabels()))}</b>`);
 }
 $("otherDone").addEventListener("click", useOther);
@@ -1325,7 +1320,7 @@ function renderGuide() {
   let t, showNext = true;
   if (!req.length) { t = "No required photos for this form · use Other as needed"; showNext = false; }
   else if (done === req.length) { t = `All ${req.length} required photos taken ✓`; showNext = false; }
-  else if (S.multi) { t = S.multi.length > 1 ? `<b>${S.multi.length} items selected</b> · one photo for all of them` : `<b>Multiple</b> · tap every item this photo shows`; showNext = false; }
+  else if (S.multi) { t = `<b>${S.multi.length} items selected</b> · one photo covers all of them`; showNext = false; }
   else if (req.includes(S.label)) {
     const i = req.indexOf(S.label) + 1, n = c[S.label] || 0;
     t = /^screenshot/i.test(S.label) ? `<b>${i} of ${req.length}</b> · add the screenshot with the picture button` : n && MULTI.test(S.label) ? `<b>${i} of ${req.length}</b> · take all you need, then Next` : `<b>${i} of ${req.length}</b> · ${esc(S.label)}`;
@@ -1335,13 +1330,14 @@ function renderGuide() {
 }
 $("guideNext").addEventListener("click", () => {
   const l = nextMissing(S.label); if (!l || !current) return;
-  S.multi = null; S.label = l; current.label = l; save(); renderChips(); renderGuide();
+  S.multi = null; S.fresh = true; S.label = l; current.label = l; save(); renderChips(); renderGuide();
 });
 // After the first photo of a required label, move on to the next one still missing (not for multi-shot labels)
 function autoAdvance(labels) {
   labels = [].concat(labels);
   const wasMulti = labels.length > 1;
-  if (S.multi) { S.multi = null; renderChips(); renderGuide(); }
+  S.multi = null; S.fresh = true; S.label = labels[0];
+  renderChips(); renderGuide();
   const req = baseShots(curJob()), c = countLabels(), last = labels[labels.length - 1];
   const fresh = labels.some(l => req.includes(l) && c[l] === 1);
   if (!fresh || (!wasMulti && MULTI.test(last))) return "";
@@ -1463,6 +1459,7 @@ function showStart() {
 }
 // Must run inside the tap: iPhone only grants motion access in direct response to one.
 function beginSession() {
+  S.fresh = true;
   if (!S.started) {
     S.started = true;
     let perm = Promise.resolve("granted");

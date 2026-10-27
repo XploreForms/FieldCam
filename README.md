@@ -1,4 +1,4 @@
-# Field Cam (v2.3.0)
+# Field Cam (v2.3.1)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -31,9 +31,10 @@ to 2048 px / 350 KB max for low-signal uploads.
    After the first photo of an item it moves to the next missing one, except for items where
    several shots are normal (LOS POVs, testing locations, SNs, issues): take all you need, then
    tap **Next**. Any label can be tapped to add more.
-   **One photo, several items:** tap **＋ Multiple** at the start of the label row, tap every item
-   the photo shows, then shoot. The photo counts for all of them, the stamp lists each one, and
-   the file name joins them (`Cable Run + Grounding Overview`). Multiple turns off after the shot.
+   **One photo, several items:** tap one item, then tap any others the same photo shows (tap a
+   selected one again to remove it), then shoot. The photo counts for all of them (each gets a ✓),
+   the stamp lists each one, and the file name joins them (`Cable Run + Grounding Overview`).
+   After the shot the app moves to the next item still needed; the next tap starts a new selection.
 4. Tap the **download button** (right of the shutter): every new photo saves as its own file.
    On iPhone they go to **Files › Downloads**.
 5. In FSL, attach the photos from Files.
