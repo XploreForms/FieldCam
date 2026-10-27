@@ -68,6 +68,9 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 #hTilt{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 #hLevel{font:normal 700 10.5px var(--sans);letter-spacing:.08em;padding:3px 7px;border-radius:6px;background:rgba(234,242,238,.16);text-shadow:none}
 .hud.lvl #hTilt{color:var(--signal)}
+.hud.free .refmarks,.hud.free .horizon,.hud.free #hLevel{display:none}
+.hud.free #hTilt{font-size:17px;font-weight:600}
+.hud.free .tiltbox{padding:5px 12px}
 .hud.lvl #hLevel{background:var(--signal);color:var(--ink)}
 .hud.near #hLevel{background:var(--warn);color:var(--ink)}
 .tiltbox .sub{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:.02em}
@@ -249,6 +252,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
       <button id="noteBtn" aria-label="Add a note to the next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
       <button id="importBtn" aria-label="Import photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></button>
     </div>
+    <div class="notebar" id="otherBar" hidden><input id="inOther" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="What is this photo of?"><button class="btn" id="otherCancel">Cancel</button><button class="btn primary" id="otherDone">Use</button></div>
     <div class="notebar" id="noteBar" hidden><input id="inNote" maxlength="80" autocomplete="off" placeholder="Note for the next photo"><button class="btn" id="noteClear">Clear</button><button class="btn primary" id="noteDone">Done</button></div>
     <div class="qcheck" id="qBanner" hidden><img id="qImg" alt=""><div><b id="qTitle"></b><span id="qText"></span></div><button class="btn primary" id="qRetake">Retake</button><button class="btn" id="qKeep">Keep</button></div>
     <div class="flash" id="flash"></div>
@@ -291,7 +295,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v1.8.1 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v1.9.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -348,7 +352,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "1.8.1";
+const VERSION = "1.9.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -402,12 +406,14 @@ const SHOTS_NOT_REQUIRED = {
 };
 const OTHER = "Other";
 const byId = (arr, id) => arr.find(x => x.id === id) || {};
-function shotList(j) {
-  if (!j) return [OTHER];
-  const base = j.outcome === "OK" ? ((SHOTS[j.plat] || {})[j.work] || [])
+// The labels this job expects (used for progress and the missing-shot check)
+function baseShots(j) {
+  if (!j) return [];
+  return j.outcome === "OK" ? ((SHOTS[j.plat] || {})[j.work] || [])
     : j.outcome === "NR" ? (SHOTS_NOT_REQUIRED[j.plat] || []) : (SHOTS_CANNOT_COMPLETE[j.plat] || []);
-  return [...base, OTHER];
 }
+// What the label row shows: expected labels, then the tech's own "Other" labels, then Other
+function shotList(j) { return [...baseShots(j), ...((j && j.custom) || []), OTHER]; }
 // "sa 0123" -> "SA-0123"; anything else upper-cased with only letters, digits and dashes
 function normRef(v) {
   v = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
@@ -446,7 +452,9 @@ const kb = b => b < 1024 * 1024 ? Math.round(b / 1024) + " KB" : (b / 1048576).t
 const pad = n => String(n).padStart(2, "0");
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const LEVEL_TOL = 3;   // degrees either side of the horizon that count as "level"
-const isPOV = l => /\bPOV\b/i.test(l || "");   // POV labels must be shot level (hold the shutter to override)
+// Labels that get the full tilt check (big readout, horizon line, level lock): radio/dish POV and LOS shots.
+// Every other label just shows a small tilt number.
+const isPOV = l => /\bPOV\b|\bLOS\b/i.test(l || "");
 const povBlocked = () => isPOV(S.label) && S.pitch != null && Math.abs(S.pitch) > LEVEL_TOL;
 const BLUR_MIN = 60, DARK_MAX = 40;   // photo check thresholds (see quality())
 function fmtTilt(p) { const v = Math.round(p * 10) / 10; return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "°"; }
@@ -643,7 +651,7 @@ function onOrient(e) {
   const b = rad(e.beta), g = rad(e.gamma), cb = Math.cos(b), sb = Math.sin(b), cg = Math.cos(g), sg = Math.sin(g);
   const ux = -cb * sg, uy = sb, uz = cb * cg;               // world "up" in the device frame
   const p = deg(Math.asin(clamp(-uz, -1, 1)));             // + = camera aimed above the horizon
-  S.pitch = S.pitch == null ? p : S.pitch * 0.8 + p * 0.2; // smoothed
+  S.pitch = S.pitch == null ? p : S.pitch * 0.55 + p * 0.45; // light smoothing: steady but responsive
   const m = Math.hypot(ux, uy);
   if (m > 0.35) {
     S.roll = deg(Math.atan2(ux, uy));
@@ -662,8 +670,8 @@ function onOrient(e) {
   }
   if (h != null) {
     const x = Math.sin(rad(h)), y = Math.cos(rad(h));
-    S.hx = S.hx == null ? x : S.hx * 0.75 + x * 0.25;
-    S.hy = S.hy == null ? y : S.hy * 0.75 + y * 0.25;
+    S.hx = S.hx == null ? x : S.hx * 0.6 + x * 0.4;
+    S.hy = S.hy == null ? y : S.hy * 0.6 + y * 0.4;
     S.heading = (deg(Math.atan2(S.hx, S.hy)) + 360) % 360;
   }
 }
@@ -704,32 +712,47 @@ window.addEventListener("online", maybeGeocode);
 
 /* ================= HUD ================= */
 const gpsFresh = () => S.pos && Date.now() - S.posAt < 60000;
-function hudTick() {
-  const hud = $("hud"), p = S.pitch;
-  hud.classList.remove("lvl", "near");
-  if (p == null) { $("hTilt").textContent = "—"; $("hLevel").textContent = "NO TILT DATA"; }
-  else {
-    const a = Math.abs(p);
-    $("hTilt").textContent = fmtTilt(p);
-    $("hLevel").textContent = a <= LEVEL_TOL ? (isPOV(S.label) ? "LEVEL ✓" : "LEVEL") : isPOV(S.label) ? "HOLD LEVEL" : p > 0 ? "AIMED UP" : "AIMED DOWN";
-    if (a <= LEVEL_TOL) hud.classList.add("lvl"); else if (a <= 5 || isPOV(S.label)) hud.classList.add("near");
+// Fast loop (every screen frame): tilt, level badge, horizon line, skew, compass. Only touches the DOM when a value changes.
+// Slow loop (twice a second): GPS chip and the time / coordinates / address text.
+let vfH = 0;
+const measureVf = () => { vfH = vfEl.clientHeight; };
+window.addEventListener("resize", measureVf);
+window.addEventListener("orientationchange", () => setTimeout(measureVf, 300));
+const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
+const hudEls = {};
+let lastHz = "", lastHzOn = null;
+function fastTick() {
+  const E = hudEls, p = S.pitch, strict = isPOV(S.label);
+  const lvl = strict && p != null && Math.abs(p) <= LEVEL_TOL, near = strict && p != null && !lvl;
+  E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
+  if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
+  else { setText(E.tilt, fmtTilt(p)); setText(E.level, Math.abs(p) <= LEVEL_TOL ? "LEVEL ✓" : "HOLD LEVEL"); }
+  // horizon line: where the horizon sits in the frame; line it up with the side marks
+  const on = strict && p != null && Math.abs(p) <= 25;
+  if (on !== lastHzOn) { E.hz.style.opacity = on ? 1 : 0; lastHzOn = on; }
+  if (on) {
+    if (!vfH) measureVf();
+    const t = `translate(-50%,${(clamp(p * vfH / 62, -vfH * 0.42, vfH * 0.42) - 1).toFixed(1)}px) rotate(${(-(S.levelDev || 0)).toFixed(1)}deg)`;
+    if (t !== lastHz) { E.hz.style.transform = t; lastHz = t; }
   }
-  // horizon line: shows where the horizon sits in the frame; line it up with the side marks
-  const hz = $("horizon"), H = vfEl.clientHeight;
-  if (p == null || Math.abs(p) > 35) hz.style.opacity = 0;
-  else { const y = clamp(p * H / 62, -H * 0.42, H * 0.42); hz.style.opacity = 1; hz.style.transform = `translate(-50%,${y - 1}px) rotate(${-(S.levelDev || 0)}deg)`; }
   const head = S.heading == null ? "no compass" : `Facing ${Math.round(S.heading)}° ${cardinal(S.heading)}`;
-  const skew = S.levelDev == null ? "" : ` · skew ${Math.round(Math.abs(S.levelDev))}°`;
-  $("hHead").textContent = head + skew;
-
+  setText(E.head, head + (S.levelDev == null ? "" : ` · skew ${Math.round(Math.abs(S.levelDev))}°`));
+  E.shutter.classList.toggle("locked", povBlocked());
+  requestAnimationFrame(fastTick);
+}
+let lastLive = "";
+function slowTick() {
   const chip = $("gpsChip");
   chip.classList.remove("ok", "meh");
-  if (gpsFresh()) { const acc = Math.round(S.pos.accuracy); if (acc <= 15) chip.classList.add("ok"); else if (acc <= 50) chip.classList.add("meh"); $("gpsTxt").textContent = "±" + acc + " m"; }
-  else $("gpsTxt").textContent = S.pos ? "GPS old" : "GPS…";
-
-  $("shutter").classList.toggle("locked", povBlocked());
-  $("live").innerHTML = (S.note ? `<div class="note">Note: ${esc(S.note)}</div>` : "") + stampLines(snapshot(), true).map(l => `<div${l.pending ? ' class="pending"' : ""}>${esc(l.t)}</div>`).join("");
-  setTimeout(() => requestAnimationFrame(hudTick), 120);
+  if (gpsFresh()) { const acc = Math.round(S.pos.accuracy); if (acc <= 15) chip.classList.add("ok"); else if (acc <= 50) chip.classList.add("meh"); setText($("gpsTxt"), "±" + acc + " m"); }
+  else setText($("gpsTxt"), S.pos ? "GPS old" : "GPS…");
+  const html = (S.note ? `<div class="note">Note: ${esc(S.note)}</div>` : "") + stampLines(snapshot(), true).map(l => `<div${l.pending ? ' class="pending"' : ""}>${esc(l.t)}</div>`).join("");
+  if (html !== lastLive) { $("live").innerHTML = html; lastLive = html; }
+  setTimeout(slowTick, 500);
+}
+function hudTick() {
+  Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), hz:$("horizon"), head:$("hHead"), shutter:$("shutter") });
+  measureVf(); fastTick(); slowTick();
 }
 
 /* ================= stamp content ================= */
@@ -756,7 +779,7 @@ function stampLines(m, live = false) {
   else if (live && m.pos) L.push({ t:navigator.onLine ? "Looking up address…" : "Address: offline (coordinates only)", pending:true });
   if (!live) {
     const parts = [];
-    if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : isPOV(m.label) ? " (not level)" : ""}`);
+    if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!isPOV(m.label) ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
     if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
     if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
     if (parts.length) L.push({ t:parts.join(" · ") });
@@ -902,7 +925,7 @@ function showRetake(rec, qc) {
   $("qImg").src = thumbURL(rec);
   $("qTitle").textContent = qc.dark ? "Photo looks too dark" : "Photo might be blurry";
   $("qText").textContent = qc.dark ? "Turn on the light or move closer, then retake." : "Hold still for a moment, then retake.";
-  $("qBanner").hidden = false; $("noteBar").hidden = true;
+  $("qBanner").hidden = false; $("noteBar").hidden = true; $("otherBar").hidden = true;
   clearTimeout(qT); qT = setTimeout(hideRetake, 8000);
   try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch {}
 }
@@ -918,7 +941,7 @@ $("qRetake").addEventListener("click", async () => {
 });
 
 /* note for the next photo */
-$("noteBtn").addEventListener("click", () => { hideRetake(); $("noteBar").hidden = false; $("inNote").value = S.note || ""; $("inNote").focus(); });
+$("noteBtn").addEventListener("click", () => { hideRetake(); $("otherBar").hidden = true; $("noteBar").hidden = false; $("inNote").value = S.note || ""; $("inNote").focus(); });
 $("inNote").addEventListener("input", () => { S.note = $("inNote").value.trim(); $("noteBtn").classList.toggle("on", !!S.note); });
 $("inNote").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("noteBar").hidden = true; $("inNote").blur(); } });
 $("noteDone").addEventListener("click", () => { $("noteBar").hidden = true; $("inNote").blur(); });
@@ -1197,21 +1220,42 @@ function renderPicker(el, sel, onChange) {
 /* ================= top bar, chips, deck ================= */
 function countLabels() { const c = {}; for (const p of curPhotos()) c[p.label] = (c[p.label] || 0) + 1; return c; }
 function renderTop() {
-  const j = curJob(), req = shotList(j).filter(l => l !== OTHER), counts = countLabels();
+  const j = curJob(), req = baseShots(j), counts = countLabels();
   $("jobTxt").textContent = j ? (j.ref ? `${j.ref} · ${byId(PLATFORMS, j.plat).code} ${byId(WORK, j.work).name}` : `${byId(PLATFORMS, j.plat).code} · ${byId(WORK, j.work).name} · ${byId(OUTCOMES, j.outcome).short}`) : "No job";
   $("jobProg").textContent = j && req.length ? `${req.filter(l => counts[l]).length}/${req.length}` : "";
 }
 function renderChips() {
-  const list = shotList(curJob()), counts = countLabels();
-  if (!list.includes(S.label)) { S.label = list[0]; if (current) { current.label = S.label; save(); } }
+  const j = curJob(), counts = countLabels(), custom = (j && j.custom) || [];
+  if (S.label === OTHER || !shotList(j).includes(S.label)) { S.label = shotList(j)[0]; if (current) { current.label = S.label; save(); } }
+  // custom labels only stay in the row once they have a photo (or are selected), so typos drop away
+  const list = shotList(j).filter(l => !custom.includes(l) || counts[l] || l === S.label);
   $("chips").innerHTML = list.map(l => { const n = counts[l] || 0; return `<button class="chip${n ? " done" : ""}" data-l="${esc(l)}" aria-pressed="${S.label === l}">${esc(l)}${n ? `<span class="c">${n}</span>` : ""}</button>`; }).join("");
   const on = $("chips").querySelector('[aria-pressed="true"]');
   if (on) { const c = $("chips"); const L = on.offsetLeft - 12, R = on.offsetLeft + on.offsetWidth + 12; if (L < c.scrollLeft) c.scrollLeft = L; else if (R > c.scrollLeft + c.clientWidth) c.scrollLeft = R - c.clientWidth; }
 }
 $("chips").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b || !current) return;
+  if (b.dataset.l === OTHER) { openOther(); return; }
   S.label = b.dataset.l; current.label = S.label; save(); renderChips();
 });
+/* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
+function openOther() {
+  hideRetake(); $("noteBar").hidden = true;
+  $("inOther").value = ""; $("otherBar").hidden = false; $("inOther").focus();
+}
+function useOther() {
+  const t = $("inOther").value.replace(/\s+/g, " ").trim();
+  $("otherBar").hidden = true; $("inOther").blur();
+  if (!t || !current) return;
+  const j = curJob(), match = shotList(j).find(l => l !== OTHER && l.toLowerCase() === t.toLowerCase());
+  if (match) S.label = match;
+  else { j.custom = [...(j.custom || []), t]; S.label = t; }
+  current.label = S.label; save(); renderChips();
+  toast(`Label set: <b>${esc(S.label)}</b>`);
+}
+$("otherDone").addEventListener("click", useOther);
+$("otherCancel").addEventListener("click", () => { $("otherBar").hidden = true; $("inOther").blur(); });
+$("inOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); useOther(); } });
 function refreshDeck() {
   const ps = curPhotos().sort((a, b) => b.created - a.created), und = ps.filter(p => !p.downloaded).length;
   $("galBtn").style.backgroundImage = ps[0] ? `url(${thumbURL(ps[0])})` : "";
@@ -1246,7 +1290,7 @@ $("inRefEdit").addEventListener("change", () => {
   const r = normRef($("inRefEdit").value);
   $("inRefEdit").value = r; curJob().ref = r; save(); renderAll();
 });
-function missingShots() { const c = countLabels(); return shotList(curJob()).filter(l => l !== OTHER && !c[l]); }
+function missingShots() { const c = countLabels(); return baseShots(curJob()).filter(l => !c[l]); }
 $("finishBtn").addEventListener("click", () => {
   const und = curPhotos().filter(p => !p.downloaded).length, miss = missingShots(), msgs = [];
   if (miss.length) msgs.push(`<p><b>No photo yet for:</b> ${miss.map(esc).join(", ")}.</p>`);

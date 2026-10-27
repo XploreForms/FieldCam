@@ -1,4 +1,4 @@
-# Xplore Field Cam (v1.8.1)
+# Xplore Field Cam (v1.9.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -45,11 +45,12 @@ Names are built at download time, so they reflect the SA-# and job type as last 
 ## Editing the photo labels
 Near the top of the script in `index.html`: `SHOTS` (completed work, per platform and work
 order type) and `SHOTS_CANNOT_COMPLETE` (reschedules, per platform) and `SHOTS_NOT_REQUIRED` (e.g. no LOS, per platform). "Other" is always
-added. Current lists are placeholders.
+added: tapping it asks what the photo is of, and that text becomes the label (stamp and file
+name). Custom labels stay in the row for the rest of the job once they have a photo. Current lists are placeholders.
 
 ## Photo checks
-- **POV level lock:** for any label with "POV" in it, the shutter turns amber and won't fire unless
-  tilt is within ±3°. Press and hold the shutter (0.8 s) to take it anyway; the stamp then
+- **POV / LOS level lock:** only for labels with "POV" or "LOS" in the name (Radio POV, Dish POV,
+  LOS Attempt POV, Sky View POV). The shutter turns amber and won't fire unless tilt is within ±3°. Press and hold the shutter (0.8 s) to take it anyway; the stamp then
   says `(not level)`.
 - **Blurry / dark warning:** after each shot the app checks sharpness and brightness and offers
   Retake or Keep. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
@@ -58,11 +59,14 @@ added. Current lists are placeholders.
 - **Missing shots:** Finish job lists labels with no photo yet and photos not downloaded.
 
 ## Tilt
-The big readout at the top is camera tilt above/below the horizon (+ = aimed up). Within ±3°
-it turns green and says LEVEL; the moving horizon line lines up with the side marks. Tilt is
-stamped on every photo, e.g. `Tilt +0.4° (level)`. Skew (sideways roll) is shown small.
+On POV / LOS labels the top readout shows tilt large (+ = aimed up), turns green with LEVEL ✓
+within ±3°, and a horizon line lines up with the side marks. The stamp says `(level)` or
+`(not level)`. On every other label the tilt is just a small number and the stamp records the
+value only. Skew (sideways roll) is shown small.
 
 ## Notes
+- Tilt, skew and the horizon line redraw every screen frame (about 60 times a second); GPS and
+  address text update twice a second.
 - Rear camera only; never falls back to the selfie camera.
 - Zoom: .5× / Tele use the real lenses where the iPhone exposes them; 2× / 3× / pinch crop.
 - Compass is magnetic north (about 10° off true north in Southern Ontario).
