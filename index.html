@@ -69,7 +69,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 #hTilt{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 #hLevel{font:normal 700 10.5px var(--sans);letter-spacing:.08em;padding:3px 7px;border-radius:6px;background:rgba(234,242,238,.16);text-shadow:none}
 .hud.lvl #hTilt{color:var(--signal)}
-.hud.free .zerodot,.hud.free .horizon,.hud.free #hLevel{display:none}
+.hud.free .zerodot,.hud.free #hLevel{display:none}
 .hud.free #hTilt{font-size:17px;font-weight:600}
 .hud.free .tiltbox{padding:5px 12px}
 .hud.lvl #hLevel{background:var(--signal);color:var(--ink)}
@@ -77,17 +77,13 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .tiltbox .sub{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:.02em}
 /* 0° dot: where the horizon (zero tilt) sits in the frame. Line it up with the centre ring to shoot level. */
 .zerodot{position:absolute;left:50%;top:50%;width:0;height:0;transition:opacity .2s}
-.zerodot i{position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 8px rgba(0,0,0,.5)}
-.zerodot span{position:absolute;left:13px;top:-9px;font-size:12px;font-weight:700;white-space:nowrap}
-.hud.near .zerodot i{background:var(--warn)}
-.hud.lvl .zerodot i{background:var(--signal)}
+.zerodot i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.92);box-shadow:0 0 0 .5px rgba(0,0,0,.5),inset 0 0 0 .5px rgba(0,0,0,.35)}
+.zerodot i::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgba(255,255,255,.95)}
+.zerodot span{position:absolute;left:11px;top:-7px;font:600 10.5px var(--sans);color:rgba(255,255,255,.9);white-space:nowrap}
+.hud.lvl .zerodot i{border-color:var(--signal)}
+.hud.lvl .zerodot i::after{background:var(--signal)}
 .hud.lvl .zerodot span{color:var(--signal)}
-.horizon{position:absolute;left:50%;top:50%;width:74%;height:0;transition:opacity .2s}
-.horizon i{position:absolute;left:0;right:0;top:-1px;height:2px;background:rgba(255,255,255,.85);box-shadow:0 0 3px rgba(0,0,0,.7)}
-.hud.near .horizon i{background:var(--warn)}
-.hud.lvl .horizon i{background:var(--signal)}
-.horizon{opacity:.55}
-.reticle{position:absolute;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border:2px solid rgba(255,255,255,.8);border-radius:50%}
+.reticle{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%}
 .hud.lvl .reticle{border-color:var(--signal)}
 .live{position:absolute;left:10px;bottom:10px;right:64px;font-size:11.5px;line-height:1.45;color:rgba(234,242,238,.92)}
 .live div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -256,7 +252,6 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
       <div class="zerodot" id="zeroDot"><i></i><span>0°</span></div>
-      <div class="horizon" id="horizon"><i></i></div>
       <div class="reticle"></div>
       <div class="tiltbox"><div class="tiltval"><span id="hTilt">—</span><em id="hLevel">TILT</em></div><div class="sub" id="hHead">—</div></div>
       <div class="zoomread" id="zoomRead">1×</div>
@@ -316,7 +311,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.5.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.6.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -373,13 +368,13 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.5.0";
+const VERSION = "2.6.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /* ================= JOB WORKFLOWS (from the JotForm job forms) =================
    Each workflow = one job form. Its "shots" are that form's Pictures Checklist, in order.
-   level: photos that must be shot along the horizon (±3°, hold shutter to override).
+   level: line-of-sight photos: show the 0° dot and stamp it into the photo.
    multi: photos where several shots are normal (the app won't auto-advance after the first).
    "Other" is always added; it asks the tech what the photo is of. */
 const JOB_TYPES = [ { id:"INS", name:"Install" }, { id:"CON", name:"Conversion" }, { id:"REP", name:"Repair" } ];
@@ -473,7 +468,7 @@ const kb = b => b < 1024 * 1024 ? Math.round(b / 1024) + " KB" : (b / 1048576).t
 const pad = n => String(n).padStart(2, "0");
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const LEVEL_TOL = 3;   // degrees either side of the horizon that count as "level"
-// Labels that get the full tilt check (big readout, horizon line, level lock): radio/dish POV and LOS shots.
+// Labels that get the full tilt check (big readout, 0° dot): radio/dish POV and LOS shots.
 // Every other label just shows a small tilt number.
 const isPOV = l => isLevelShot(l);
 // One photo can cover several checklist items: tap a second label to add it to the selection.
@@ -739,7 +734,7 @@ window.addEventListener("online", maybeGeocode);
 
 /* ================= HUD ================= */
 const gpsFresh = () => S.pos && Date.now() - S.posAt < 60000;
-// Fast loop (every screen frame): tilt, level badge, horizon line, skew, compass. Only touches the DOM when a value changes.
+// Fast loop (every screen frame): tilt, level badge, 0° dot, skew, compass. Only touches the DOM when a value changes.
 // Slow loop (twice a second): GPS chip and the time / coordinates / address text.
 let vfH = 0;
 const measureVf = () => { vfH = vfEl.clientHeight; };
@@ -748,15 +743,17 @@ window.addEventListener("orientationchange", () => setTimeout(measureVf, 300));
 const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
 const hudEls = {};
 let lastHz = "", lastHzOn = null;
-// Pixels from screen centre to the horizon for a given tilt. iPhone main camera: about 69° across the
-// long side of the 4:3 frame and 54° across the short side; zoom and lens change that.
+// Where 0° tilt (the horizon) sits relative to the image centre. iPhone main camera: about 69° across
+// the long side of the 4:3 frame and 54° across the short side; zoom and lens narrow that.
+const zoomFactor = () => curZoom() * (S.lens === "ultra" ? 0.5 : S.lens === "tele" ? 3 : 1);
+function zeroOffset(p, imgW, imgH, zf) {
+  const fov = rad(imgH >= imgW ? 69 : 54);
+  return (imgH / 2) * Math.tan(rad(p)) / (Math.tan(fov / 2) / zf);
+}
 function horizonOffset(p) {
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, W = vfEl.clientWidth, H = vfH;
-  const dispH = W / H > vw / vh ? H : W * vh / vw;               // height of the visible camera image
-  const fov = (vh >= vw ? 69 : 54) * Math.PI / 180;               // vertical field of view at 1×
-  const lens = S.lens === "ultra" ? 0.5 : S.lens === "tele" ? 3 : 1;
-  const y = (dispH / 2) * Math.tan(rad(p)) / (Math.tan(fov / 2) / (curZoom() * lens));
-  return clamp(y, -H * 0.44, H * 0.44);
+  const dispH = W / H > vw / vh ? H : W * vh / vw, dispW = dispH * vw / vh;   // visible camera image
+  return clamp(zeroOffset(p, dispW, dispH, zoomFactor()), -H * 0.44, H * 0.44);
 }
 function fastTick() {
   const E = hudEls, p = S.pitch, strict = selStrict();
@@ -764,17 +761,16 @@ function fastTick() {
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
   if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
   else { setText(E.tilt, fmtTilt(p)); setText(E.level, Math.abs(p) <= LEVEL_TOL ? "LEVEL ✓" : p > 0 ? "AIM LOWER" : "AIM HIGHER"); }
-  // 0° dot + faint horizon line: where zero tilt sits in the frame, from the camera's field of view.
+  // 0° dot: where zero tilt sits in the frame, from the camera's field of view
   const on = strict && p != null && Math.abs(p) <= 40;
-  if (on !== lastHzOn) { E.hz.style.opacity = on ? "" : 0; E.dot.style.opacity = on ? 1 : 0; lastHzOn = on; }
+  if (on !== lastHzOn) { E.dot.style.opacity = on ? 1 : 0; lastHzOn = on; }
   if (on) {
     if (!vfH) measureVf();
     const y = horizonOffset(p), r = rad(-(S.levelDev || 0));
     const t = `${(-y * Math.sin(r)).toFixed(1)}|${(y * Math.cos(r)).toFixed(1)}|${(-(S.levelDev || 0)).toFixed(1)}`;
     if (t !== lastHz) {
-      const [dx, dy, rot] = t.split("|");
+      const [dx, dy] = t.split("|");
       E.dot.style.transform = `translate(${dx}px,${dy}px)`;
-      E.hz.style.transform = `translate(calc(-50% + ${dx}px),${dy - 1}px) rotate(${rot}deg)`;
       lastHz = t;
     }
   }
@@ -794,7 +790,7 @@ function slowTick() {
   setTimeout(slowTick, 500);
 }
 function hudTick() {
-  Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), hz:$("horizon"), dot:$("zeroDot"), head:$("hHead"), shutter:$("shutter") });
+  Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), dot:$("zeroDot"), head:$("hHead"), shutter:$("shutter") });
   measureVf(); fastTick(); slowTick();
 }
 
@@ -805,7 +801,7 @@ function snapshot(extra = {}) {
     when:new Date(), pos:gpsFresh() ? { ...S.pos } : null,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
     heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), note:S.note || "",
-    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), imported:false
+    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), skew:S.levelDev || 0, imported:false
   }, extra);
 }
 function stampLines(m, live = false) {
@@ -894,6 +890,23 @@ function quality(src) {
   const mean = sum / (w * h), sharp = s2 / n - (s1 / n) ** 2;
   return { mean:Math.round(mean), sharp:Math.round(sharp), dark:mean < DARK_MAX, blurry:mean >= DARK_MAX && sharp < BLUR_MIN };
 }
+// Small, crisp 0° marker drawn into the photo at the horizon position (line-of-sight shots only).
+function drawZeroDot(c, m) {
+  const W = c.width, H = c.height, x = c.getContext("2d");
+  const y = zeroOffset(m.pitch, W, H, m.zf || 1), r = rad(-(m.skew || 0));
+  const cx = W / 2 - y * Math.sin(r), cy = H / 2 + y * Math.cos(r);
+  const R = Math.max(7, Math.round(Math.min(W, H) * 0.009));
+  if (cy < R * 2 || cy > H - R * 2 || cx < R * 2 || cx > W - R * 2) return;   // horizon outside the frame: stamp has the tilt
+  x.save();
+  x.lineWidth = Math.max(1.5, R * 0.2);
+  x.strokeStyle = "rgba(0,0,0,0.45)"; x.beginPath(); x.arc(cx, cy, R + x.lineWidth * 0.75, 0, Math.PI * 2); x.stroke();
+  x.strokeStyle = "rgba(255,255,255,0.9)"; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = "rgba(255,255,255,0.95)"; x.beginPath(); x.arc(cx, cy, Math.max(1.2, R * 0.22), 0, Math.PI * 2); x.fill();
+  x.font = `600 ${Math.round(R * 1.25)}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
+  x.textBaseline = "middle"; x.lineWidth = Math.max(2, R * 0.28); x.strokeStyle = "rgba(0,0,0,0.5)";
+  x.strokeText("0°", cx + R * 1.7, cy); x.fillStyle = "rgba(255,255,255,0.92)"; x.fillText("0°", cx + R * 1.7, cy);
+  x.restore();
+}
 async function processFrame(src, crop, rotation, meta) {
   const { sx, sy, cw, ch } = crop;
   const full = canvas(cw, ch); full.getContext("2d").drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
@@ -902,6 +915,7 @@ async function processFrame(src, crop, rotation, meta) {
   full.width = full.height = 0;
   c = rotate(c, rotation);
   const qc = quality(c);
+  if (meta.level && meta.pitch != null && !meta.imported) drawZeroDot(c, meta);
   drawStamp(c, stampLines(meta));
   const enc = await encodeToTarget(c, OUTPUT.target);
   let blob = enc.blob;

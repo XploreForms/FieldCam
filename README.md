@@ -1,4 +1,4 @@
-# Field Cam (v2.5.0)
+# Field Cam (v2.6.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -75,8 +75,9 @@ once they have a photo.
 ## Photo checks
 - **Level guide (no lock):** on Fixed Wireless "CPE Line of Sight" and "Line of sight POVs to all
   viable towers" a **0° dot** shows where the horizon sits in the frame. Put the dot in the centre
-  ring to shoot level; it turns green within ±3°. The shutter always works, and the stamp records
-  the real tilt with `(level)` or `(not level)`. Satellite LOS photos have no guide (dishes aim at
+  ring to shoot level; it turns green within ±3°. The shutter always works. The same 0° marker is
+  drawn into the saved photo at the horizon position (small ring, full resolution), and the stamp
+  records the real tilt with `(level)` or `(not level)`. Satellite LOS photos have no guide (dishes aim at
   the sky).
 - **Blurry / dark warning:** after each shot the app checks sharpness and brightness and offers
   Retake or Keep. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
@@ -86,7 +87,7 @@ once they have a photo.
 
 ## Tilt
 On level-guided photos the top readout shows tilt large (+ = aimed up) with LEVEL ✓ / AIM LOWER /
-AIM HIGHER, and the 0° dot plus a faint horizon line (which also shows skew) move with the phone.
+AIM HIGHER, and the 0° dot moves with the phone (skew is shown as a number).
 The dot's position uses the iPhone camera's field of view and the current zoom/lens. On every
 other label the tilt is just a small number and the stamp records the value only.
 
@@ -95,7 +96,7 @@ other label the tilt is just a small number and the stamp records the value only
   Store apps. Motion & Orientation is asked on every launch (Apple rule); camera and location are
   usually asked once per launch. Setting Settings › Apps › Safari › Camera and Location to
   **Allow** can reduce the prompts.
-- Tilt, skew and the horizon line redraw every screen frame (about 60 times a second); GPS and
+- Tilt, skew and the 0° dot redraw every screen frame (about 60 times a second); GPS and
   address text update twice a second.
 - Rear camera only; never falls back to the selfie camera.
 - Zoom: .5× / Tele use the real lenses where the iPhone exposes them; 2× / 3× / pinch crop.
