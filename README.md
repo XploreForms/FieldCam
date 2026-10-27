@@ -1,4 +1,4 @@
-# Field Cam (v2.4.0)
+# Field Cam (v2.5.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -67,16 +67,17 @@ Pictures Checklist copied from the form:
 | Cannot Complete | One form for all jobs (platform chosen for the file name) | Form has no checklist; optional "House (customer no-show)" |
 | Not Required | Fixed Wireless: Signal Requirements Not Met, Stop Sell Area, Not in Coverage Area, NLOS. Satellite NLOS. Unrelated to Signal (any job) | FW: LOS POVs to all viable towers, Testing locations, Overall structure (+ eCoverage screenshot for Not in Coverage). Sat: LOS POVs, Testing locations, Overall structure. Unrelated: none |
 
-When a form changes, edit its `shots` list. `level` marks photos that must be shot level;
+When a form changes, edit its `shots` list. `level` marks photos that get the 0° level guide;
 `MULTI` marks items where several photos are normal. "Other" is always added: tapping it asks
 what the photo is of, and that text becomes the label. Custom labels stay for the rest of the job
 once they have a photo.
 
 ## Photo checks
-- **Level lock:** Fixed Wireless "CPE Line of Sight" and "Line of sight POVs to all viable towers"
-  only (satellite dishes aim at the sky, so no lock there). The shutter turns amber and won't
-  fire unless tilt is within ±3°. Press and hold the shutter (0.8 s) to take it anyway; the stamp then
-  says `(not level)`.
+- **Level guide (no lock):** on Fixed Wireless "CPE Line of Sight" and "Line of sight POVs to all
+  viable towers" a **0° dot** shows where the horizon sits in the frame. Put the dot in the centre
+  ring to shoot level; it turns green within ±3°. The shutter always works, and the stamp records
+  the real tilt with `(level)` or `(not level)`. Satellite LOS photos have no guide (dishes aim at
+  the sky).
 - **Blurry / dark warning:** after each shot the app checks sharpness and brightness and offers
   Retake or Keep. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
   adjust after field use if it warns too often or not enough.
@@ -84,10 +85,10 @@ once they have a photo.
 - **Missing shots:** Finish job lists labels with no photo yet and photos not downloaded.
 
 ## Tilt
-On level-locked photos the top readout shows tilt large (+ = aimed up), turns green with LEVEL ✓
-within ±3°, and a horizon line lines up with the side marks. The stamp says `(level)` or
-`(not level)`. On every other label the tilt is just a small number and the stamp records the
-value only. Skew (sideways roll) is shown small.
+On level-guided photos the top readout shows tilt large (+ = aimed up) with LEVEL ✓ / AIM LOWER /
+AIM HIGHER, and the 0° dot plus a faint horizon line (which also shows skew) move with the phone.
+The dot's position uses the iPhone camera's field of view and the current zoom/lens. On every
+other label the tilt is just a small number and the stamp records the value only.
 
 ## Notes
 - **Permission prompts on iPhone:** home-screen web apps don't get permanent permissions like App
