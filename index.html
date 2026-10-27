@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>Xplore Field Cam</title>
+<title>Field Cam</title>
 <meta name="theme-color" content="#0A1211">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -48,6 +48,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .jobpill{flex:1;min-width:0;justify-content:flex-start;gap:10px}
 .jobpill b{font-weight:650;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .jobpill span{font:600 12px var(--mono);color:var(--accent);flex:none}
+.jobpill .chev{font-style:normal;color:var(--muted);font-size:12px;flex:none;margin-left:-4px}
 .gps{font-family:var(--mono);font-size:13px;padding:0 12px;flex:none}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--bad);flex:none}
 .gps.ok .dot{background:var(--signal);box-shadow:0 0 8px var(--signal)}
@@ -111,12 +112,21 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .notebar .btn{min-height:40px;padding:0 12px}
 .live .note{color:var(--accent);font-weight:600}
 
+.guide{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));font-size:13.5px;color:var(--muted);min-height:32px}
+.guide span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.guide b{color:var(--fg)}
+.guide .btn{flex:none;white-space:nowrap}
+.guide.done span{color:var(--accent)}
+
 /* bottom deck */
-.deck{padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 12px);display:grid;gap:10px;background:var(--ink)}
+.deck{padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 12px);display:grid;grid-template-columns:minmax(0,1fr);gap:10px;background:var(--ink)}
+.deck>*{min-width:0}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));scrollbar-width:none;scroll-padding-inline:12px}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;background:var(--ink-3);font-size:14px;color:var(--muted)}
 .chip.done{color:var(--fg)}
+.chip.multi{border:1px dashed var(--muted);background:transparent;color:var(--fg)}
+.chip.multi[aria-pressed="true"]{border:1px solid var(--accent);background:var(--brand);color:var(--accent)}
 .chip .c{min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--brand);color:var(--accent);font:700 11px/19px var(--mono);text-align:center}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--ink);font-weight:600}
 .chip[aria-pressed="true"] .c{background:var(--ink);color:var(--accent)}
@@ -164,6 +174,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 /* job picker */
 .picker{display:grid;gap:14px}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--ink-3);padding:4px;border-radius:12px}
+.seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .seg button{padding:9px 4px;border-radius:9px;text-align:center;color:var(--fg);min-height:44px}
 .seg button b{display:block;font-size:14px;line-height:1.2}
 .seg button span{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.2}
@@ -230,7 +241,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <div id="app">
   <div class="top">
-    <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b id="jobTxt">No job</b><span id="jobProg"></span></button>
+    <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b id="jobTxt">No job</b><span id="jobProg"></span><i class="chev" aria-hidden="true">▾</i></button>
     <div class="pill gps" id="gpsChip"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
     <button class="iconbtn" id="setBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
@@ -259,6 +270,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
   </div>
 
   <div class="deck">
+    <div class="guide" id="guide"><span id="guideTxt"></span><button class="btn sm" id="guideNext">Next ›</button></div>
     <div class="chips" id="chips" role="group" aria-label="Photo label"></div>
     <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
     <div class="row">
@@ -280,7 +292,11 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inRefEdit">Account ID or SA-# <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
     <div class="picker" id="sheetPicker"></div>
     <p class="hint" id="jobEditHint"></p>
-    <button class="btn" id="finishBtn">Finish job and start a new one</button>
+    <div class="btnrow"><button class="btn primary" id="finishBtn">Start a new job</button><button class="btn danger" id="cancelJobBtn">Cancel this job</button></div>
+    <div class="warnbox" id="cancelConfirm" hidden>
+      <p id="cancelMsg"></p>
+      <div class="btnrow"><button class="btn danger" id="cancelYes">Delete and start over</button><button class="btn" id="cancelNo">Keep this job</button></div>
+    </div>
     <div class="warnbox" id="finishConfirm" hidden>
       <div id="finishMsg" style="display:grid;gap:6px"></div>
       <div class="btnrow"><button class="btn primary" id="finishDl">Download, then finish</button><button class="btn" id="finishKeep">Keep shooting</button><button class="btn" id="finishYes">Finish anyway</button></div>
@@ -295,7 +311,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v1.9.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.3.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -352,68 +368,68 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "1.9.0";
+const VERSION = "2.3.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-/* ================= JOB TYPES AND SHOT LISTS =================
-   Placeholders: edit these lists freely. "Other" is always added at the end.
-   Labels appear on the photo stamp and in the file name. */
-const PLATFORMS = [
-  { id:"FW",  name:"Fixed Wireless", code:"FW" },
-  { id:"FIB", name:"Fibre",          code:"Fibre" },
-  { id:"SAT", name:"Satellite",      code:"Sat" }
-];
-const WORK = [
-  { id:"INS", name:"Install",    code:"Install" },
-  { id:"CON", name:"Conversion", code:"Conversion" },
-  { id:"REP", name:"Repair",     code:"Repair" }
-];
+/* ================= JOB WORKFLOWS (from the JotForm job forms) =================
+   Each workflow = one job form. Its "shots" are that form's Pictures Checklist, in order.
+   level: photos that must be shot along the horizon (±3°, hold shutter to override).
+   multi: photos where several shots are normal (the app won't auto-advance after the first).
+   "Other" is always added; it asks the tech what the photo is of. */
+const JOB_TYPES = [ { id:"INS", name:"Install" }, { id:"CON", name:"Conversion" }, { id:"REP", name:"Repair" } ];
 const OUTCOMES = [
-  { id:"OK", name:"Complete",        sub:"Work done",        code:"Complete",       short:"Complete" },
-  { id:"CC", name:"Cannot Complete", sub:"Reschedule",       code:"CannotComplete", short:"Can’t complete" },
-  { id:"NR", name:"Not Required",    sub:"e.g. no LOS",      code:"NotRequired",    short:"Not required" }
+  { id:"OK", name:"Complete",        sub:"Work done",  code:"Complete" },
+  { id:"CC", name:"Cannot Complete", sub:"Reschedule", code:"CannotComplete" },
+  { id:"NR", name:"Not Required",    sub:"e.g. NLOS",  code:"NotRequired" }
 ];
-// Shots for completed work: SHOTS[platform][work order type]
-const SHOTS = {
-  FW: {
-    INS: ["Radio POV","Mount","Radio Install","Grounding","Cable Entry","Cabling","Indoor Equipment","Signal Reading","Speed Test","Site Overview"],
-    CON: ["Old Equipment","Radio POV","Mount","Radio Install","Grounding","Cabling","Indoor Equipment","Signal Reading","Speed Test"],
-    REP: ["Issue Found","Radio POV","Mount","Cabling","Grounding","Repair Done","Signal Reading","Speed Test"]
-  },
-  FIB: {
-    INS: ["Fibre Drop","NID / Demarc","Cable Entry","ONT Location","Cabling","Light Level","Router","Speed Test","Site Overview"],
-    CON: ["Old Equipment","Fibre Drop","NID / Demarc","ONT Location","Light Level","Router","Speed Test"],
-    REP: ["Issue Found","Fibre Drop","NID / Demarc","ONT","Light Level","Repair Done","Speed Test"]
-  },
-  SAT: {
-    INS: ["Dish POV","Mount","Dish Install","Grounding","Cable Entry","Cabling","Modem","Signal Reading","Speed Test","Site Overview"],
-    CON: ["Old Equipment","Dish POV","Mount","Dish Install","Grounding","Cabling","Modem","Signal Reading","Speed Test"],
-    REP: ["Issue Found","Dish POV","Mount","Cabling","Grounding","Repair Done","Signal Reading","Speed Test"]
-  }
-};
-// Cannot Complete (reschedule): by platform
-const SHOTS_CANNOT_COMPLETE = {
-  FW:  ["Site Overview","Work Done So Far","Reason"],
-  FIB: ["Site Overview","Work Done So Far","Reason"],
-  SAT: ["Site Overview","Work Done So Far","Reason"]
-};
-// Not Required (e.g. no line of sight): by platform
-const SHOTS_NOT_REQUIRED = {
-  FW:  ["Site Overview","LOS Attempt POV","Obstruction","Proposed Mount","Reason"],
-  FIB: ["Site Overview","Drop / Access Issue","Proposed Entry","Reason"],
-  SAT: ["Site Overview","Sky View POV","Obstruction","Proposed Mount","Reason"]
-};
+const FIBRE_EXISTING = ["Total install overview","NID with door open","Fibre patch cable run","Cable entrypoint","Indoor cable run","ONT placement","Router placement","Light level measurement"];
+const FIBRE_DROP = ["MPT","Drop route","Drop attachment point (aerial)", ...FIBRE_EXISTING];
+const FW_SAT = ["Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Cable Run","Indoor Equipment","Equipment SNs","Signal Page"];
+const FW_NOT_REQ = ["Line of sight POVs to all viable towers","Testing locations","Overall structure"];
+const ALL_JOBS = ["INS","CON","REP"];
+const WORKFLOWS = [
+  // Complete: forms 02–14
+  { work:["INS","CON"], outcome:"OK", opt:"Fibre (Existing Drop)", code:"Fibre-ExistingDrop", shots:FIBRE_EXISTING },
+  { work:["INS","CON"], outcome:"OK", opt:"Fibre (Drop Required)", code:"Fibre-DropRequired", shots:FIBRE_DROP },
+  { work:["INS","CON"], outcome:"OK", opt:"Fixed Wireless", code:"FW", shots:FW_SAT, level:["CPE Line of Sight"] },
+  { work:["INS","CON"], outcome:"OK", opt:"Satellite", code:"Sat", shots:FW_SAT },
+  { work:["INS"],       outcome:"OK", opt:"VAS", code:"VAS", shots:["Indoor Cable Run","Indoor Equipment","Equipment SNs"] },
+  { work:["REP"], outcome:"OK", opt:"Fibre", code:"Fibre", shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","Fibre patch cable run","Cable entry point","Light level at ONT"] },
+  { work:["REP"], outcome:"OK", opt:"Fixed Wireless", code:"FW", level:["CPE Line of Sight"],
+    shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Equipment"] },
+  { work:["REP"], outcome:"OK", opt:"Satellite", code:"Sat",
+    shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","Line of Sight","System and Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Equipment"] },
+  { work:["REP"], outcome:"OK", opt:"VAS", code:"VAS", shots:["Issue found","Issue after repair","Indoor cable run","Indoor equipment","Equipment SNs"] },
+  // Cannot Complete: form 15 has no pictures checklist; its no-show steps include a photo of the house
+  ...["Fibre","Fixed Wireless","Satellite","VAS"].map(o => ({ work:ALL_JOBS, outcome:"CC", opt:o, code:{ "Fibre":"Fibre", "Fixed Wireless":"FW", "Satellite":"Sat", "VAS":"VAS" }[o], shots:[], optional:["House (customer no-show)"] })),
+  // Not Required: forms 16.1–16.4 (Fixed Wireless), 17 (Satellite), 18 (unrelated to signal, no pictures checklist)
+  { work:["INS","CON"], outcome:"NR", opt:"Signal Requirements Not Met", sub:"Fixed Wireless", code:"FW-SignalNotMet", shots:FW_NOT_REQ, level:[FW_NOT_REQ[0]] },
+  { work:["INS","CON"], outcome:"NR", opt:"Stop Sell Area", sub:"Fixed Wireless", code:"FW-StopSell", shots:FW_NOT_REQ, level:[FW_NOT_REQ[0]] },
+  { work:["INS","CON"], outcome:"NR", opt:"Not in Coverage Area", sub:"Fixed Wireless", code:"FW-NotInCoverage", shots:[...FW_NOT_REQ, "Screenshot of eCoverage showing customer outside of coverage"], level:[FW_NOT_REQ[0]] },
+  { work:["INS","CON"], outcome:"NR", opt:"NLOS", sub:"Fixed Wireless", code:"FW-NLOS", shots:FW_NOT_REQ, level:[FW_NOT_REQ[0]] },
+  { work:["INS","CON"], outcome:"NR", opt:"Satellite NLOS", sub:"Satellite", code:"Sat-NLOS", shots:["Line of sight POVs","Testing locations","Overall structure"] },
+  { work:ALL_JOBS, outcome:"NR", opt:"Unrelated to Signal", sub:"No pictures checklist", code:"Unrelated", shots:[] }
+];
+const MULTI = /POVs|locations|SNs|Issue/i;
 const OTHER = "Other";
 const byId = (arr, id) => arr.find(x => x.id === id) || {};
-// The labels this job expects (used for progress and the missing-shot check)
-function baseShots(j) {
-  if (!j) return [];
-  return j.outcome === "OK" ? ((SHOTS[j.plat] || {})[j.work] || [])
-    : j.outcome === "NR" ? (SHOTS_NOT_REQUIRED[j.plat] || []) : (SHOTS_CANNOT_COMPLETE[j.plat] || []);
+const wfOptions = (work, outcome) => WORKFLOWS.filter(w => w.outcome === outcome && w.work.includes(work));
+const wfFor = j => j ? WORKFLOWS.find(w => w.outcome === j.outcome && w.work.includes(j.work) && w.opt === j.opt) || null : null;
+function baseShots(j) { const w = wfFor(j); return w ? w.shots : []; }                 // required: progress + missing-shot check
+function shotList(j) { const w = wfFor(j); return [...baseShots(j), ...((w && w.optional) || []), ...((j && j.custom) || []), OTHER]; }
+const isLevelShot = (label, j = curJob()) => !!((wfFor(j) || {}).level || []).includes(label);
+// Human titles
+function jobTitle(j) {   // e.g. "Install · Fixed Wireless · Complete" / "Install · Not Required · Fixed Wireless NLOS"
+  const w = wfFor(j); if (!w) return "Earlier job";
+  const work = byId(JOB_TYPES, j.work).name;
+  return w.outcome === "NR" ? `${work} · Not Required · ${w.sub && w.sub !== "No pictures checklist" && !w.opt.startsWith(w.sub) ? w.sub + " " : ""}${w.opt}` : `${work} · ${w.opt} · ${byId(OUTCOMES, w.outcome).name}`;
 }
-// What the label row shows: expected labels, then the tech's own "Other" labels, then Other
-function shotList(j) { return [...baseShots(j), ...((j && j.custom) || []), OTHER]; }
+function jobCode(j) {    // file-name part, platform-work order-outcome, e.g. FW-Install-Complete, Sat-Repair-CannotComplete
+  const w = wfFor(j); if (!w) return "Photo";
+  const plat = { FW:"FW", Sat:"Sat", Fibre:"Fibre", VAS:"VAS" }[w.code.split("-")[0]] || "";
+  return [plat, byId(JOB_TYPES, j.work).name, byId(OUTCOMES, w.outcome).code].filter(Boolean).join("-");
+}
 // "sa 0123" -> "SA-0123"; anything else upper-cased with only letters, digits and dashes
 function normRef(v) {
   v = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
@@ -421,15 +437,15 @@ function normRef(v) {
   return m ? "SA-" + m[1] : v.replace(/[^A-Z0-9-]/g, "");
 }
 const refLabel = r => !r ? "" : /^SA-/.test(r) ? r : "Account " + r;
-const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${byId(PLATFORMS, j.plat).code} · ${byId(WORK, j.work).name} · ${byId(OUTCOMES, j.outcome).name}` : "";
+const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${jobTitle(j)}` : "";
 
 /* ================= stored state ================= */
 function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch { return d; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 let settings = Object.assign({ name:"" }, load("fieldcam.settings", {}));
-let jobs = load("fieldcam.jobs", {});          // job id -> { plat, work, outcome, started }
+let jobs = load("fieldcam.jobs", {});          // job id -> { work, outcome, opt, ref, started, custom }
 let current = load("fieldcam.current", null);
-for (const j of Object.values(jobs)) { if (j.outcome === "RS") j.outcome = "CC"; if (j.outcome === "NP") j.outcome = "NR"; }   // outcomes from earlier versions  // { id, label } of the job in progress
+
 function save() { store("fieldcam.settings", settings); store("fieldcam.jobs", jobs); store("fieldcam.current", current); }
 const curJob = () => current && jobs[current.id] ? jobs[current.id] : null;
 
@@ -454,8 +470,13 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const LEVEL_TOL = 3;   // degrees either side of the horizon that count as "level"
 // Labels that get the full tilt check (big readout, horizon line, level lock): radio/dish POV and LOS shots.
 // Every other label just shows a small tilt number.
-const isPOV = l => /\bPOV\b|\bLOS\b/i.test(l || "");
-const povBlocked = () => isPOV(S.label) && S.pitch != null && Math.abs(S.pitch) > LEVEL_TOL;
+const isPOV = l => isLevelShot(l);
+// One photo can cover several checklist items: "Multiple" mode selects more than one label for the next shot.
+const selLabels = () => S.multi && S.multi.length ? S.multi : [S.label || OTHER];
+const labelsOf = p => p.labels && p.labels.length ? p.labels : [p.label || "Photo"];
+const labelText = ls => ls.join(" + ");
+const selStrict = () => selLabels().some(isPOV);
+const povBlocked = () => selStrict() && S.pitch != null && Math.abs(S.pitch) > LEVEL_TOL;
 const BLUR_MIN = 60, DARK_MAX = 40;   // photo check thresholds (see quality())
 function fmtTilt(p) { const v = Math.round(p * 10) / 10; return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "°"; }
 function tzAbbr(d) { try { return new Intl.DateTimeFormat("en-CA", { timeZoneName:"short" }).formatToParts(d).find(p => p.type === "timeZoneName").value; } catch { return ""; } }
@@ -722,7 +743,7 @@ const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
 const hudEls = {};
 let lastHz = "", lastHzOn = null;
 function fastTick() {
-  const E = hudEls, p = S.pitch, strict = isPOV(S.label);
+  const E = hudEls, p = S.pitch, strict = selStrict();
   const lvl = strict && p != null && Math.abs(p) <= LEVEL_TOL, near = strict && p != null && !lvl;
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
   if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
@@ -761,15 +782,15 @@ function snapshot(extra = {}) {
   return Object.assign({
     when:new Date(), pos:gpsFresh() ? { ...S.pos } : null,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
-    heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), label:S.label || OTHER, note:S.note || "",
-    job:j ? { plat:j.plat, work:j.work, outcome:j.outcome, ref:j.ref || "" } : null, imported:false
+    heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), note:S.note || "",
+    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), imported:false
   }, extra);
 }
 function stampLines(m, live = false) {
   const L = [];
   if (!live) {
-    L.push({ t:m.label || "Photo", strong:true });
-    if (m.job) L.push({ t:[refLabel(m.job.ref), byId(PLATFORMS, m.job.plat).name, byId(WORK, m.job.work).name].filter(Boolean).join(" · ") });
+    for (const l of (m.labels || [m.label || "Photo"])) L.push({ t:l, strong:true });
+    if (m.job) L.push({ t:[refLabel(m.job.ref), jobTitle(m.job)].filter(Boolean).join(" · ") });
     if (m.note) L.push({ t:"Note: " + m.note });
   }
   L.push({ t:fmtTime(m.when) + (m.imported ? " (photo time)" : "") });
@@ -779,7 +800,7 @@ function stampLines(m, live = false) {
   else if (live && m.pos) L.push({ t:navigator.onLine ? "Looking up address…" : "Address: offline (coordinates only)", pending:true });
   if (!live) {
     const parts = [];
-    if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!isPOV(m.label) ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
+    if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
     if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
     if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
     if (parts.length) L.push({ t:parts.join(" · ") });
@@ -894,12 +915,12 @@ async function capture(force = false) {
     const rec = await storePhoto(out, meta);
     if (S.note) { S.note = ""; $("inNote").value = ""; $("noteBtn").classList.remove("on"); }
     if (out.qc.dark || out.qc.blurry) showRetake(rec, out.qc);
-    else toast(`<b>${esc(meta.label)}</b> saved · ${kb(out.blob.size)}`);
+    else toast(`<b>${esc(meta.label)}</b> saved${autoAdvance(meta.labels)}`, 2600);
   } catch (e) { console.error(e); toast("Couldn’t save that photo. Try again."); }
   finally { S.busy = false; $("shutter").classList.remove("busy"); }
 }
 async function storePhoto(out, meta) {
-  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), sessionId:current.id, label:meta.label, job:meta.job,
+  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), sessionId:current.id, label:meta.labels[0], labels:meta.labels, job:meta.job,
     blob:out.blob, thumb:out.thumb, w:out.w, h:out.h, q:Math.round(out.q * 100), created:meta.when.getTime(), downloaded:false,
     note:meta.note || "", lat:meta.pos ? meta.pos.latitude : null, lon:meta.pos ? meta.pos.longitude : null, check:out.qc ? { mean:out.qc.mean, sharp:out.qc.sharp } : null };
   await DB.put(rec);
@@ -930,11 +951,11 @@ function showRetake(rec, qc) {
   try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch {}
 }
 function hideRetake() { clearTimeout(qT); $("qBanner").hidden = true; qRec = null; }
-$("qKeep").addEventListener("click", hideRetake);
+$("qKeep").addEventListener("click", () => { const r = qRec; hideRetake(); if (r) { const t = autoAdvance(labelsOf(r)); if (t) toast(`Kept${t}`); } });
 $("qRetake").addEventListener("click", async () => {
   if (!qRec) return hideRetake();
   const rec = qRec; hideRetake();
-  S.label = rec.label; if (current) { current.label = rec.label; save(); }
+  const ls = labelsOf(rec); S.label = ls[0]; S.multi = ls.length > 1 ? [...ls] : null; if (current) { current.label = S.label; save(); }
   if (rec.note) { S.note = rec.note; $("inNote").value = rec.note; }
   await removePhotos([rec.id]);
   toast("Deleted. Take it again.");
@@ -971,7 +992,8 @@ $("fileIn").addEventListener("change", async e => {
     } catch (err) { console.error(err); }
   }
   S.busy = false; $("shutter").classList.remove("busy");
-  toast(done ? `Imported ${done} as <b>${esc(S.label)}</b> · ${kb(total)}` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
+  if (S.multi) { S.multi = null; renderChips(); renderGuide(); }
+  toast(done ? `Imported ${done} as <b>${esc(labelText(selLabels()))}</b> · ${kb(total)}` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
 });
 
 /* ================= EXIF write (IFD0 + Exif + GPS) ================= */
@@ -1001,7 +1023,7 @@ async function addExif(blob, m, w, h) {
   const d = m.when, dt = `${d.getFullYear()}:${pad(d.getMonth()+1)}:${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   const A = (tag, s) => { const b = asciiBytes(s); return { tag, type:2, count:b.length, bytes:b }; };
   const desc = stampLines(m).map(l => l.t).join(" | ");
-  const ifd0 = [A(0x010E, desc), A(0x010F, "Xplore Field Cam"), A(0x0131, "Field Cam " + VERSION), A(0x0132, dt), { tag:0x8769, type:4, count:1, ptr:"exif" }];
+  const ifd0 = [A(0x010E, desc), A(0x010F, "Field Cam"), A(0x0131, "Field Cam " + VERSION), A(0x0132, dt), { tag:0x8769, type:4, count:1, ptr:"exif" }];
   if (m.tech) ifd0.push(A(0x013B, m.tech));
   const uc = [65,83,67,73,73,0,0,0, ...asciiBytes(desc).slice(0, -1)];
   const exif = [A(0x9003, dt), A(0x9004, dt), A(0x9011, tzOffset(d)), { tag:0x9286, type:7, count:uc.length, bytes:uc },
@@ -1066,18 +1088,29 @@ function parseTiff(v, t, out) {
 
 /* ================= file names and downloads ================= */
 const slug = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
-// Date-time _ Account ID or SA-# _ job type _ photo name-number _ GPS, e.g.
-// 20261026-185233_SA-01234567_FW-Install-Success_Radio-POV-01_43.36010_-80.31230.jpg
-// Built at download time, so it follows the SA-# and job type as last set.
+// Plain, readable file names:
+//   2026-10-27 1541 SA-01234567 FW Install - CPE Line of Sight (43.3601 -80.3123).jpg
+//   2026-10-27 1543 FW Install Not Required - LOS POVs 2 (43.3601 -80.3123).jpg
+// Date and time taken, SA-# (if entered), platform + work order (+ outcome unless Complete), photo name
+// (numbered only when there is more than one), GPS. Built at download time, so it follows the job as last set.
+const FILE_LABEL = {   // shorter names for long checklist items (file name only; the stamp keeps the full wording)
+  "Line of sight POVs to all viable towers":"LOS POVs",
+  "Line of sight POVs":"LOS POVs",
+  "Screenshot of eCoverage showing customer outside of coverage":"eCoverage Screenshot",
+  "Drop attachment point (aerial)":"Drop Attachment Point",
+  "Issue Resolved After Repair":"Issue Resolved",
+  "House (customer no-show)":"House No-Show"
+};
+const cleanName = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/&/g, "and").replace(/[\\/:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim();
 function fileNameFor(p) {
-  const j = jobs[p.sessionId] || p.job, d = new Date(p.created);
-  const same = S.photos.filter(x => x.sessionId === p.sessionId && x.label === p.label).sort((a, b) => a.created - b.created);
-  const parts = [`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`];
-  if (j && j.ref) parts.push(slug(j.ref));
-  if (j) parts.push([byId(PLATFORMS, j.plat).code, byId(WORK, j.work).code, byId(OUTCOMES, j.outcome).code].join("-"));
-  parts.push(`${slug(p.label || "Photo")}-${pad(same.indexOf(p) + 1)}`);
-  parts.push(p.lat != null ? `${p.lat.toFixed(5)}_${p.lon.toFixed(5)}` : "noGPS");
-  return parts.join("_") + ".jpg";
+  const j = jobs[p.sessionId] || p.job, d = new Date(p.created), w = wfFor(j);
+  const key = labelText(labelsOf(p)), same = S.photos.filter(x => x.sessionId === p.sessionId && labelText(labelsOf(x)) === key).sort((a, b) => a.created - b.created);
+  const plat = w ? ({ FW:"FW", Sat:"Sat", Fibre:"Fibre", VAS:"VAS" }[w.code.split("-")[0]] || "") : "";
+  const job = w ? [plat, byId(JOB_TYPES, j.work).name, w.outcome === "OK" ? "" : byId(OUTCOMES, w.outcome).name].filter(Boolean).join(" ") : "";
+  const head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j && j.ref, job].filter(Boolean).join(" ");
+  const label = labelsOf(p).map(l => cleanName(FILE_LABEL[l] || l)).join(" + ") + (same.length > 1 ? " " + (same.indexOf(p) + 1) : "");
+  const gps = p.lat != null ? ` (${p.lat.toFixed(4)} ${p.lon.toFixed(4)})` : " (no GPS)";
+  return `${head} - ${label}${gps}.jpg`;
 }
 async function saveFile(name, blob) {
   const url = URL.createObjectURL(blob), a = document.createElement("a");
@@ -1123,7 +1156,7 @@ function renderGallery() {
   $("dlAllBtn").textContent = S.selected.size ? `Download ${S.selected.size}` : `Download all ${list.length || ""}`.trim();
   $("dlAllBtn").disabled = !list.length;
   $("delBtn").hidden = !S.selected.size;
-  $("grid").innerHTML = list.length ? list.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(p.label || "Photo")}" loading="lazy">${p.downloaded ? '<span class="ok" title="Downloaded">✓</span>' : ""}<span class="lab">${esc(p.label || "Photo")}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("")
+  $("grid").innerHTML = list.length ? list.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(labelText(labelsOf(p)))}" loading="lazy">${p.downloaded ? '<span class="ok" title="Downloaded">✓</span>' : ""}<span class="lab">${esc(labelText(labelsOf(p)))}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("")
     : `<div class="empty" style="grid-column:1/-1">No photos in this job yet.</div>`;
   renderPrev();
 }
@@ -1207,36 +1240,57 @@ $("vDel").addEventListener("click", async e => {
 
 /* ================= job picker ================= */
 function renderPicker(el, sel, onChange) {
-  const groups = [["plat", "Platform", PLATFORMS], ["work", "Work order", WORK], ["outcome", "Outcome", OUTCOMES]];
-  el.innerHTML = groups.map(([k, t, opts]) => `<div><label>${t}</label><div class="seg" role="group" aria-label="${t}">${opts.map(o => `<button type="button" data-k="${k}" data-v="${o.id}" aria-pressed="${sel[k] === o.id}"><b>${esc(o.name)}</b>${o.sub ? `<span>${esc(o.sub)}</span>` : ""}</button>`).join("")}</div></div>`).join("");
+  const opts = sel.work && sel.outcome ? wfOptions(sel.work, sel.outcome) : [];
+  if (sel.opt && !opts.some(o => o.opt === sel.opt)) sel.opt = null;
+  const seg = (k, list, cls = "") => `<div class="seg${cls}" role="group">${list.map(o => `<button type="button" data-k="${k}" data-v="${esc(o.id)}" aria-pressed="${sel[k] === o.id}"><b>${esc(o.name)}</b>${o.sub ? `<span>${esc(o.sub)}</span>` : ""}</button>`).join("")}</div>`;
+  const third = sel.outcome === "NR" ? "Reason" : "Platform";
+  const w = wfFor(sel), shots = w ? [...w.shots] : [];
+  el.innerHTML = `<div><label>Work order</label>${seg("work", JOB_TYPES)}</div>
+    <div><label>Outcome</label>${seg("outcome", OUTCOMES)}</div>
+    ${opts.length ? `<div><label>${third}</label>${seg("opt", opts.map(o => ({ id:o.opt, name:o.opt, sub:o.outcome === "NR" ? o.sub : "" })), " two")}</div>` : ""}
+    ${w ? `<p class="hint">${shots.length ? `<b>${shots.length} photos:</b> ${shots.map(esc).join(" · ")}` : "This form has no pictures checklist. Use Other for any photos you take."}</p>` : ""}`;
   el.onclick = e => {
     const b = e.target.closest("[data-k]"); if (!b) return;
     sel[b.dataset.k] = b.dataset.v;
-    el.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", x === b));
+    renderPicker(el, sel, onChange);
     onChange && onChange();
   };
 }
 
 /* ================= top bar, chips, deck ================= */
-function countLabels() { const c = {}; for (const p of curPhotos()) c[p.label] = (c[p.label] || 0) + 1; return c; }
+function countLabels() { const c = {}; for (const p of curPhotos()) for (const l of labelsOf(p)) c[l] = (c[l] || 0) + 1; return c; }
 function renderTop() {
   const j = curJob(), req = baseShots(j), counts = countLabels();
-  $("jobTxt").textContent = j ? (j.ref ? `${j.ref} · ${byId(PLATFORMS, j.plat).code} ${byId(WORK, j.work).name}` : `${byId(PLATFORMS, j.plat).code} · ${byId(WORK, j.work).name} · ${byId(OUTCOMES, j.outcome).short}`) : "No job";
+  const w = wfFor(j), sh = w ? `${byId(JOB_TYPES, j.work).name} · ${w.outcome === "NR" ? "NR · " + w.code.replace("-", " ") : w.code.replace("-", " ") + (w.outcome === "CC" ? " · Can’t complete" : "")}` : "";
+  $("jobTxt").textContent = j ? (j.ref ? `${j.ref} · ${sh}` : sh) : "No job";
   $("jobProg").textContent = j && req.length ? `${req.filter(l => counts[l]).length}/${req.length}` : "";
 }
 function renderChips() {
   const j = curJob(), counts = countLabels(), custom = (j && j.custom) || [];
   if (S.label === OTHER || !shotList(j).includes(S.label)) { S.label = shotList(j)[0]; if (current) { current.label = S.label; save(); } }
   // custom labels only stay in the row once they have a photo (or are selected), so typos drop away
-  const list = shotList(j).filter(l => !custom.includes(l) || counts[l] || l === S.label);
-  $("chips").innerHTML = list.map(l => { const n = counts[l] || 0; return `<button class="chip${n ? " done" : ""}" data-l="${esc(l)}" aria-pressed="${S.label === l}">${esc(l)}${n ? `<span class="c">${n}</span>` : ""}</button>`; }).join("");
+  const sel = selLabels();
+  const list = shotList(j).filter(l => !custom.includes(l) || counts[l] || sel.includes(l));
+  $("chips").innerHTML = `<button class="chip multi" data-multi="1" aria-pressed="${!!S.multi}">${S.multi ? "✓ Multiple" : "＋ Multiple"}</button>` +
+    list.map(l => { const n = counts[l] || 0; return `<button class="chip${n ? " done" : ""}" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(l)}${n ? `<span class="c">${n}</span>` : ""}</button>`; }).join("");
   const on = $("chips").querySelector('[aria-pressed="true"]');
   if (on) { const c = $("chips"); const L = on.offsetLeft - 12, R = on.offsetLeft + on.offsetWidth + 12; if (L < c.scrollLeft) c.scrollLeft = L; else if (R > c.scrollLeft + c.clientWidth) c.scrollLeft = R - c.clientWidth; }
 }
 $("chips").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b || !current) return;
+  if (b.dataset.multi) {
+    if (S.multi) { S.label = S.multi[0]; S.multi = null; }
+    else { S.multi = [S.label]; toast("Tap every item this photo shows", 2400); }
+    current.label = S.label; save(); renderChips(); renderGuide(); return;
+  }
   if (b.dataset.l === OTHER) { openOther(); return; }
-  S.label = b.dataset.l; current.label = S.label; save(); renderChips();
+  const l = b.dataset.l;
+  if (S.multi) {
+    if (S.multi.includes(l)) { if (S.multi.length > 1) S.multi = S.multi.filter(x => x !== l); }
+    else S.multi = [...S.multi, l];
+    S.label = S.multi[0];
+  } else S.label = l;
+  current.label = S.label; save(); renderChips(); renderGuide();
 });
 /* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
 function openOther() {
@@ -1248,14 +1302,55 @@ function useOther() {
   $("otherBar").hidden = true; $("inOther").blur();
   if (!t || !current) return;
   const j = curJob(), match = shotList(j).find(l => l !== OTHER && l.toLowerCase() === t.toLowerCase());
-  if (match) S.label = match;
-  else { j.custom = [...(j.custom || []), t]; S.label = t; }
-  current.label = S.label; save(); renderChips();
-  toast(`Label set: <b>${esc(S.label)}</b>`);
+  const l = match || t;
+  if (!match) j.custom = [...(j.custom || []), t];
+  if (S.multi) { if (!S.multi.includes(l)) S.multi = [...S.multi, l]; S.label = S.multi[0]; }
+  else S.label = l;
+  current.label = S.label; save(); renderChips(); renderGuide();
+  toast(`Label set: <b>${esc(labelText(selLabels()))}</b>`);
 }
 $("otherDone").addEventListener("click", useOther);
 $("otherCancel").addEventListener("click", () => { $("otherBar").hidden = true; $("inOther").blur(); });
 $("inOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); useOther(); } });
+function nextMissing(after) {
+  const req = baseShots(curJob()), c = countLabels();
+  if (!req.length) return null;
+  const start = Math.max(0, req.indexOf(after) + 1);
+  for (let i = 0; i < req.length; i++) { const l = req[(start + i) % req.length]; if (!c[l]) return l; }
+  return null;
+}
+function renderGuide() {
+  const req = baseShots(curJob()), c = countLabels(), done = req.filter(l => c[l]).length, g = $("guide");
+  g.classList.toggle("done", !!req.length && done === req.length);
+  let t, showNext = true;
+  if (!req.length) { t = "No required photos for this form · use Other as needed"; showNext = false; }
+  else if (done === req.length) { t = `All ${req.length} required photos taken ✓`; showNext = false; }
+  else if (S.multi) { t = S.multi.length > 1 ? `<b>${S.multi.length} items selected</b> · one photo for all of them` : `<b>Multiple</b> · tap every item this photo shows`; showNext = false; }
+  else if (req.includes(S.label)) {
+    const i = req.indexOf(S.label) + 1, n = c[S.label] || 0;
+    t = /^screenshot/i.test(S.label) ? `<b>${i} of ${req.length}</b> · add the screenshot with the picture button` : n && MULTI.test(S.label) ? `<b>${i} of ${req.length}</b> · take all you need, then Next` : `<b>${i} of ${req.length}</b> · ${esc(S.label)}`;
+  } else t = `${done} of ${req.length} required done`;
+  $("guideTxt").innerHTML = t;
+  $("guideNext").hidden = !showNext;
+}
+$("guideNext").addEventListener("click", () => {
+  const l = nextMissing(S.label); if (!l || !current) return;
+  S.multi = null; S.label = l; current.label = l; save(); renderChips(); renderGuide();
+});
+// After the first photo of a required label, move on to the next one still missing (not for multi-shot labels)
+function autoAdvance(labels) {
+  labels = [].concat(labels);
+  const wasMulti = labels.length > 1;
+  if (S.multi) { S.multi = null; renderChips(); renderGuide(); }
+  const req = baseShots(curJob()), c = countLabels(), last = labels[labels.length - 1];
+  const fresh = labels.some(l => req.includes(l) && c[l] === 1);
+  if (!fresh || (!wasMulti && MULTI.test(last))) return "";
+  const l = nextMissing(last);
+  if (!l) return " · all required photos taken";
+  S.label = l; if (current) { current.label = l; save(); }
+  renderChips(); renderGuide();
+  return ` · next: ${esc(l)}`;
+}
 function refreshDeck() {
   const ps = curPhotos().sort((a, b) => b.created - a.created), und = ps.filter(p => !p.downloaded).length;
   $("galBtn").style.backgroundImage = ps[0] ? `url(${thumbURL(ps[0])})` : "";
@@ -1263,7 +1358,7 @@ function refreshDeck() {
   $("dlCount").textContent = und || "";
   $("dlBtn").classList.toggle("has", und > 0);
 }
-function renderAll() { renderTop(); renderChips(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); }
+function renderAll() { renderTop(); renderChips(); renderGuide(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); }
 
 /* ================= sheets ================= */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
@@ -1276,14 +1371,14 @@ $("inName").addEventListener("input", () => { settings.name = $("inName").value;
 
 $("jobBtn").addEventListener("click", () => {
   const j = curJob(); if (!j) return;
-  const sel = { plat:j.plat, work:j.work, outcome:j.outcome };
-  renderPicker($("sheetPicker"), sel, () => { Object.assign(jobs[current.id], sel); save(); renderAll(); });
+  const sel = { work:j.work, outcome:j.outcome, opt:j.opt };
+  renderPicker($("sheetPicker"), sel, () => { if (sel.work && sel.outcome && sel.opt) { Object.assign(jobs[current.id], sel); save(); renderAll(); } });
   $("inRefEdit").value = j.ref || "";
   const n = curPhotos().length;
   $("jobEditHint").textContent = n
-    ? `${plural(n, "photo")} taken. Changes here update their file names and the shot list; the stamp already on a photo stays as it was.`
-    : "You can change these at any point during the job, for example if it turns out to be no line of sight.";
-  $("finishConfirm").hidden = true;
+    ? `${plural(n, "photo")} taken. Changes here update their file names and the photo list; the stamp already on a photo stays as it was.`
+    : "You can change these at any point during the job, for example if it turns out to be NLOS.";
+  $("finishConfirm").hidden = true; $("cancelConfirm").hidden = true;
   openSheet("jobSheet");
 });
 $("inRefEdit").addEventListener("change", () => {
@@ -1292,6 +1387,7 @@ $("inRefEdit").addEventListener("change", () => {
 });
 function missingShots() { const c = countLabels(); return baseShots(curJob()).filter(l => !c[l]); }
 $("finishBtn").addEventListener("click", () => {
+  $("cancelConfirm").hidden = true;
   const und = curPhotos().filter(p => !p.downloaded).length, miss = missingShots(), msgs = [];
   if (miss.length) msgs.push(`<p><b>No photo yet for:</b> ${miss.map(esc).join(", ")}.</p>`);
   if (und) msgs.push(`<p>${plural(und, "photo")} ${und === 1 ? "hasn’t" : "haven’t"} been downloaded. If you finish now ${und === 1 ? "it stays" : "they stay"} on this phone under Previous jobs.</p>`);
@@ -1299,11 +1395,36 @@ $("finishBtn").addEventListener("click", () => {
   $("finishMsg").innerHTML = msgs.join("");
   $("finishDl").hidden = !und;
   $("finishConfirm").hidden = false;
+  $("finishConfirm").scrollIntoView({ block:"nearest", behavior:"smooth" });
 });
 $("finishKeep").addEventListener("click", () => { $("finishConfirm").hidden = true; closeSheets(); });
 $("finishDl").addEventListener("click", async () => { await downloadPhotos(curPhotos().filter(p => !p.downloaded)); finishJob(); });
 $("finishYes").addEventListener("click", finishJob);
-function finishJob() { current = null; S.label = null; S.selected.clear(); save(); closeSheets(); showStart(); }
+function finishJob() {
+  S.multi = null;
+  if (current && !curPhotos().length) delete jobs[current.id];   // nothing taken: don't keep an empty job
+  current = null; S.label = null; S.selected.clear(); save(); closeSheets(); showStart();
+}
+// Cancel this job: back out (e.g. wrong form picked). With photos, ask first; they're deleted.
+$("cancelJobBtn").addEventListener("click", () => {
+  $("finishConfirm").hidden = true;
+  const n = curPhotos().length;
+  if (!n) return cancelJob();
+  $("cancelMsg").textContent = `This deletes the ${plural(n, "photo")} taken in this job from the phone and goes back to the start screen. To keep them, use Start a new job instead.`;
+  $("cancelConfirm").hidden = false;
+  $("cancelConfirm").scrollIntoView({ block:"nearest", behavior:"smooth" });
+});
+$("cancelNo").addEventListener("click", () => { $("cancelConfirm").hidden = true; });
+$("cancelYes").addEventListener("click", cancelJob);
+async function cancelJob() {
+  if (!current) return;
+  const id = current.id;
+  await removePhotos(curPhotos().map(p => p.id));
+  delete jobs[id];
+  current = null; S.label = null; S.multi = null; S.selected.clear(); S.note = ""; save();
+  closeSheets(); showStart();
+  toast("Job cancelled");
+}
 
 async function renderStorage() {
   const total = S.photos.reduce((a, p) => a + p.blob.size + p.thumb.size, 0);
@@ -1318,7 +1439,7 @@ function installText() {
 }
 
 /* ================= start / new job ================= */
-let startSel = { plat:null, work:null, outcome:null };
+let startSel = { work:null, outcome:null, opt:null };
 function showStart() {
   const named = !!settings.name.trim();
   $("nameBlock").hidden = named;
@@ -1331,7 +1452,7 @@ function showStart() {
     $("resumeMeta").textContent = `${plural(ps.length, "photo")} · started ${fmtDay(new Date(j.started))}`;
   }
   $("newJobH").textContent = j ? "Or start a new job" : "New job";
-  startSel = { plat:null, work:null, outcome:null };
+  startSel = { work:null, outcome:null, opt:null };
   $("inRef").value = "";
   renderPicker($("startPicker"), startSel, () => { $("startErr").hidden = true; });
   $("startBtn").textContent = j ? "Start new job" : "Start job";
@@ -1366,16 +1487,16 @@ $("startBtn").addEventListener("click", () => {
   const missing = [];
   const ref = normRef($("inRef").value);
   if (!name) missing.push("your name");
-  if (!startSel.plat) missing.push("platform");
-  if (!startSel.work) missing.push("work order type");
+  if (!startSel.work) missing.push("work order");
   if (!startSel.outcome) missing.push("outcome");
+  else if (!startSel.opt) missing.push(startSel.outcome === "NR" ? "reason" : "platform");
   if (missing.length) { $("startErr").textContent = "Still needed: " + missing.join(", ") + "."; $("startErr").hidden = false; return; }
   settings.name = name;
   const hadPrev = curPhotos().length;
   const id = Date.now().toString(36);
   jobs[id] = { ...startSel, ref, started:Date.now() };
   current = { id, label:null };
-  S.label = null; S.selected.clear();
+  S.label = null; S.multi = null; S.selected.clear();
   beginSession();
   if (hadPrev) toast("The last job’s photos are under Previous jobs in the gallery.", 3200);
 });

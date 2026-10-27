@@ -1,5 +1,5 @@
 {
-  "name": "Xplore Field Cam",
+  "name": "Field Cam",
   "short_name": "Field Cam",
   "description": "Job-site photos stamped with time, GPS, direction and tilt, compressed for low-signal uploads.",
   "start_url": "./",

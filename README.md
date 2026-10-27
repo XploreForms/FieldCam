@@ -1,4 +1,4 @@
-# Xplore Field Cam (v1.9.0)
+# Field Cam (v2.3.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -23,34 +23,56 @@ to 2048 px / 350 KB max for low-signal uploads.
 
 ## Tech workflow
 1. First launch only: enter name.
-2. Each work order: optionally enter the **Account ID or SA-#**, pick **Platform** (Fixed Wireless / Fibre / Satellite), **Work order**
-   (Install / Conversion / Repair) and **Outcome** (Complete / Cannot Complete = reschedule / Not Required = e.g. no LOS),
-   then **Start job**. These can be changed mid-job from the top bar.
-3. Pick a label (Radio POV, Mount, Cabling…) and shoot as many as needed; the label stays
-   selected and its count goes up. The top bar shows how many labels are covered (e.g. 4/10).
+2. Each work order: optionally enter the **Account ID or SA-#**, then pick the job form:
+   **Work order** (Install / Conversion / Repair) → **Outcome** (Complete / Cannot Complete /
+   Not Required) → **Platform** (or **Reason** for Not Required). The start screen previews the
+   photos that form needs. Can be changed mid-job from the top bar.
+3. The app walks through that form's Pictures Checklist in order ("3 of 10 · Cable Run").
+   After the first photo of an item it moves to the next missing one, except for items where
+   several shots are normal (LOS POVs, testing locations, SNs, issues): take all you need, then
+   tap **Next**. Any label can be tapped to add more.
+   **One photo, several items:** tap **＋ Multiple** at the start of the label row, tap every item
+   the photo shows, then shoot. The photo counts for all of them, the stamp lists each one, and
+   the file name joins them (`Cable Run + Grounding Overview`). Multiple turns off after the shot.
 4. Tap the **download button** (right of the shutter): every new photo saves as its own file.
    On iPhone they go to **Files › Downloads**.
 5. In FSL, attach the photos from Files.
-6. Top bar → **Finish job and start a new one**.
+6. Tap the job name at the top (▾) → **Start a new job** (keeps this job's photos under
+   Previous jobs) or **Cancel this job** (wrong form picked etc.: deletes its photos after
+   confirming and goes back to the start screen).
 
 Previous jobs stay on the phone (gallery › Previous jobs) until deleted.
 
 ## File names
-`20261026-185233_SA-01234567_FW-Install-Complete_Radio-POV-01_43.36010_-80.31230.jpg`
-= date-time taken _ Account ID or SA-# _ platform-work order-outcome _ photo name-number _ latitude_longitude.
-No SA-# entered: that part is left out. No GPS fix: ends in `noGPS`.
-Names are built at download time, so they reflect the SA-# and job type as last set.
-`sa 01234567` is tidied to `SA-01234567`.
+Plain and readable:
+- `2026-10-27 1541 SA-01234567 FW Install - CPE Line of Sight (43.3601 -80.3123).jpg`
+- `2026-10-27 1543 FW Install Not Required - LOS POVs 2 (43.3601 -80.3123).jpg`
 
-## Editing the photo labels
-Near the top of the script in `index.html`: `SHOTS` (completed work, per platform and work
-order type) and `SHOTS_CANNOT_COMPLETE` (reschedules, per platform) and `SHOTS_NOT_REQUIRED` (e.g. no LOS, per platform). "Other" is always
-added: tapping it asks what the photo is of, and that text becomes the label (stamp and file
-name). Custom labels stay in the row for the rest of the job once they have a photo. Current lists are placeholders.
+= date and time taken, SA-# (if entered), platform + work order (+ outcome unless Complete),
+photo name (numbered only when there's more than one), GPS (or `no GPS`).
+A few long checklist items get a short name in the file (`FILE_LABEL` in `index.html`), e.g.
+"Line of sight POVs to all viable towers" → "LOS POVs"; the stamp keeps the full wording.
+Names are built at download time, so they follow the SA-# and job type as last set.
+
+## Job forms and photo lists
+`WORKFLOWS` near the top of the script in `index.html` has one entry per JotForm, with its
+Pictures Checklist copied from the form:
+
+| Outcome | Forms | Photos |
+|---|---|---|
+| Complete | Install / Conversion: Fibre (Existing Drop), Fibre (Drop Required), Fixed Wireless, Satellite; Install: VAS. Repair: Fibre, Fixed Wireless, Satellite, VAS | As on each form |
+| Cannot Complete | One form for all jobs (platform chosen for the file name) | Form has no checklist; optional "House (customer no-show)" |
+| Not Required | Fixed Wireless: Signal Requirements Not Met, Stop Sell Area, Not in Coverage Area, NLOS. Satellite NLOS. Unrelated to Signal (any job) | FW: LOS POVs to all viable towers, Testing locations, Overall structure (+ eCoverage screenshot for Not in Coverage). Sat: LOS POVs, Testing locations, Overall structure. Unrelated: none |
+
+When a form changes, edit its `shots` list. `level` marks photos that must be shot level;
+`MULTI` marks items where several photos are normal. "Other" is always added: tapping it asks
+what the photo is of, and that text becomes the label. Custom labels stay for the rest of the job
+once they have a photo.
 
 ## Photo checks
-- **POV / LOS level lock:** only for labels with "POV" or "LOS" in the name (Radio POV, Dish POV,
-  LOS Attempt POV, Sky View POV). The shutter turns amber and won't fire unless tilt is within ±3°. Press and hold the shutter (0.8 s) to take it anyway; the stamp then
+- **Level lock:** Fixed Wireless "CPE Line of Sight" and "Line of sight POVs to all viable towers"
+  only (satellite dishes aim at the sky, so no lock there). The shutter turns amber and won't
+  fire unless tilt is within ±3°. Press and hold the shutter (0.8 s) to take it anyway; the stamp then
   says `(not level)`.
 - **Blurry / dark warning:** after each shot the app checks sharpness and brightness and offers
   Retake or Keep. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
@@ -59,7 +81,7 @@ name). Custom labels stay in the row for the rest of the job once they have a ph
 - **Missing shots:** Finish job lists labels with no photo yet and photos not downloaded.
 
 ## Tilt
-On POV / LOS labels the top readout shows tilt large (+ = aimed up), turns green with LEVEL ✓
+On level-locked photos the top readout shows tilt large (+ = aimed up), turns green with LEVEL ✓
 within ±3°, and a horizon line lines up with the side marks. The stamp says `(level)` or
 `(not level)`. On every other label the tilt is just a small number and the stamp records the
 value only. Skew (sideways roll) is shown small.
