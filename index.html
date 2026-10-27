@@ -275,7 +275,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div class="row">
       <button class="thumbbtn" id="galBtn" aria-label="Open this job's photos"><span class="badge" id="galCount"></span></button>
       <button class="shutter" id="shutter" aria-label="Take photo"><i></i></button>
-      <button class="dlbtn" id="dlBtn" aria-label="Download new photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"/></svg><span class="badge" id="dlCount"></span></button>
+      <button class="dlbtn" id="dlBtn" aria-label="Save new photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"/></svg><span class="badge" id="dlCount"></span></button>
     </div>
   </div>
 </div>
@@ -298,7 +298,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     </div>
     <div class="warnbox" id="finishConfirm" hidden>
       <div id="finishMsg" style="display:grid;gap:6px"></div>
-      <div class="btnrow"><button class="btn primary" id="finishDl">Download, then finish</button><button class="btn" id="finishKeep">Keep shooting</button><button class="btn" id="finishYes">Finish anyway</button></div>
+      <div class="btnrow"><button class="btn primary" id="finishDl">Save, then finish</button><button class="btn" id="finishKeep">Keep shooting</button><button class="btn" id="finishYes">Finish anyway</button></div>
     </div>
   </div>
 </section>
@@ -310,7 +310,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.3.1 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.4.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -321,14 +321,14 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div class="gtools"><span class="stats" id="galStats"></span><button class="btn sm" id="selAllBtn">Select all</button></div>
     <div class="grid" id="grid"></div>
     <div class="btnrow">
-      <button class="btn primary" id="dlAllBtn">Download all</button>
+      <button class="btn primary" id="dlAllBtn">Save all</button>
       <button class="btn danger" id="delBtn" hidden>Delete</button>
     </div>
     <div class="warnbox" id="delConfirm" hidden>
       <p>Delete <span id="delN"></span> from this phone? This can’t be undone.</p>
       <div class="btnrow"><button class="btn danger" id="delYes">Delete</button><button class="btn" id="delNo">Keep</button></div>
     </div>
-    <p class="hint">Each photo downloads as its own file, named with the job type and label. On iPhone they land in Files › Downloads, ready to attach in FSL.</p>
+    <p class="hint" id="saveHint"></p>
     <div id="prevBlock" hidden><h3>Previous jobs</h3><div id="prevList"></div></div>
   </div>
 </section>
@@ -337,7 +337,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 <div class="viewer" id="viewer">
   <div class="vtop"><div class="meta" id="vMeta"></div><button class="btn" id="vClose">Close</button></div>
   <div class="vstage" id="vStage"><img id="vImg" alt="Photo preview"></div>
-  <div class="vbar"><button class="btn primary" id="vDl" style="flex:1">Download</button><button class="btn danger" id="vDel">Delete</button></div>
+  <div class="vbar"><button class="btn primary" id="vDl" style="flex:1">Save</button><button class="btn danger" id="vDel">Delete</button></div>
 </div>
 
 <!-- Start / new job -->
@@ -367,7 +367,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.3.1";
+const VERSION = "2.4.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -1119,13 +1119,34 @@ async function saveFile(name, blob) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 let dlBusy = false;
+// iPhone: web apps can't write into the Photos gallery directly (a download only opens a preview),
+// so photos go to the share sheet in one batch: "Save N Images" puts them in Photos,
+// "Save to Files" keeps the file names. Other phones and computers download each file.
+// Must start straight from the tap (no awaits before share) or iOS refuses the share sheet.
 async function downloadPhotos(items) {
   if (!items.length || dlBusy) return;
-  dlBusy = true;
   const list = [...items].sort((a, b) => a.created - b.created);
+  if (isIOS && navigator.canShare && navigator.share) {
+    const files = list.map(p => new File([p.blob], fileNameFor(p), { type:"image/jpeg", lastModified:p.created }));
+    let ok = false;
+    try { ok = navigator.canShare({ files }); } catch {}
+    if (ok) {
+      dlBusy = true;
+      try {
+        await navigator.share({ files });
+        for (const p of list) { p.downloaded = true; try { await DB.put(p); } catch {} }
+        toast(`Saved ${plural(list.length, "photo")}`, 2600);
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") { toast("Not saved. Tap Save Images (Photos) or Save to Files.", 3200); return; }
+        // share sheet unavailable here: fall through to plain downloads
+      } finally { dlBusy = false; renderAll(); }
+    }
+  }
+  dlBusy = true;
   let n = 0;
   for (const p of list) {
-    toast(`Downloading ${n + 1} of ${list.length}…`, 1600);
+    toast(`Saving ${n + 1} of ${list.length}…`, 1600);
     try { await saveFile(fileNameFor(p), p.blob); } catch (e) { if (e && e.stop) break; continue; }
     p.downloaded = true; n++;
     try { await DB.put(p); } catch {}
@@ -1133,12 +1154,12 @@ async function downloadPhotos(items) {
   }
   dlBusy = false;
   renderAll();
-  if (n) toast(`Downloaded ${plural(n, "photo")}${isIOS ? " to Files › Downloads" : ""}`, 3000);
+  if (n) toast(`Saved ${plural(n, "photo")}`, 3000);
 }
 $("dlBtn").addEventListener("click", () => {
   const ps = curPhotos(), und = ps.filter(p => !p.downloaded);
   if (!ps.length) return toast("No photos in this job yet.");
-  if (!und.length) return toast("Every photo in this job is downloaded. Use Download all in the gallery to save them again.", 3200);
+  if (!und.length) return toast("Every photo in this job is saved. Use Save all in the gallery to save them again.", 3200);
   downloadPhotos(und);
 });
 
@@ -1150,13 +1171,13 @@ function renderGallery() {
   for (const id of [...S.selected]) if (!list.some(p => p.id === id)) S.selected.delete(id);
   const total = list.reduce((a, p) => a + p.blob.size, 0), und = list.filter(p => !p.downloaded).length;
   $("galTitle").textContent = S.selected.size ? `${S.selected.size} selected` : "This job";
-  $("galStats").textContent = list.length ? `${plural(list.length, "photo")} · ${kb(total)} · ${und ? und + " not downloaded" : "all downloaded"}` : "";
+  $("galStats").textContent = list.length ? `${plural(list.length, "photo")} · ${kb(total)} · ${und ? und + " not saved" : "all saved"}` : "";
   $("selAllBtn").hidden = !list.length;
   $("selAllBtn").textContent = S.selected.size === list.length && list.length ? "Clear" : "Select all";
-  $("dlAllBtn").textContent = S.selected.size ? `Download ${S.selected.size}` : `Download all ${list.length || ""}`.trim();
+  $("dlAllBtn").textContent = S.selected.size ? `Save ${S.selected.size}` : `Save all ${list.length || ""}`.trim();
   $("dlAllBtn").disabled = !list.length;
   $("delBtn").hidden = !S.selected.size;
-  $("grid").innerHTML = list.length ? list.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(labelText(labelsOf(p)))}" loading="lazy">${p.downloaded ? '<span class="ok" title="Downloaded">✓</span>' : ""}<span class="lab">${esc(labelText(labelsOf(p)))}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("")
+  $("grid").innerHTML = list.length ? list.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(labelText(labelsOf(p)))}" loading="lazy">${p.downloaded ? '<span class="ok" title="Saved">✓</span>' : ""}<span class="lab">${esc(labelText(labelsOf(p)))}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("")
     : `<div class="empty" style="grid-column:1/-1">No photos in this job yet.</div>`;
   renderPrev();
 }
@@ -1173,7 +1194,7 @@ function renderPrev() {
   $("prevList").innerHTML = [...groups.entries()].sort((a, b) => newest(b[1]) - newest(a[1])).map(([k, ps]) => {
     const j = jobs[k] || ps[0].job, when = new Date((jobs[k] && jobs[k].started) || Math.min(...ps.map(p => p.created)));
     const und = ps.filter(p => !p.downloaded).length;
-    return `<div class="prev" data-sid="${esc(k)}"><div style="min-width:0"><b>${esc(j ? jobShort(j) : "Earlier photos")}</b><span>${esc(fmtDay(when))} · ${plural(ps.length, "photo")} · ${und ? und + " not downloaded" : "all downloaded"}</span></div><button class="btn sm" data-act="dl">Download</button><button class="btn sm danger" data-act="del">Delete</button></div>`;
+    return `<div class="prev" data-sid="${esc(k)}"><div style="min-width:0"><b>${esc(j ? jobShort(j) : "Earlier photos")}</b><span>${esc(fmtDay(when))} · ${plural(ps.length, "photo")} · ${und ? und + " not saved" : "all saved"}</span></div><button class="btn sm" data-act="dl">Save</button><button class="btn sm danger" data-act="del">Delete</button></div>`;
   }).join("");
 }
 $("prevList").addEventListener("click", async e => {
@@ -1208,7 +1229,7 @@ function openViewer(id) {
   const p = S.photos.find(x => x.id === id); if (!p) return;
   S.viewing = p; if (vURL) URL.revokeObjectURL(vURL);
   vURL = URL.createObjectURL(p.blob); $("vImg").src = vURL;
-  $("vMeta").innerHTML = `<b>${esc(fileNameFor(p))}</b>${kb(p.blob.size)} · ${p.w}×${p.h} · q${p.q}${p.downloaded ? " · downloaded" : ""}`;
+  $("vMeta").innerHTML = `<b>${esc(fileNameFor(p))}</b>${kb(p.blob.size)} · ${p.w}×${p.h} · q${p.q}${p.downloaded ? " · saved" : ""}`;
   Z = { s:1, x:0, y:0 }; applyZ();
   $("viewer").classList.add("open");
 }
@@ -1386,7 +1407,7 @@ $("finishBtn").addEventListener("click", () => {
   $("cancelConfirm").hidden = true;
   const und = curPhotos().filter(p => !p.downloaded).length, miss = missingShots(), msgs = [];
   if (miss.length) msgs.push(`<p><b>No photo yet for:</b> ${miss.map(esc).join(", ")}.</p>`);
-  if (und) msgs.push(`<p>${plural(und, "photo")} ${und === 1 ? "hasn’t" : "haven’t"} been downloaded. If you finish now ${und === 1 ? "it stays" : "they stay"} on this phone under Previous jobs.</p>`);
+  if (und) msgs.push(`<p>${plural(und, "photo")} ${und === 1 ? "hasn’t" : "haven’t"} been saved. If you finish now ${und === 1 ? "it stays" : "they stay"} on this phone under Previous jobs.</p>`);
   if (!msgs.length) return finishJob();
   $("finishMsg").innerHTML = msgs.join("");
   $("finishDl").hidden = !und;
@@ -1428,6 +1449,9 @@ async function renderStorage() {
   try { const e = await navigator.storage.estimate(); if (e.quota) txt += ` · ${kb(e.quota)} available`; } catch {}
   $("storageStats").textContent = txt;
 }
+const SAVE_HINT = isIOS
+  ? "Save opens the iPhone share sheet: tap “Save N Images” to put them in Photos, or “Save to Files” to keep the file names. Then attach them in FSL."
+  : "Each photo downloads as its own file, named with the job type and label, ready to attach in FSL.";
 function installText() {
   if (standalone) return "Installed on this phone. It opens full-screen and works with no signal.";
   if (isIOS) return "Install: tap the Share button in Safari, then “Add to Home Screen”. It then opens full-screen and works with no signal.";
@@ -1501,6 +1525,7 @@ $("startBtn").addEventListener("click", () => {
 (async function boot() {
   if (!standalone) { $("installTip").hidden = false; $("installTip").textContent = installText(); }
   $("installHelp").textContent = installText();
+  $("saveHint").textContent = SAVE_HINT;
   try { await DB.open(); S.photos = (await DB.all()).sort((a, b) => b.created - a.created); }
   catch { toast("Photo storage is unavailable in this browser mode.", 4000); }
   if (current && !jobs[current.id]) current = null;

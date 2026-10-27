@@ -1,4 +1,4 @@
-# Field Cam (v2.3.1)
+# Field Cam (v2.4.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -35,9 +35,11 @@ to 2048 px / 350 KB max for low-signal uploads.
    selected one again to remove it), then shoot. The photo counts for all of them (each gets a ✓),
    the stamp lists each one, and the file name joins them (`Cable Run + Grounding Overview`).
    After the shot the app moves to the next item still needed; the next tap starts a new selection.
-4. Tap the **download button** (right of the shutter): every new photo saves as its own file.
-   On iPhone they go to **Files › Downloads**.
-5. In FSL, attach the photos from Files.
+4. Tap the **save button** (right of the shutter). On iPhone this opens the share sheet with
+   every new photo: tap **Save N Images** to put them in Photos (the gallery), or **Save to Files**
+   to keep the readable file names. iPhone web apps can't write into Photos any other way; a plain
+   download only opens a preview. On Android/computers each photo downloads as its own file.
+5. In FSL, attach the photos from Photos or Files.
 6. Tap the job name at the top (▾) → **Start a new job** (keeps this job's photos under
    Previous jobs) or **Cancel this job** (wrong form picked etc.: deletes its photos after
    confirming and goes back to the start screen).
@@ -88,6 +90,10 @@ within ±3°, and a horizon line lines up with the side marks. The stamp says `(
 value only. Skew (sideways roll) is shown small.
 
 ## Notes
+- **Permission prompts on iPhone:** home-screen web apps don't get permanent permissions like App
+  Store apps. Motion & Orientation is asked on every launch (Apple rule); camera and location are
+  usually asked once per launch. Setting Settings › Apps › Safari › Camera and Location to
+  **Allow** can reduce the prompts.
 - Tilt, skew and the horizon line redraw every screen frame (about 60 times a second); GPS and
   address text update twice a second.
 - Rear camera only; never falls back to the selfie camera.
