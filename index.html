@@ -69,20 +69,19 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 #hTilt{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 #hLevel{font:normal 700 10.5px var(--sans);letter-spacing:.08em;padding:3px 7px;border-radius:6px;background:rgba(234,242,238,.16);text-shadow:none}
 .hud.lvl #hTilt{color:var(--signal)}
-.hud.free .zerodot,.hud.free #hLevel{display:none}
+.hud.free .zeroline,.hud.free #hLevel{display:none}
 .hud.free #hTilt{font-size:17px;font-weight:600}
 .hud.free .tiltbox{padding:5px 12px}
 .hud.lvl #hLevel{background:var(--signal);color:var(--ink)}
 .hud.near #hLevel{background:var(--warn);color:var(--ink)}
 .tiltbox .sub{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:.02em}
 /* 0° dot: where the horizon (zero tilt) sits in the frame. Line it up with the centre ring to shoot level. */
-.zerodot{position:absolute;left:50%;top:50%;width:0;height:0;transition:opacity .2s}
-.zerodot i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.92);box-shadow:0 0 0 .5px rgba(0,0,0,.5),inset 0 0 0 .5px rgba(0,0,0,.35)}
-.zerodot i::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:rgba(255,255,255,.95)}
-.zerodot span{position:absolute;left:11px;top:-7px;font:600 10.5px var(--sans);color:rgba(255,255,255,.9);white-space:nowrap}
-.hud.lvl .zerodot i{border-color:var(--signal)}
-.hud.lvl .zerodot i::after{background:var(--signal)}
-.hud.lvl .zerodot span{color:var(--signal)}
+/* 0° line: where the horizon (zero tilt) sits in the frame. Line it up with the centre ring to shoot level. */
+.zeroline{position:absolute;left:50%;top:50%;width:0;height:0;transition:opacity .2s}
+.zeroline i{position:absolute;left:-39vmin;width:78vmin;top:-0.75px;height:1.5px;background:rgba(255,255,255,.9);box-shadow:0 0 0 .5px rgba(0,0,0,.45),0 0 4px rgba(0,0,0,.35)}
+.zeroline span{position:absolute;left:calc(39vmin + 6px);top:-8px;font:600 11px var(--sans);color:rgba(255,255,255,.92);white-space:nowrap}
+.hud.lvl .zeroline i{background:var(--signal)}
+.hud.lvl .zeroline span{color:var(--signal)}
 .reticle{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%}
 .hud.lvl .reticle{border-color:var(--signal)}
 .live{position:absolute;left:10px;bottom:10px;right:64px;font-size:11.5px;line-height:1.45;color:rgba(234,242,238,.92)}
@@ -226,15 +225,32 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast b{font-family:var(--mono);color:var(--accent)}
 
-@media (orientation:landscape) and (max-height:500px){
-  #app{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr}
-  .top{grid-column:1/3}
-  .deck{grid-row:2;grid-column:2;width:170px;align-content:center;padding:8px max(10px,env(safe-area-inset-right,0px)) 8px 10px}
-  .chips{flex-direction:column;overflow-y:auto;max-height:38vh;padding:0}
-  .zoombar{flex-wrap:wrap}
-  .row{grid-template-columns:1fr;justify-items:center;gap:10px;padding:0}
-  .thumbbtn,.dlbtn{justify-self:center}
+/* Horizontal (phone turned sideways, rotation unlocked): camera-style layout.
+   Viewfinder left, shutter rail on the right, zoom up the left edge, checklist along the bottom. */
+@media (orientation:landscape) and (max-height:540px){
+  #app{grid-template-columns:minmax(0,1fr) calc(96px + env(safe-area-inset-right,0px));grid-template-rows:auto minmax(0,1fr) auto auto}
+  .top{grid-column:1/3;grid-row:1;padding-top:6px;padding-bottom:6px}
+  .pill,.iconbtn{min-height:34px;height:34px}
+  .iconbtn{width:34px}
+  .deck{display:contents}
+  .vf{grid-column:1;grid-row:2}
+  .guide{grid-column:1;grid-row:3;background:var(--ink);padding-top:6px;min-height:30px}
+  .chips{grid-column:1;grid-row:4;background:var(--ink);padding-top:6px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+  .zoombar{grid-column:1;grid-row:2;align-self:center;justify-self:start;flex-direction:column;margin-left:max(10px,env(safe-area-inset-left,0px));z-index:4;min-height:0}
+  .zoombar button{background:rgba(10,18,17,.7)}
+  .row{grid-column:2;grid-row:2/5;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:8px env(safe-area-inset-right,0px) calc(env(safe-area-inset-bottom,0px) + 8px) 0;background:var(--ink)}
+  .row>span{display:none}
+  .row .dlbtn{order:3}.row .shutter{order:2}.row .thumbbtn{order:1}
+  .shutter{width:70px;height:70px}.shutter i{width:54px;height:54px}
+  .thumbbtn,.dlbtn{width:50px;height:50px;justify-self:center}
+  .live{left:calc(64px + env(safe-area-inset-left,0px))}
 }
+/* Rotation locked but phone held sideways: keep the readouts upright for the tech */
+/* r90: phone top points left, so the tech's "up" is the screen's right edge */
+.hud.r90 .tiltbox{top:50%;left:calc(100% - 44px);transform:translate(-50%,-50%) rotate(90deg)}
+.hud.r270 .tiltbox{top:50%;left:calc(44px + env(safe-area-inset-left,0px));transform:translate(-50%,-50%) rotate(-90deg)}
+.hud.r90 .zoomread{transform:translate(-50%,-50%) rotate(90deg)}
+.hud.r270 .zoomread{transform:translate(-50%,-50%) rotate(-90deg)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -251,7 +267,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <video id="video" playsinline muted autoplay></video>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
-      <div class="zerodot" id="zeroDot"><i></i><span>0°</span></div>
+      <div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
       <div class="reticle"></div>
       <div class="tiltbox"><div class="tiltval"><span id="hTilt">—</span><em id="hLevel">TILT</em></div><div class="sub" id="hHead">—</div></div>
       <div class="zoomread" id="zoomRead">1×</div>
@@ -311,7 +327,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.6.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.8.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -368,7 +384,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.6.0";
+const VERSION = "2.8.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -740,6 +756,7 @@ let vfH = 0;
 const measureVf = () => { vfH = vfEl.clientHeight; };
 window.addEventListener("resize", measureVf);
 window.addEventListener("orientationchange", () => setTimeout(measureVf, 300));
+if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener("change", () => setTimeout(() => { measureVf(); lastHz = ""; }, 300));
 const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
 const hudEls = {};
 let lastHz = "", lastHzOn = null;
@@ -750,27 +767,33 @@ function zeroOffset(p, imgW, imgH, zf) {
   const fov = rad(imgH >= imgW ? 69 : 54);
   return (imgH / 2) * Math.tan(rad(p)) / (Math.tan(fov / 2) / zf);
 }
+function uiAngle() { return (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (typeof window.orientation === "number" ? (window.orientation + 360) % 360 : 0); }
+// How far the phone is turned beyond what the screen shows (0 normally; 90/270 when held sideways with rotation lock on)
+function extraTurn() { return ((S.rollQ - uiAngle()) % 360 + 360) % 360; }
 function horizonOffset(p) {
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, W = vfEl.clientWidth, H = vfH;
   const dispH = W / H > vw / vh ? H : W * vh / vw, dispW = dispH * vw / vh;   // visible camera image
-  return clamp(zeroOffset(p, dispW, dispH, zoomFactor()), -H * 0.44, H * 0.44);
+  const side = extraTurn() % 180 === 90;                                      // world "up" runs across the screen
+  const lim = (side ? W : H) * 0.44;
+  return clamp(side ? zeroOffset(p, dispH, dispW, zoomFactor()) : zeroOffset(p, dispW, dispH, zoomFactor()), -lim, lim);
 }
 function fastTick() {
   const E = hudEls, p = S.pitch, strict = selStrict();
   const lvl = strict && p != null && Math.abs(p) <= LEVEL_TOL, near = strict && p != null && !lvl;
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
+  const xt = extraTurn(); E.hud.classList.toggle("r90", xt === 90); E.hud.classList.toggle("r270", xt === 270);
   if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
   else { setText(E.tilt, fmtTilt(p)); setText(E.level, Math.abs(p) <= LEVEL_TOL ? "LEVEL ✓" : p > 0 ? "AIM LOWER" : "AIM HIGHER"); }
-  // 0° dot: where zero tilt sits in the frame, from the camera's field of view
+  // 0° line: where the horizon sits in the frame (camera field of view), tilted with skew
   const on = strict && p != null && Math.abs(p) <= 40;
-  if (on !== lastHzOn) { E.dot.style.opacity = on ? 1 : 0; lastHzOn = on; }
+  if (on !== lastHzOn) { E.line.style.opacity = on ? 1 : 0; lastHzOn = on; }
   if (on) {
     if (!vfH) measureVf();
-    const y = horizonOffset(p), r = rad(-(S.levelDev || 0));
-    const t = `${(-y * Math.sin(r)).toFixed(1)}|${(y * Math.cos(r)).toFixed(1)}|${(-(S.levelDev || 0)).toFixed(1)}`;
+    const y = horizonOffset(p), r = rad(extraTurn() - (S.levelDev || 0));
+    const t = `${(-y * Math.sin(r)).toFixed(1)}|${(y * Math.cos(r)).toFixed(1)}|${deg(r).toFixed(1)}`;
     if (t !== lastHz) {
-      const [dx, dy] = t.split("|");
-      E.dot.style.transform = `translate(${dx}px,${dy}px)`;
+      const [dx, dy, rot] = t.split("|");
+      E.line.style.transform = `translate(${dx}px,${dy}px) rotate(${rot}deg)`;
       lastHz = t;
     }
   }
@@ -790,7 +813,7 @@ function slowTick() {
   setTimeout(slowTick, 500);
 }
 function hudTick() {
-  Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), dot:$("zeroDot"), head:$("hHead"), shutter:$("shutter") });
+  Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), line:$("zeroLine"), head:$("hHead"), shutter:$("shutter") });
   measureVf(); fastTick(); slowTick();
 }
 
@@ -850,20 +873,6 @@ function rotate(c, angle) {
   x.translate(r.width / 2, r.height / 2); x.rotate(rad(angle)); x.drawImage(c, -c.width / 2, -c.height / 2);
   return r;
 }
-function drawStamp(c, lines) {
-  const x = c.getContext("2d"), W = c.width, H = c.height;
-  const fs = Math.max(13, Math.round(Math.min(W, H) * 0.024)), lh = Math.round(fs * 1.32), padd = Math.round(fs * 0.7);
-  const maxW = W - padd * 4;
-  const fit = (t, f) => { x.font = f; if (x.measureText(t).width <= maxW) return t; while (t.length > 4 && x.measureText(t + "…").width > maxW) t = t.slice(0, -1); return t + "…"; };
-  const rows = lines.map(l => { const f = `${l.strong ? 700 : 500} ${l.strong ? Math.round(fs * 1.12) : fs}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`; const t = fit(l.t, f); x.font = f; return { t, f, w:x.measureText(t).width, strong:l.strong }; });
-  const bw = Math.min(W - padd * 2, Math.max(...rows.map(r => r.w)) + padd * 2), bh = rows.length * lh + padd * 1.4;
-  const bx = padd, by = H - bh - padd;
-  x.fillStyle = "rgba(0,0,0,0.58)";
-  if (x.roundRect) { x.beginPath(); x.roundRect(bx, by, bw, bh, fs * 0.45); x.fill(); } else x.fillRect(bx, by, bw, bh);
-  x.fillStyle = "#58C774"; x.fillRect(bx, by + fs * 0.45, Math.max(3, fs * 0.16), bh - fs * 0.9);
-  x.textBaseline = "top";
-  rows.forEach((r, i) => { x.font = r.f; x.fillStyle = r.strong ? "#58C774" : "#FFFFFF"; x.fillText(r.t, bx + padd, by + padd * 0.7 + i * lh + (lh - fs) / 2); });
-}
 const toBlob = (c, q) => new Promise(r => c.toBlob(r, "image/jpeg", q));
 async function encodeToTarget(c, target) {
   let b = await toBlob(c, 0.9);
@@ -890,22 +899,86 @@ function quality(src) {
   const mean = sum / (w * h), sharp = s2 / n - (s1 / n) ** 2;
   return { mean:Math.round(mean), sharp:Math.round(sharp), dark:mean < DARK_MAX, blurry:mean >= DARK_MAX && sharp < BLUR_MIN };
 }
-// Small, crisp 0° marker drawn into the photo at the horizon position (line-of-sight shots only).
-function drawZeroDot(c, m) {
+// 0° horizon line drawn into the photo (line-of-sight shots only): dashed so the real tree line
+// stays visible between dashes, white with a dark outline, tilted with any skew, "0°" at the left end.
+function drawZeroLine(c, m) {
   const W = c.width, H = c.height, x = c.getContext("2d");
   const y = zeroOffset(m.pitch, W, H, m.zf || 1), r = rad(-(m.skew || 0));
   const cx = W / 2 - y * Math.sin(r), cy = H / 2 + y * Math.cos(r);
-  const R = Math.max(7, Math.round(Math.min(W, H) * 0.009));
-  if (cy < R * 2 || cy > H - R * 2 || cx < R * 2 || cx > W - R * 2) return;   // horizon outside the frame: stamp has the tilt
-  x.save();
-  x.lineWidth = Math.max(1.5, R * 0.2);
-  x.strokeStyle = "rgba(0,0,0,0.45)"; x.beginPath(); x.arc(cx, cy, R + x.lineWidth * 0.75, 0, Math.PI * 2); x.stroke();
-  x.strokeStyle = "rgba(255,255,255,0.9)"; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.stroke();
-  x.fillStyle = "rgba(255,255,255,0.95)"; x.beginPath(); x.arc(cx, cy, Math.max(1.2, R * 0.22), 0, Math.PI * 2); x.fill();
-  x.font = `600 ${Math.round(R * 1.25)}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
-  x.textBaseline = "middle"; x.lineWidth = Math.max(2, R * 0.28); x.strokeStyle = "rgba(0,0,0,0.5)";
-  x.strokeText("0°", cx + R * 1.7, cy); x.fillStyle = "rgba(255,255,255,0.92)"; x.fillText("0°", cx + R * 1.7, cy);
+  const u = Math.min(W, H), lw = Math.max(2, u * 0.0028), half = W * 0.46;
+  if (cy < u * 0.02 || cy > H - u * 0.02) return;   // horizon outside the frame: the info band has the tilt
+  const ca = Math.cos(r), sa = Math.sin(r);
+  const x1 = cx - half * ca, y1 = cy - half * sa, x2 = cx + half * ca, y2 = cy + half * sa;
+  const seg = () => { x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); };
+  x.save(); x.lineCap = "butt"; x.setLineDash([u * 0.03, u * 0.015]);
+  x.lineWidth = lw + Math.max(2, lw * 0.9); x.strokeStyle = "rgba(0,0,0,0.55)"; seg();
+  x.lineWidth = lw; x.strokeStyle = "rgba(255,255,255,0.95)"; seg();
+  x.setLineDash([]);
+  const fsz = Math.round(u * 0.022);
+  x.translate(x1, y1); x.rotate(r);
+  x.font = `700 ${fsz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
+  x.textBaseline = "bottom"; x.lineJoin = "round";
+  x.lineWidth = Math.max(3, fsz * 0.22); x.strokeStyle = "rgba(0,0,0,0.6)"; x.strokeText("0°", 0, -lw * 2);
+  x.fillStyle = "#FFFFFF"; x.fillText("0°", 0, -lw * 2);
   x.restore();
+}
+// Info band added BELOW the photo (nothing covers the picture): labels across the top in green,
+// job / note / tech on the left, time / GPS / address / tilt on the right.
+function bandContent(m) {
+  const left = [], right = [];
+  if (m.job) left.push([refLabel(m.job.ref), jobTitle(m.job)].filter(Boolean).join(" · "));
+  if (m.note) left.push("Note: " + m.note);
+  if (m.tech) left.push("Tech: " + m.tech);
+  if (m.imported) left.push("Imported from photo library");
+  right.push(fmtTime(m.when) + (m.imported ? " (photo time)" : ""));
+  right.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` : "No GPS fix");
+  if (m.addr) right.push(m.addr);
+  const parts = [];
+  if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
+  if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
+  if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
+  if (parts.length) right.push(parts.join(" · "));
+  return { title:(m.labels || [m.label || "Photo"]).join(" + "), left, right };
+}
+function wrapText(ctx, text, maxW, maxLines) {
+  const out = []; let line = "";
+  for (const w of String(text).split(" ")) {
+    const t = line ? line + " " + w : w;
+    if (ctx.measureText(t).width <= maxW || !line) line = t; else { out.push(line); line = w; }
+  }
+  if (line) out.push(line);
+  if (out.length > maxLines) {
+    out.length = maxLines;
+    let l = out[maxLines - 1]; while (l.length > 1 && ctx.measureText(l + "…").width > maxW) l = l.slice(0, -1);
+    out[maxLines - 1] = l + "…";
+  }
+  return out;
+}
+function addInfoBand(c, m) {
+  const W = c.width, H = c.height, k = bandContent(m);
+  const fs = Math.max(13, Math.round(Math.min(W, H) * 0.019)), lh = Math.round(fs * 1.34), pad = Math.round(fs * 0.9);
+  const F = (wt, sz) => `${wt} ${sz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
+  const mc = canvas(1, 1).getContext("2d");
+  const tfs = Math.round(fs * 1.18), tlh = Math.round(tfs * 1.3);
+  mc.font = F(700, tfs); const tl = wrapText(mc, k.title, W - pad * 2, 3);
+  const colW = (W - pad * 3) / 2;
+  mc.font = F(500, fs);
+  const col = arr => arr.flatMap(t => wrapText(mc, t, colW, 2));
+  const L = col(k.left), Rr = col(k.right);
+  const bandH = Math.round(pad * 0.9 + tl.length * tlh + fs * 0.35 + Math.max(L.length, Rr.length, 1) * lh + pad * 0.8);
+  const out = canvas(W, H + bandH), x = out.getContext("2d");
+  x.drawImage(c, 0, 0);
+  x.fillStyle = "#0B1413"; x.fillRect(0, H, W, bandH);
+  x.fillStyle = "#58C774"; x.fillRect(0, H, W, Math.max(3, Math.round(fs * 0.14)));
+  x.textBaseline = "top";
+  let y = H + pad * 0.9;
+  x.font = F(700, tfs); x.fillStyle = "#58C774";
+  tl.forEach((t, i) => x.fillText(t, pad, y + i * tlh));
+  y += tl.length * tlh + fs * 0.35;
+  x.font = F(500, fs);
+  x.fillStyle = "#E8EFEC"; L.forEach((t, i) => x.fillText(t, pad, y + i * lh));
+  x.fillStyle = "#E8EFEC"; Rr.forEach((t, i) => x.fillText(t, pad * 2 + colW, y + i * lh));
+  return out;
 }
 async function processFrame(src, crop, rotation, meta) {
   const { sx, sy, cw, ch } = crop;
@@ -915,20 +988,16 @@ async function processFrame(src, crop, rotation, meta) {
   full.width = full.height = 0;
   c = rotate(c, rotation);
   const qc = quality(c);
-  if (meta.level && meta.pitch != null && !meta.imported) drawZeroDot(c, meta);
-  drawStamp(c, stampLines(meta));
-  const enc = await encodeToTarget(c, OUTPUT.target);
+  if (meta.level && meta.pitch != null && !meta.imported) drawZeroLine(c, meta);
+  const thumb = await makeThumb(c);              // gallery thumbnail shows the photo only
+  const enc = await encodeToTarget(addInfoBand(c, meta), OUTPUT.target);
   let blob = enc.blob;
   try { blob = await addExif(blob, meta, enc.canvas.width, enc.canvas.height); } catch (e) { console.warn("exif", e); }
-  return { blob, thumb:await makeThumb(enc.canvas), w:enc.canvas.width, h:enc.canvas.height, q:enc.q, qc };
+  return { blob, thumb, w:enc.canvas.width, h:enc.canvas.height, q:enc.q, qc };
 }
 
 /* ================= capture ================= */
-function outputRotation() {
-  const ui = (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (typeof window.orientation === "number" ? (window.orientation + 360) % 360 : 0);
-  const need = ((S.rollQ - ui) % 360 + 360) % 360;
-  return (360 - need) % 360;
-}
+function outputRotation() { return (360 - extraTurn()) % 360; }   // turn the saved photo upright
 async function capture(force = false) {
   const v = $("video");
   if (!current || S.busy) return;

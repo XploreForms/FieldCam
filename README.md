@@ -1,11 +1,13 @@
-# Field Cam (v2.6.0)
+# Field Cam (v2.8.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
 
-Each photo is stamped with its label, platform and work order type, date/time, GPS coordinates
-(± accuracy), street address, tilt, compass direction, elevation and tech name, then compressed
-to 2048 px / 350 KB max for low-signal uploads.
+Each photo gets an **info band added below the picture** (nothing is drawn over the photo itself):
+label, SA-#, job form, note and tech on the left; date/time, GPS (± accuracy), street address,
+tilt, compass direction and elevation on the right. Then it's compressed to 2048 px / 350 KB max
+for low-signal uploads. The band adds about 14% height and roughly 30–45 KB; the 350 KB cap still
+applies to the whole file.
 
 ## Files
 | File | Purpose |
@@ -67,17 +69,17 @@ Pictures Checklist copied from the form:
 | Cannot Complete | One form for all jobs (platform chosen for the file name) | Form has no checklist; optional "House (customer no-show)" |
 | Not Required | Fixed Wireless: Signal Requirements Not Met, Stop Sell Area, Not in Coverage Area, NLOS. Satellite NLOS. Unrelated to Signal (any job) | FW: LOS POVs to all viable towers, Testing locations, Overall structure (+ eCoverage screenshot for Not in Coverage). Sat: LOS POVs, Testing locations, Overall structure. Unrelated: none |
 
-When a form changes, edit its `shots` list. `level` marks photos that get the 0° level guide;
+When a form changes, edit its `shots` list. `level` marks photos that get the 0° horizon line;
 `MULTI` marks items where several photos are normal. "Other" is always added: tapping it asks
 what the photo is of, and that text becomes the label. Custom labels stay for the rest of the job
 once they have a photo.
 
 ## Photo checks
 - **Level guide (no lock):** on Fixed Wireless "CPE Line of Sight" and "Line of sight POVs to all
-  viable towers" a **0° dot** shows where the horizon sits in the frame. Put the dot in the centre
-  ring to shoot level; it turns green within ±3°. The shutter always works. The same 0° marker is
-  drawn into the saved photo at the horizon position (small ring, full resolution), and the stamp
-  records the real tilt with `(level)` or `(not level)`. Satellite LOS photos have no guide (dishes aim at
+  viable towers" a **0° horizon line** shows where level sits in the frame. Line it up with the
+  centre ring to shoot level; it turns green within ±3°. The shutter always works. A dashed 0°
+  line (white with a dark outline, labelled "0°") is drawn into the saved photo at the horizon,
+  and the info band records the real tilt with `(level)` or `(not level)`. Satellite LOS photos have no guide (dishes aim at
   the sky).
 - **Blurry / dark warning:** after each shot the app checks sharpness and brightness and offers
   Retake or Keep. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
@@ -85,10 +87,16 @@ once they have a photo.
 - **Note:** the pencil button adds a note to the next photo (stamped as `Note: …`), then clears.
 - **Missing shots:** Finish job lists labels with no photo yet and photos not downloaded.
 
+## Horizontal photos
+- **Rotation lock off:** turning the phone sideways switches to a camera-style layout: shutter,
+  gallery and save down the right, zoom up the left edge, checklist along the bottom.
+- **Rotation lock on:** the screen stays upright, the tilt readout turns to face the tech, and the
+  saved photo still comes out landscape.
+
 ## Tilt
 On level-guided photos the top readout shows tilt large (+ = aimed up) with LEVEL ✓ / AIM LOWER /
-AIM HIGHER, and the 0° dot moves with the phone (skew is shown as a number).
-The dot's position uses the iPhone camera's field of view and the current zoom/lens. On every
+AIM HIGHER, and the 0° line moves and tilts with the phone (skew).
+The line's position uses the iPhone camera's field of view and the current zoom/lens. On every
 other label the tilt is just a small number and the stamp records the value only.
 
 ## Notes
@@ -96,7 +104,7 @@ other label the tilt is just a small number and the stamp records the value only
   Store apps. Motion & Orientation is asked on every launch (Apple rule); camera and location are
   usually asked once per launch. Setting Settings › Apps › Safari › Camera and Location to
   **Allow** can reduce the prompts.
-- Tilt, skew and the 0° dot redraw every screen frame (about 60 times a second); GPS and
+- Tilt, skew and the 0° line redraw every screen frame (about 60 times a second); GPS and
   address text update twice a second.
 - Rear camera only; never falls back to the selfie camera.
 - Zoom: .5× / Tele use the real lenses where the iPhone exposes them; 2× / 3× / pinch crop.
