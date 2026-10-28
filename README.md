@@ -1,4 +1,4 @@
-# Field Cam (v2.8.0)
+# Field Cam (v2.8.3)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -107,7 +107,9 @@ other label the tilt is just a small number and the stamp records the value only
 - Tilt, skew and the 0° line redraw every screen frame (about 60 times a second); GPS and
   address text update twice a second.
 - Rear camera only; never falls back to the selfie camera.
-- Zoom: .5× / Tele use the real lenses where the iPhone exposes them; 2× / 3× / pinch crop.
+- Zoom starts at 1× every time and **1× is the minimum**: no ultra-wide, and pinch can't go wider.
+  Tele uses the real telephoto lens where exposed; 2× / 3× / pinch crop. Any zoom other than 1×
+  is noted on the info band.
 - Compass is magnetic north (about 10° off true north in Southern Ontario).
 - Address lookup uses OpenStreetMap's free service; with no data, coordinates are still stamped.
 - Location, time and direction are also written into the JPEG metadata.

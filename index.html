@@ -327,7 +327,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.8.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.8.3 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -384,7 +384,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.8.0";
+const VERSION = "2.8.3";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -545,7 +545,8 @@ async function startCamera(deviceId) {
     if (S.caps.zoom && !(S.caps.zoom.max > S.caps.zoom.min)) S.caps.zoom = null;
     if ((S.caps.focusMode || []).includes("continuous")) S.track.applyConstraints({ advanced:[{ focusMode:"continuous" }] }).catch(() => {});
     $("torchBtn").hidden = !S.caps.torch;
-    S.zoom = S.caps.zoom ? Math.max(1, S.caps.zoom.min || 1) : 1; S.digitalZoom = 1; S.torch = false;
+    S.zoom = 1; S.digitalZoom = 1; S.torch = false;
+    if (S.caps.zoom) pushHwZoom();   // always start at exactly 1×, even on a camera that could go wider
     $("torchBtn").classList.remove("on");
     $("vfMsg").hidden = true;
     S.track.addEventListener("ended", () => { if (document.visibilityState === "visible" && !S.switching) startCamera(); });
@@ -580,14 +581,16 @@ async function detectLenses() {
     for (const d of devs) {
       const L = (d.label || "").toLowerCase();
       if (!L || /front|user|facetime/.test(L)) continue;
-      if (/ultra ?wide/.test(L)) S.lenses.ultra = d.deviceId;
-      else if (/tele/.test(L)) S.lenses.tele = d.deviceId;
+      if (/ultra ?wide/.test(L)) continue;            // ultra-wide is never used
+      if (/tele/.test(L)) S.lenses.tele = d.deviceId;
       else if (/^back camera$/.test(L.trim())) S.lenses.wide = d.deviceId;
     }
   } catch {}
 }
 const curZoom = () => S.caps.zoom ? S.zoom : S.digitalZoom;
-const zoomRange = () => S.caps.zoom ? [Math.max(1, S.caps.zoom.min || 1), Math.min(S.caps.zoom.max || 1, 10)] : [1, MAX_DIGITAL];
+// 1× is the minimum: no ultra-wide (its soft edges don't survive the compression). Some iPhones give
+// Safari one combined camera that could zoom below 1×; the range is clamped so it never does.
+const zoomRange = () => S.caps.zoom ? [Math.max(1, S.caps.zoom.min || 1), Math.max(1, Math.min(S.caps.zoom.max || 1, 10))] : [1, MAX_DIGITAL];
 let hwBusy = false, hwQueued = false;
 function pushHwZoom() {
   if (!S.track || !S.caps.zoom) return;
@@ -609,15 +612,14 @@ const fmtZ = z => (Math.round(z * 10) / 10).toString().replace(/^0\./, ".") + "�
 function zoomLabel() {
   const z = curZoom();
   if (S.lens === "tele") return z > 1.05 ? "Tele " + fmtZ(z) : "Tele";
-  return fmtZ((S.lens === "ultra" ? 0.5 : 1) * z);
+  return fmtZ(z);
 }
 function applyZoomUI() {
   $("video").style.transform = S.digitalZoom > 1 ? `scale(${S.digitalZoom})` : "";
   const z = curZoom(), btns = [], wide = S.lens === "wide";
-  if (S.lenses && S.lenses.ultra) btns.push({ k:"ultra", t:S.lens === "ultra" ? fmtZ(0.5 * z) : ".5×", on:S.lens === "ultra" });
   btns.push({ k:"w1", t:wide && z < 1.5 ? fmtZ(z) : "1×", on:wide && z < 1.5 });
   btns.push({ k:"w2", t:wide && z >= 1.5 && z < 3 ? fmtZ(z) : "2×", on:wide && z >= 1.5 && z < 3 });
-  if (S.lenses && S.lenses.tele) btns.push({ k:"tele", t:zoomLabel().replace("Tele ", "T "), on:S.lens === "tele" });
+  if (S.lenses && S.lenses.tele) btns.push({ k:"tele", t:S.lens === "tele" ? zoomLabel().replace("Tele ", "T ") : "Tele", on:S.lens === "tele" });
   else btns.push({ k:"w3", t:wide && z >= 3 ? fmtZ(z) : "3×", on:wide && z >= 3 });
   $("zoomBar").innerHTML = btns.map(b => `<button data-z="${b.k}" aria-pressed="${b.on}">${b.t}</button>`).join("");
   $("zoomRead").textContent = zoomLabel();
@@ -625,7 +627,7 @@ function applyZoomUI() {
 $("zoomBar").addEventListener("click", e => {
   const b = e.target.closest("[data-z]"); if (!b) return;
   const k = b.dataset.z, z = k === "w2" ? 2 : k === "w3" ? 3 : 1;
-  if (k === "ultra" || k === "tele") selectLens(k, 1);
+  if (k === "tele") selectLens(k, 1);
   else selectLens("wide", z).then(() => { if (S.lens === "wide") { setZoom(z); flashZoomRead(); } });
 });
 let zrT;
@@ -687,9 +689,12 @@ document.addEventListener("visibilitychange", () => {
 function onOrient(e) {
   if (e.beta == null || e.gamma == null) return;
   const b = rad(e.beta), g = rad(e.gamma), cb = Math.cos(b), sb = Math.sin(b), cg = Math.cos(g), sg = Math.sin(g);
-  const ux = -cb * sg, uy = sb, uz = cb * cg;               // world "up" in the device frame
-  const p = deg(Math.asin(clamp(-uz, -1, 1)));             // + = camera aimed above the horizon
-  S.pitch = S.pitch == null ? p : S.pitch * 0.55 + p * 0.45; // light smoothing: steady but responsive
+  // World "up" in the device frame. Smoothed as one vector (not as separate angles) so tilt and
+  // left/right roll stay steady together, including near upright where the raw angles jump around.
+  const raw = [-cb * sg, sb, cb * cg];
+  S.up = S.up ? S.up.map((v, i) => v * 0.6 + raw[i] * 0.4) : raw;
+  const n = Math.hypot(...S.up) || 1, ux = S.up[0] / n, uy = S.up[1] / n, uz = S.up[2] / n;
+  S.pitch = deg(Math.asin(clamp(-uz, -1, 1)));             // + = camera aimed above the horizon
   const m = Math.hypot(ux, uy);
   if (m > 0.35) {
     S.roll = deg(Math.atan2(ux, uy));
@@ -762,7 +767,7 @@ const hudEls = {};
 let lastHz = "", lastHzOn = null;
 // Where 0° tilt (the horizon) sits relative to the image centre. iPhone main camera: about 69° across
 // the long side of the 4:3 frame and 54° across the short side; zoom and lens narrow that.
-const zoomFactor = () => curZoom() * (S.lens === "ultra" ? 0.5 : S.lens === "tele" ? 3 : 1);
+const zoomFactor = () => curZoom() * (S.lens === "tele" ? 3 : 1);
 function zeroOffset(p, imgW, imgH, zf) {
   const fov = rad(imgH >= imgW ? 69 : 54);
   return (imgH / 2) * Math.tan(rad(p)) / (Math.tan(fov / 2) / zf);
@@ -789,7 +794,8 @@ function fastTick() {
   if (on !== lastHzOn) { E.line.style.opacity = on ? 1 : 0; lastHzOn = on; }
   if (on) {
     if (!vfH) measureVf();
-    const y = horizonOffset(p), r = rad(extraTurn() - (S.levelDev || 0));
+    // the horizon turns opposite to the phone: roll the line by the phone's roll relative to the screen
+    const y = horizonOffset(p), r = rad(extraTurn() + (S.levelDev || 0));
     const t = `${(-y * Math.sin(r)).toFixed(1)}|${(y * Math.cos(r)).toFixed(1)}|${deg(r).toFixed(1)}`;
     if (t !== lastHz) {
       const [dx, dy, rot] = t.split("|");
@@ -824,7 +830,7 @@ function snapshot(extra = {}) {
     when:new Date(), pos:gpsFresh() ? { ...S.pos } : null,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
     heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), note:S.note || "",
-    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), skew:S.levelDev || 0, imported:false
+    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false
   }, extra);
 }
 function stampLines(m, live = false) {
@@ -903,7 +909,7 @@ function quality(src) {
 // stays visible between dashes, white with a dark outline, tilted with any skew, "0°" at the left end.
 function drawZeroLine(c, m) {
   const W = c.width, H = c.height, x = c.getContext("2d");
-  const y = zeroOffset(m.pitch, W, H, m.zf || 1), r = rad(-(m.skew || 0));
+  const y = zeroOffset(m.pitch, W, H, m.zf || 1), r = rad(m.skew || 0);
   const cx = W / 2 - y * Math.sin(r), cy = H / 2 + y * Math.cos(r);
   const u = Math.min(W, H), lw = Math.max(2, u * 0.0028), half = W * 0.46;
   if (cy < u * 0.02 || cy > H - u * 0.02) return;   // horizon outside the frame: the info band has the tilt
@@ -937,6 +943,7 @@ function bandContent(m) {
   if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
   if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
   if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
+  if (m.zoomLabel && m.zoomLabel !== "1×" && !m.imported) parts.push(`Zoom ${m.zoomLabel}`);
   if (parts.length) right.push(parts.join(" · "));
   return { title:(m.labels || [m.label || "Photo"]).join(" + "), left, right };
 }
