@@ -58,7 +58,9 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 /* viewfinder */
 .vf{position:relative;overflow:hidden;background:#000;min-height:0;touch-action:none}
-.vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:center}
+/* The camera frame is always 3:4 (4:3 when the screen is sideways): exactly what gets saved */
+.frame{position:absolute;left:50%;top:50%;width:75%;height:100%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
+.vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 .flash.go{animation:flash .28s ease-out}
 @keyframes flash{0%{opacity:.85}100%{opacity:0}}
@@ -264,7 +266,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
   </div>
 
   <div class="vf" id="vf">
-    <video id="video" playsinline muted autoplay></video>
+    <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video></div>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
       <div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
@@ -327,7 +329,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.8.3 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v2.9.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -384,7 +386,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.8.3";
+const VERSION = "2.9.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -758,7 +760,15 @@ const gpsFresh = () => S.pos && Date.now() - S.posAt < 60000;
 // Fast loop (every screen frame): tilt, level badge, 0° dot, skew, compass. Only touches the DOM when a value changes.
 // Slow loop (twice a second): GPS chip and the time / coordinates / address text.
 let vfH = 0;
-const measureVf = () => { vfH = vfEl.clientHeight; };
+// Size the 3:4 camera frame to fit the viewfinder (4:3 when the screen itself is sideways)
+const FRAME = { w:0, h:0 };
+const measureVf = () => {
+  vfH = vfEl.clientHeight;
+  const W = vfEl.clientWidth, H = vfH, r = H >= W ? 3 / 4 : 4 / 3;   // width ÷ height
+  const fw = Math.min(W, H * r), fh = fw / r;
+  FRAME.w = Math.round(fw); FRAME.h = Math.round(fh);
+  const f = $("frame"); f.style.width = FRAME.w + "px"; f.style.height = FRAME.h + "px";
+};
 window.addEventListener("resize", measureVf);
 window.addEventListener("orientationchange", () => setTimeout(measureVf, 300));
 if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener("change", () => setTimeout(() => { measureVf(); lastHz = ""; }, 300));
@@ -776,8 +786,7 @@ function uiAngle() { return (screen.orientation && typeof screen.orientation.ang
 // How far the phone is turned beyond what the screen shows (0 normally; 90/270 when held sideways with rotation lock on)
 function extraTurn() { return ((S.rollQ - uiAngle()) % 360 + 360) % 360; }
 function horizonOffset(p) {
-  const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, W = vfEl.clientWidth, H = vfH;
-  const dispH = W / H > vw / vh ? H : W * vh / vw, dispW = dispH * vw / vh;   // visible camera image
+  const W = vfEl.clientWidth, H = vfH, dispW = FRAME.w || W, dispH = FRAME.h || H;   // the 3:4 camera frame on screen
   const side = extraTurn() % 180 === 90;                                      // world "up" runs across the screen
   const lim = (side ? W : H) * 0.44;
   return clamp(side ? zeroOffset(p, dispH, dispW, zoomFactor()) : zeroOffset(p, dispW, dispH, zoomFactor()), -lim, lim);
@@ -818,6 +827,7 @@ function slowTick() {
   if (html !== lastLive) { $("live").innerHTML = html; lastLive = html; }
   setTimeout(slowTick, 500);
 }
+window.addEventListener("resize", () => { lastHz = ""; });
 function hudTick() {
   Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), line:$("zeroLine"), head:$("hHead"), shutter:$("shutter") });
   measureVf(); fastTick(); slowTick();
@@ -1019,7 +1029,10 @@ async function capture(force = false) {
   try { navigator.vibrate && navigator.vibrate(15); } catch {}
   const meta = snapshot();
   const vw = v.videoWidth, vh = v.videoHeight, z = S.caps.zoom ? 1 : S.digitalZoom;
-  const cw = Math.round(vw / z), ch = Math.round(vh / z);
+  // Always 3:4: crop the centre of the camera feed to 3:4 (4:3 if the feed is landscape), the same area the frame shows
+  if (!FRAME.w) measureVf();
+  const r = FRAME.h >= FRAME.w ? 3 / 4 : 4 / 3, w0 = vw / vh > r ? vh * r : vw, h0 = w0 / r;
+  const cw = Math.round(w0 / z), ch = Math.round(h0 / z);
   const grab = canvas(vw, vh); grab.getContext("2d").drawImage(v, 0, 0, vw, vh);
   try {
     const out = await processFrame(grab, { sx:Math.round((vw - cw) / 2), sy:Math.round((vh - ch) / 2), cw, ch }, outputRotation(), meta);
