@@ -1,15 +1,14 @@
-# Field Cam (v2.9.0)
+# Field Cam (v3.0.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
 
-Each photo gets an **info band added below the picture** (nothing is drawn over the photo itself):
-label, SA-#, job form, note and tech on the left; date/time, GPS (± accuracy), street address,
-tilt, compass direction and elevation on the right. Every camera photo is **3:4** (2048 × 1536 px, upright or sideways): if the iPhone hands the app a
-wider 16:9 feed, the centre is cropped to 3:4, and the viewfinder shows exactly that frame.
-Imported pictures keep their own shape. Then it's compressed to 2048 px / 350 KB max
-for low-signal uploads. The band adds about 14% height and roughly 30–45 KB; the 350 KB cap still
-applies to the whole file.
+Every camera photo is **landscape 4:3** (2048 × 1536), however the phone is held, and the
+viewfinder shows exactly that frame. An **info band** below the photo makes the final image a
+**2048 × 2048 square**: label, SA-#, job form, note and tech on the left; date/time, GPS
+(± accuracy), street address, tilt, compass direction and elevation on the right. Nothing is drawn
+over the photo itself. Imported pictures keep their shape, centred on the same square. Compressed to
+350 KB max for low-signal uploads.
 
 ## Files
 | File | Purpose |

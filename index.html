@@ -58,7 +58,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 /* viewfinder */
 .vf{position:relative;overflow:hidden;background:#000;min-height:0;touch-action:none}
-/* The camera frame is always 3:4 (4:3 when the screen is sideways): exactly what gets saved */
+/* The camera frame: exactly what gets saved (always landscape 4:3 in the world) */
 .frame{position:absolute;left:50%;top:50%;width:75%;height:100%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
 .vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
@@ -329,7 +329,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v2.9.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.0.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -386,7 +386,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "2.9.0";
+const VERSION = "3.0.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -762,9 +762,13 @@ const gpsFresh = () => S.pos && Date.now() - S.posAt < 60000;
 let vfH = 0;
 // Size the 3:4 camera frame to fit the viewfinder (4:3 when the screen itself is sideways)
 const FRAME = { w:0, h:0 };
+// Photos are always landscape 4:3 in the world. Phone upright: a wide 4:3 frame on screen. Phone held sideways
+// with rotation lock on: the frame is tall on screen (it's wide in the world) and the photo is turned upright after.
+let frameTurn = 0;
 const measureVf = () => {
   vfH = vfEl.clientHeight;
-  const W = vfEl.clientWidth, H = vfH, r = H >= W ? 3 / 4 : 4 / 3;   // width ÷ height
+  frameTurn = extraTurn() % 180;
+  const W = vfEl.clientWidth, H = vfH, r = frameTurn === 90 ? 3 / 4 : 4 / 3;   // width ÷ height on screen
   const fw = Math.min(W, H * r), fh = fw / r;
   FRAME.w = Math.round(fw); FRAME.h = Math.round(fh);
   const f = $("frame"); f.style.width = FRAME.w + "px"; f.style.height = FRAME.h + "px";
@@ -778,24 +782,28 @@ let lastHz = "", lastHzOn = null;
 // Where 0° tilt (the horizon) sits relative to the image centre. iPhone main camera: about 69° across
 // the long side of the 4:3 frame and 54° across the short side; zoom and lens narrow that.
 const zoomFactor = () => curZoom() * (S.lens === "tele" ? 3 : 1);
-function zeroOffset(p, imgW, imgH, zf) {
-  const fov = rad(imgH >= imgW ? 69 : 54);
-  return (imgH / 2) * Math.tan(rad(p)) / (Math.tan(fov / 2) / zf);
+// Focal length in camera-feed pixels: the main camera covers about 69° across the long side of its 4:3 sensor.
+const TAN_HALF_LONG = Math.tan(rad(34.5));
+function focalSrc() {
+  const v = $("video"), long = Math.max(v.videoWidth || 4, v.videoHeight || 3);
+  return long / 2 / TAN_HALF_LONG * zoomFactor();          // zoomFactor = hardware zoom / telephoto (digital zoom is a crop)
 }
+const zeroOffsetF = (p, f) => f * Math.tan(rad(p));        // pixels from centre to the horizon, for focal length f
 function uiAngle() { return (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (typeof window.orientation === "number" ? (window.orientation + 360) % 360 : 0); }
 // How far the phone is turned beyond what the screen shows (0 normally; 90/270 when held sideways with rotation lock on)
 function extraTurn() { return ((S.rollQ - uiAngle()) % 360 + 360) % 360; }
 function horizonOffset(p) {
-  const W = vfEl.clientWidth, H = vfH, dispW = FRAME.w || W, dispH = FRAME.h || H;   // the 3:4 camera frame on screen
-  const side = extraTurn() % 180 === 90;                                      // world "up" runs across the screen
-  const lim = (side ? W : H) * 0.44;
-  return clamp(side ? zeroOffset(p, dispH, dispW, zoomFactor()) : zeroOffset(p, dispW, dispH, zoomFactor()), -lim, lim);
+  const v = $("video"), vw = v.videoWidth || 4, vh = v.videoHeight || 3, W = vfEl.clientWidth, H = vfH;
+  const scale = Math.max((FRAME.w || W) / vw, (FRAME.h || H) / vh) * (S.digitalZoom || 1);   // screen px per feed px (object-fit: cover)
+  const side = extraTurn() % 180 === 90, lim = (side ? FRAME.w || W : FRAME.h || H) * 0.5;
+  return clamp(zeroOffsetF(p, focalSrc() * scale), -lim, lim);
 }
 function fastTick() {
   const E = hudEls, p = S.pitch, strict = selStrict();
   const lvl = strict && p != null && Math.abs(p) <= LEVEL_TOL, near = strict && p != null && !lvl;
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
   const xt = extraTurn(); E.hud.classList.toggle("r90", xt === 90); E.hud.classList.toggle("r270", xt === 270);
+  if (xt % 180 !== frameTurn) { measureVf(); lastHz = ""; }   // phone turned: reshape the frame
   if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
   else { setText(E.tilt, fmtTilt(p)); setText(E.level, Math.abs(p) <= LEVEL_TOL ? "LEVEL ✓" : p > 0 ? "AIM LOWER" : "AIM HIGHER"); }
   // 0° line: where the horizon sits in the frame (camera field of view), tilted with skew
@@ -840,7 +848,7 @@ function snapshot(extra = {}) {
     when:new Date(), pos:gpsFresh() ? { ...S.pos } : null,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
     heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), note:S.note || "",
-    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false
+    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false
   }, extra);
 }
 function stampLines(m, live = false) {
@@ -919,7 +927,7 @@ function quality(src) {
 // stays visible between dashes, white with a dark outline, tilted with any skew, "0°" at the left end.
 function drawZeroLine(c, m) {
   const W = c.width, H = c.height, x = c.getContext("2d");
-  const y = zeroOffset(m.pitch, W, H, m.zf || 1), r = rad(m.skew || 0);
+  const y = zeroOffsetF(m.pitch, m.fpx || (Math.max(W, H) / 2 / TAN_HALF_LONG)), r = rad(m.skew || 0);
   const cx = W / 2 - y * Math.sin(r), cy = H / 2 + y * Math.cos(r);
   const u = Math.min(W, H), lw = Math.max(2, u * 0.0028), half = W * 0.46;
   if (cy < u * 0.02 || cy > H - u * 0.02) return;   // horizon outside the frame: the info band has the tilt
@@ -971,30 +979,38 @@ function wrapText(ctx, text, maxW, maxLines) {
   }
   return out;
 }
+// Final image is square: the photo on top, the info band filling the rest (512 px under a 2048 × 1536 photo).
+// Imported pictures of other shapes are centred on the same square canvas.
 function addInfoBand(c, m) {
-  const W = c.width, H = c.height, k = bandContent(m);
-  const fs = Math.max(13, Math.round(Math.min(W, H) * 0.019)), lh = Math.round(fs * 1.34), pad = Math.round(fs * 0.9);
+  const W0 = c.width, H0 = c.height, k = bandContent(m);
   const F = (wt, sz) => `${wt} ${sz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
   const mc = canvas(1, 1).getContext("2d");
-  const tfs = Math.round(fs * 1.18), tlh = Math.round(tfs * 1.3);
-  mc.font = F(700, tfs); const tl = wrapText(mc, k.title, W - pad * 2, 3);
-  const colW = (W - pad * 3) / 2;
-  mc.font = F(500, fs);
-  const col = arr => arr.flatMap(t => wrapText(mc, t, colW, 2));
-  const L = col(k.left), Rr = col(k.right);
-  const bandH = Math.round(pad * 0.9 + tl.length * tlh + fs * 0.35 + Math.max(L.length, Rr.length, 1) * lh + pad * 0.8);
-  const out = canvas(W, H + bandH), x = out.getContext("2d");
-  x.drawImage(c, 0, 0);
-  x.fillStyle = "#0B1413"; x.fillRect(0, H, W, bandH);
-  x.fillStyle = "#58C774"; x.fillRect(0, H, W, Math.max(3, Math.round(fs * 0.14)));
+  const layout = (S, fs) => {
+    const lh = Math.round(fs * 1.34), pad = Math.round(fs * 0.9), tfs = Math.round(fs * 1.18), tlh = Math.round(tfs * 1.3);
+    mc.font = F(700, tfs); const tl = wrapText(mc, k.title, S - pad * 2, 2);
+    const colW = (S - pad * 3) / 2; mc.font = F(500, fs);
+    const col = arr => arr.flatMap(t => wrapText(mc, t, colW, 2));
+    const L = col(k.left), R = col(k.right);
+    const need = Math.round(pad * 1.7 + tl.length * tlh + fs * 0.45 + Math.max(L.length, R.length, 1) * lh);
+    return { fs, lh, pad, tfs, tlh, tl, colW, L, R, need };
+  };
+  // square side: at least the width; taller-than-wide imports need room for a minimum band too
+  let S = Math.max(W0, H0 + Math.round(W0 * 0.12));
+  let fs = Math.round(S * 0.026), L0 = layout(S, fs);
+  const bandH = S - H0;
+  while (L0.need > bandH && fs > 12) { fs -= 1; L0 = layout(S, fs); }
+  const out = canvas(S, S), x = out.getContext("2d");
+  x.fillStyle = "#0B1413"; x.fillRect(0, 0, S, S);
+  x.drawImage(c, Math.round((S - W0) / 2), 0);
+  x.fillStyle = "#58C774"; x.fillRect(0, H0, S, Math.max(3, Math.round(fs * 0.14)));
+  const { lh, pad, tfs, tlh, tl, colW, L, R, need } = L0;
+  let y = H0 + Math.max(pad, Math.round((bandH - need) / 2) + pad * 0.9);   // centred in the band
   x.textBaseline = "top";
-  let y = H + pad * 0.9;
-  x.font = F(700, tfs); x.fillStyle = "#58C774";
-  tl.forEach((t, i) => x.fillText(t, pad, y + i * tlh));
-  y += tl.length * tlh + fs * 0.35;
-  x.font = F(500, fs);
-  x.fillStyle = "#E8EFEC"; L.forEach((t, i) => x.fillText(t, pad, y + i * lh));
-  x.fillStyle = "#E8EFEC"; Rr.forEach((t, i) => x.fillText(t, pad * 2 + colW, y + i * lh));
+  x.font = F(700, tfs); x.fillStyle = "#58C774"; tl.forEach((t, i) => x.fillText(t, pad, y + i * tlh));
+  y += tl.length * tlh + fs * 0.45;
+  x.font = F(500, fs); x.fillStyle = "#E8EFEC";
+  L.forEach((t, i) => x.fillText(t, pad, y + i * lh));
+  R.forEach((t, i) => x.fillText(t, pad * 2 + colW, y + i * lh));
   return out;
 }
 async function processFrame(src, crop, rotation, meta) {
@@ -1002,6 +1018,7 @@ async function processFrame(src, crop, rotation, meta) {
   const full = canvas(cw, ch); full.getContext("2d").drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
   const [tw, th] = fitBox(cw, ch, OUTPUT.edge);
   let c = downscale(full, cw, ch, tw, th);
+  if (meta.fsrc) meta.fpx = meta.fsrc * (tw / cw);   // focal length in output pixels
   full.width = full.height = 0;
   c = rotate(c, rotation);
   const qc = quality(c);
@@ -1029,9 +1046,9 @@ async function capture(force = false) {
   try { navigator.vibrate && navigator.vibrate(15); } catch {}
   const meta = snapshot();
   const vw = v.videoWidth, vh = v.videoHeight, z = S.caps.zoom ? 1 : S.digitalZoom;
-  // Always 3:4: crop the centre of the camera feed to 3:4 (4:3 if the feed is landscape), the same area the frame shows
-  if (!FRAME.w) measureVf();
-  const r = FRAME.h >= FRAME.w ? 3 / 4 : 4 / 3, w0 = vw / vh > r ? vh * r : vw, h0 = w0 / r;
+  // Always landscape 4:3 in the world: crop the centre of the camera feed to the frame's shape
+  measureVf();
+  const r = FRAME.w / FRAME.h, w0 = vw / vh > r ? vh * r : vw, h0 = w0 / r;   // same 4:3 area the frame shows
   const cw = Math.round(w0 / z), ch = Math.round(h0 / z);
   const grab = canvas(vw, vh); grab.getContext("2d").drawImage(v, 0, 0, vw, vh);
   try {
