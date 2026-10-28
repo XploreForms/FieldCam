@@ -60,7 +60,10 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .vf{position:relative;overflow:hidden;background:#000;min-height:0;touch-action:none}
 /* The camera frame: exactly what gets saved (always landscape 4:3 in the world) */
 .frame{position:absolute;left:50%;top:50%;width:75%;height:100%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
-.vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center}
+/* Square viewfinder; the feed is sized so the whole 4:3 photo area fits inside it, nothing cropped */
+.vf video{position:absolute;left:50%;top:50%;width:100%;height:100%;object-fit:fill;transform-origin:center;translate:-50% -50%}
+/* the 4:3 area that gets saved: outlined, everything outside it dimmed (context only) */
+.capbox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2000px rgba(0,0,0,.5);outline:1px solid rgba(255,255,255,.7);pointer-events:none}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 .flash.go{animation:flash .28s ease-out}
 @keyframes flash{0%{opacity:.85}100%{opacity:0}}
@@ -203,6 +206,10 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .viewer{position:fixed;inset:0;z-index:30;background:#000;display:none;flex-direction:column}
 .viewer.open{display:flex}
 .vstage{flex:1;position:relative;overflow:hidden;touch-action:none}
+.vnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(10,18,17,.6);color:#fff;z-index:2}
+.vnav svg{width:22px;height:22px}.vnav.prev{left:10px}.vnav.next{right:10px}.vnav[hidden]{display:none}
+.vcount{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);padding:3px 10px;border-radius:999px;background:rgba(10,18,17,.6);font:600 12px var(--mono);color:#fff;pointer-events:none}
+.vstage img.slide{transition:transform .18s ease-out}
 .vstage img{position:absolute;left:50%;top:50%;max-width:100%;max-height:100%;transform-origin:center;will-change:transform;user-select:none;-webkit-user-drag:none}
 .vbar{display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(14px,env(safe-area-inset-left,0px));background:var(--ink)}
 .vtop{padding:calc(env(safe-area-inset-top,0px) + 8px) max(14px,env(safe-area-inset-right,0px)) 8px max(14px,env(safe-area-inset-left,0px));display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--ink)}
@@ -266,7 +273,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
   </div>
 
   <div class="vf" id="vf">
-    <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video></div>
+    <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video><div class="capbox" id="capBox"></div></div>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
       <div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
@@ -329,7 +336,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.0.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.1.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -355,7 +362,10 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 <!-- Viewer -->
 <div class="viewer" id="viewer">
   <div class="vtop"><div class="meta" id="vMeta"></div><button class="btn" id="vClose">Close</button></div>
-  <div class="vstage" id="vStage"><img id="vImg" alt="Photo preview"></div>
+  <div class="vstage" id="vStage"><img id="vImg" alt="Photo preview">
+    <button class="vnav prev" id="vPrev" aria-label="Previous photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="vnav next" id="vNext" aria-label="Next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    <div class="vcount" id="vCount"></div></div>
   <div class="vbar"><button class="btn primary" id="vDl" style="flex:1">Save</button><button class="btn danger" id="vDel">Delete</button></div>
 </div>
 
@@ -386,7 +396,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "3.0.0";
+const VERSION = "3.1.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -765,15 +775,24 @@ const FRAME = { w:0, h:0 };
 // Photos are always landscape 4:3 in the world. Phone upright: a wide 4:3 frame on screen. Phone held sideways
 // with rotation lock on: the frame is tall on screen (it's wide in the world) and the photo is turned upright after.
 let frameTurn = 0;
+// The viewfinder itself is square. Inside it the camera feed is scaled so the whole 4:3 photo area fits
+// (FRAME = that area on screen, k = screen px per feed px); feed outside it shows dimmed for context.
+const capRatio = () => frameTurn === 90 ? 3 / 4 : 4 / 3;      // width ÷ height of the photo area on screen
+function capArea(vw, vh) { const r = capRatio(), w0 = vw / vh > r ? vh * r : vw; return { w0, h0:w0 / r }; }
 const measureVf = () => {
   vfH = vfEl.clientHeight;
   frameTurn = extraTurn() % 180;
-  const W = vfEl.clientWidth, H = vfH, r = frameTurn === 90 ? 3 / 4 : 4 / 3;   // width ÷ height on screen
-  const fw = Math.min(W, H * r), fh = fw / r;
-  FRAME.w = Math.round(fw); FRAME.h = Math.round(fh);
-  const f = $("frame"); f.style.width = FRAME.w + "px"; f.style.height = FRAME.h + "px";
+  const W = vfEl.clientWidth, H = vfH, side = Math.round(Math.min(W, H));
+  const f = $("frame"); f.style.width = side + "px"; f.style.height = side + "px";
+  const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, { w0, h0 } = capArea(vw, vh);
+  const k = Math.min(side / w0, side / h0);
+  v.style.width = (vw * k).toFixed(1) + "px"; v.style.height = (vh * k).toFixed(1) + "px";
+  FRAME.w = Math.round(w0 * k); FRAME.h = Math.round(h0 * k); FRAME.k = k; FRAME.side = side;
+  const b = $("capBox"); b.style.width = FRAME.w + "px"; b.style.height = FRAME.h + "px";
 };
 window.addEventListener("resize", measureVf);
+$("video").addEventListener("loadedmetadata", () => { measureVf(); lastHz = ""; });
+$("video").addEventListener("resize", () => { measureVf(); lastHz = ""; });
 window.addEventListener("orientationchange", () => setTimeout(measureVf, 300));
 if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener("change", () => setTimeout(() => { measureVf(); lastHz = ""; }, 300));
 const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
@@ -794,7 +813,7 @@ function uiAngle() { return (screen.orientation && typeof screen.orientation.ang
 function extraTurn() { return ((S.rollQ - uiAngle()) % 360 + 360) % 360; }
 function horizonOffset(p) {
   const v = $("video"), vw = v.videoWidth || 4, vh = v.videoHeight || 3, W = vfEl.clientWidth, H = vfH;
-  const scale = Math.max((FRAME.w || W) / vw, (FRAME.h || H) / vh) * (S.digitalZoom || 1);   // screen px per feed px (object-fit: cover)
+  const scale = (FRAME.k || Math.max(W / vw, H / vh)) * (S.digitalZoom || 1);   // screen px per feed px
   const side = extraTurn() % 180 === 90, lim = (side ? FRAME.w || W : FRAME.h || H) * 0.5;
   return clamp(zeroOffsetF(p, focalSrc() * scale), -lim, lim);
 }
@@ -1048,7 +1067,7 @@ async function capture(force = false) {
   const vw = v.videoWidth, vh = v.videoHeight, z = S.caps.zoom ? 1 : S.digitalZoom;
   // Always landscape 4:3 in the world: crop the centre of the camera feed to the frame's shape
   measureVf();
-  const r = FRAME.w / FRAME.h, w0 = vw / vh > r ? vh * r : vw, h0 = w0 / r;   // same 4:3 area the frame shows
+  const { w0, h0 } = capArea(vw, vh);   // the outlined 4:3 area
   const cw = Math.round(w0 / z), ch = Math.round(h0 / z);
   const grab = canvas(vw, vh); grab.getContext("2d").drawImage(v, 0, 0, vw, vh);
   try {
@@ -1367,18 +1386,43 @@ async function removePhotos(ids) {
 /* ================= viewer with pinch zoom ================= */
 let vURL = null, Z = { s:1, x:0, y:0 }, pinch = null, lastTap = 0;
 const pts = new Map();
-function openViewer(id) {
+// The viewer pages through this job's photos in gallery order (swipe or arrows)
+let vList = [], swipe = null;
+function openViewer(id, dir = 0) {
   const p = S.photos.find(x => x.id === id); if (!p) return;
+  if (!$("viewer").classList.contains("open") || !vList.includes(id)) vList = curPhotos().sort((a, b) => b.created - a.created).map(x => x.id);
+  if (!vList.includes(id)) vList = [id];
+  const i = vList.indexOf(id);
+  $("vPrev").hidden = i <= 0; $("vNext").hidden = i >= vList.length - 1;
+  $("vCount").textContent = vList.length > 1 ? `${i + 1} / ${vList.length}` : "";
+  $("vCount").hidden = vList.length < 2;
   S.viewing = p; if (vURL) URL.revokeObjectURL(vURL);
   vURL = URL.createObjectURL(p.blob); $("vImg").src = vURL;
   $("vMeta").innerHTML = `<b>${esc(fileNameFor(p))}</b>${kb(p.blob.size)} · ${p.w}×${p.h} · q${p.q}${p.downloaded ? " · saved" : ""}`;
-  Z = { s:1, x:0, y:0 }; applyZ();
+  Z = { s:1, x:0, y:0 };
+  const img = $("vImg"); img.classList.remove("slide");
+  if (dir) { Z.x = dir * st.clientWidth * 0.35; applyZ(); void img.offsetWidth; img.classList.add("slide"); Z.x = 0; }
+  applyZ();
   $("viewer").classList.add("open");
 }
 function applyZ() { $("vImg").style.transform = `translate(-50%,-50%) translate(${Z.x}px,${Z.y}px) scale(${Z.s})`; }
+function stepViewer(d) {
+  const i = vList.indexOf(S.viewing && S.viewing.id), j = i + d;
+  if (i < 0 || j < 0 || j >= vList.length) { Z.x = 0; $("vImg").classList.add("slide"); applyZ(); return false; }
+  openViewer(vList[j], d); return true;
+}
+$("vPrev").addEventListener("click", e => { e.stopPropagation(); stepViewer(-1); });
+$("vNext").addEventListener("click", e => { e.stopPropagation(); stepViewer(1); });
+document.addEventListener("keydown", e => {
+  if (!$("viewer").classList.contains("open")) return;
+  if (e.key === "ArrowLeft") stepViewer(-1); else if (e.key === "ArrowRight") stepViewer(1); else if (e.key === "Escape") $("vClose").click();
+});
 const st = $("vStage");
 st.addEventListener("pointerdown", e => {
+  if (e.target.closest(".vnav")) return;
   st.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  $("vImg").classList.remove("slide");
+  swipe = pts.size === 1 && Z.s === 1 ? { x0:e.clientX, y0:e.clientY } : null;
   if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d:Math.hypot(a.x - b.x, a.y - b.y), s:Z.s }; }
   if (pts.size === 1) { const now = Date.now(); if (now - lastTap < 280) { Z = Z.s > 1 ? { s:1, x:0, y:0 } : { s:3, x:0, y:0 }; applyZ(); } lastTap = now; }
 });
@@ -1387,18 +1431,35 @@ st.addEventListener("pointermove", e => {
   const prev = pts.get(e.pointerId); pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
   if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; Z.s = clamp(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, 1, 8); }
   else if (pts.size === 1 && Z.s > 1) { Z.x += e.clientX - prev.x; Z.y += e.clientY - prev.y; }
+  if (pts.size === 1 && swipe && Z.s === 1) {             // not zoomed: drag sideways to flip photos
+    const i = vList.indexOf(S.viewing && S.viewing.id), dx = e.clientX - swipe.x0;
+    const edge = (dx > 0 && i <= 0) || (dx < 0 && i >= vList.length - 1);
+    Z.x = edge ? dx * 0.3 : dx; Z.y = 0; applyZ(); return;
+  }
+  if (pts.size > 1) swipe = null;
   if (Z.s === 1) { Z.x = 0; Z.y = 0; }
   applyZ();
 });
-const endPt = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
+const endPt = e => {
+  if (!pts.has(e.pointerId)) return;
+  pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
+  if (swipe && !pts.size) {
+    const dx = e.clientX - swipe.x0, dy = e.clientY - swipe.y0; swipe = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && stepViewer(dx < 0 ? 1 : -1)) return;
+    if (Z.s === 1 && Z.x) { Z.x = 0; $("vImg").classList.add("slide"); applyZ(); }
+  }
+};
 st.addEventListener("pointerup", endPt); st.addEventListener("pointercancel", endPt);
 $("vClose").addEventListener("click", () => $("viewer").classList.remove("open"));
 $("vDl").addEventListener("click", async () => { if (S.viewing) { await downloadPhotos([S.viewing]); openViewer(S.viewing.id); } });
 $("vDel").addEventListener("click", async e => {
   if (!S.viewing || !arm(e.currentTarget, "Tap again to delete")) return;
-  const id = S.viewing.id;
+  const id = S.viewing.id, i = vList.indexOf(id);
   await removePhotos([id]); S.selected.delete(id);
-  $("viewer").classList.remove("open"); renderGallery();
+  vList = vList.filter(x => x !== id && S.photos.some(p => p.id === x));
+  renderGallery();
+  if (vList.length) openViewer(vList[Math.min(i, vList.length - 1)]);
+  else $("viewer").classList.remove("open");
 });
 
 /* ================= job picker ================= */

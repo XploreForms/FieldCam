@@ -1,10 +1,11 @@
-# Field Cam (v3.0.0)
+# Field Cam (v3.1.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
 
-Every camera photo is **landscape 4:3** (2048 × 1536), however the phone is held, and the
-viewfinder shows exactly that frame. An **info band** below the photo makes the final image a
+Every camera photo is **landscape 4:3** (2048 × 1536), however the phone is held. The
+viewfinder is **square**: the full 4:3 photo area sits inside it, outlined, nothing cropped. Any
+extra camera view outside the outline is dimmed (context only, not saved). An **info band** below the photo makes the final image a
 **2048 × 2048 square**: label, SA-#, job form, note and tech on the left; date/time, GPS
 (± accuracy), street address, tilt, compass direction and elevation on the right. Nothing is drawn
 over the photo itself. Imported pictures keep their shape, centred on the same square. Compressed to
@@ -42,6 +43,8 @@ over the photo itself. Imported pictures keep their shape, centred on the same s
    every new photo: tap **Save N Images** to put them in Photos (the gallery), or **Save to Files**
    to keep the readable file names. iPhone web apps can't write into Photos any other way; a plain
    download only opens a preview. On Android/computers each photo downloads as its own file.
+   Tap a gallery photo to view it full screen; **swipe left/right** (or the arrows) to flip
+   through the job's photos, pinch or double-tap to zoom. Save or Delete applies to the photo shown.
 5. In FSL, attach the photos from Photos or Files.
 6. Tap the job name at the top (▾) → **Start a new job** (keeps this job's photos under
    Previous jobs) or **Cancel this job** (wrong form picked etc.: deletes its photos after
