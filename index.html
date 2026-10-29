@@ -389,7 +389,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.2.4 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.2.5 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -457,7 +457,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "3.2.4";
+const VERSION = "3.2.5";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -911,7 +911,7 @@ let lastLive = "";
 function slowTick() {
   const chip = $("gpsChip");
   chip.classList.remove("ok", "meh");
-  if (gpsFresh()) { const acc = Math.round(S.pos.accuracy); if (acc <= 15) chip.classList.add("ok"); else if (acc <= 50) chip.classList.add("meh"); setText($("gpsTxt"), "±" + acc + " m"); }
+  if (gpsFresh()) { const acc = Math.round(S.pos.accuracy); if (acc <= 15) chip.classList.add("ok"); else if (acc <= 50) chip.classList.add("meh"); setText($("gpsTxt"), "GPS"); }
   else setText($("gpsTxt"), S.pos ? "GPS old" : "GPS…");
   const html = (S.note ? `<div class="note">Note: ${esc(S.note)}</div>` : "") + stampLines(snapshot(), true).map(l => `<div${l.pending ? ' class="pending"' : ""}>${esc(l.t)}</div>`).join("");
   if (html !== lastLive) { $("live").innerHTML = html; lastLive = html; }
@@ -941,7 +941,7 @@ function stampLines(m, live = false) {
     if (m.note) L.push({ t:"Note: " + m.note });
   }
   L.push({ t:fmtTime(m.when) + (m.imported ? " (photo time)" : "") });
-  if (m.pos) L.push({ t:`${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` });
+  if (m.pos) L.push({ t:`${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}` });
   else L.push({ t:"No GPS fix", pending:true });
   if (m.addr) L.push({ t:m.addr });
   else if (live && m.pos) L.push({ t:navigator.onLine ? "Looking up address…" : "Address: offline (coordinates only)", pending:true });
@@ -1037,7 +1037,7 @@ function bandContent(m) {
   // left = when / where, right = what / who; short items so each fits on one line in most cases
   const A = [], B = [];
   A.push(fmtTime(m.when) + (m.imported ? " (photo time)" : ""));
-  A.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` : "No GPS fix");
+  A.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}` : "No GPS fix");
   const dir = [];
   if (m.heading != null) dir.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
   if (m.pos && m.pos.altitude != null) dir.push(`Elev ${Math.round(m.pos.altitude)} m`);
