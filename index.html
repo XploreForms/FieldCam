@@ -114,6 +114,9 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .vfctl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:8px;pointer-events:auto;z-index:2}
 .vfctl button{width:36px;height:36px;border-radius:50%;background:rgba(10,18,17,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:center}
 .vfctl button.on{background:var(--accent);color:var(--ink)}
+.vfctl .hq{width:auto;min-width:46px;padding:0 10px;border-radius:18px;font:700 12.5px var(--mono);letter-spacing:.04em;color:rgba(234,242,238,.85)}
+.vfctl .hq[aria-pressed="true"]{background:var(--accent);color:#0A1211}
+.lhead .hqtag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:var(--accent);color:var(--ink);font:700 11px var(--mono);vertical-align:1px}
 .vfctl svg{width:18px;height:18px}
 .vfmsg{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 
@@ -352,6 +355,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <div class="live" id="live"></div>
     </div>
     <div class="vfctl">
+      <button class="hq" id="hqBtn" aria-pressed="false" aria-label="Full quality">HQ</button>
       <button id="torchBtn" aria-label="Flashlight" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></button>
     </div>
     <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
@@ -421,7 +425,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.6.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.7.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -491,7 +495,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.6.0";
+const VERSION = "3.7.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -604,7 +608,7 @@ const S = {
   stream:null, track:null, caps:{}, zoom:1, digitalZoom:1, torch:false, deviceId:null, lens:"wide", lenses:{}, lensesScanned:false, switching:false, rearRetry:false,
   heading:null, headingSrc:"", hx:null, hy:null, pitch:null, roll:0, rollQ:0, levelDev:null,
   pos:null, posAt:0, addr:null, addrPos:null, geoBusy:false, lastGeoTry:0,
-  note:"", fresh:true, sel:[], busy:false, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
+  note:"", fresh:true, sel:[], busy:false, paused:false, geoWatch:null, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
 };
 const jobPhotos = sid => S.photos.filter(p => p.sessionId === sid);
 const curPhotos = () => current ? jobPhotos(current.id) : [];
@@ -815,8 +819,33 @@ $("torchBtn").addEventListener("click", async () => {
   $("torchBtn").classList.toggle("on", S.torch);
 });
 async function keepAwake() { try { if ("wakeLock" in navigator && document.visibilityState === "visible") S.wake = await navigator.wakeLock.request("screen"); } catch {} }
+/* Battery: pause the camera preview, GPS and the tilt loop whenever the camera isn't in view
+   (app in the background, start screen, gallery, photo viewer, sorter or any sheet open), and resume
+   the moment it is. Soft pause: the camera stays connected (just not shown), so iPhones don't
+   ask for camera permission again on the way back. */
+function cameraHidden() {
+  return document.visibilityState !== "visible" || !$("start").hidden || !!document.querySelector(".sheet.open")
+    || $("viewer").classList.contains("open") || $("sorter").classList.contains("open");
+}
+function syncPause() {
+  if (!S.started) return;
+  const hide = cameraHidden();
+  if (hide && !S.paused) {
+    S.paused = true;
+    const v = $("video"); try { v.pause(); } catch {}
+    if (S.track) S.track.enabled = false;
+    stopGeo();
+  } else if (!hide && S.paused) {
+    S.paused = false;
+    if (!S.track || S.track.readyState === "ended") startCamera();
+    else { S.track.enabled = true; $("video").play().catch(() => {}); }
+    startGeo(); startLoop(); keepAwake();
+    setTimeout(() => { measureVf(); lastHz = ""; }, 60);
+  }
+}
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && S.started) {
+  syncPause();
+  if (document.visibilityState === "visible" && S.started && !S.paused) {
     if (!S.track || S.track.readyState === "ended") startCamera();
     keepAwake();
   }
@@ -862,14 +891,15 @@ function startOrientation() {
 
 /* ================= location ================= */
 function startGeo() {
-  if (!("geolocation" in navigator)) return;
-  navigator.geolocation.watchPosition(p => {
+  if (!("geolocation" in navigator) || S.geoWatch != null) return;
+  S.geoWatch = navigator.geolocation.watchPosition(p => {
     S.pos = { latitude:p.coords.latitude, longitude:p.coords.longitude, accuracy:p.coords.accuracy, altitude:p.coords.altitude };
     S.posAt = Date.now();
     maybeGeocode();
   }, err => { if (err.code === 1) toast("Location is blocked. Photos will be stamped without coordinates.", 3500); },
   { enableHighAccuracy:true, maximumAge:3000, timeout:30000 });
 }
+function stopGeo() { if (S.geoWatch != null) { try { navigator.geolocation.clearWatch(S.geoWatch); } catch {} S.geoWatch = null; } }
 // Street address for a position (OpenStreetMap). Returns "" if none, throws if offline / failed.
 async function lookupAddress(at) {
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
@@ -1050,8 +1080,13 @@ function fastTick() {
   const head = S.heading == null ? "no compass" : `Facing ${Math.round(S.heading)}° ${cardinal(S.heading)}`;
   setText(E.head, head + (S.levelDev == null ? "" : ` · skew ${Math.round(Math.abs(S.levelDev))}°`));
   E.shutter.classList.toggle("locked", povBlocked());
-  requestAnimationFrame(fastTick);
+  if (S.paused) { loopOn = false; loopFast = false; return; }
+  // Line-of-sight shots: every screen frame (the 0° line must track smoothly). Everything else: 4 times a second.
+  loopFast = strict;
+  if (strict) requestAnimationFrame(fastTick); else loopT = setTimeout(fastTick, 250);
 }
+let loopOn = false, loopFast = false, loopT = null;
+function startLoop() { if (loopOn) return; loopOn = true; fastTick(); }
 let lastLive = "", slowN = 0;
 function slowTick() {
   const chip = $("gpsChip");
@@ -1066,7 +1101,11 @@ function slowTick() {
 window.addEventListener("resize", () => { lastHz = ""; });
 function hudTick() {
   Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), line:$("zeroLine"), head:$("hHead"), shutter:$("shutter") });
-  measureVf(); fastTick(); slowTick();
+  measureVf(); startLoop(); slowTick();
+  // watch the screens that cover the camera
+  const mo = new MutationObserver(syncPause);
+  [$("start"), $("viewer"), $("sorter"), ...document.querySelectorAll(".sheet")].forEach(el => mo.observe(el, { attributes:true, attributeFilter:["class", "hidden"] }));
+  syncPause();
 }
 
 /* ================= stamp content ================= */
@@ -1077,7 +1116,7 @@ function snapshot(extra = {}) {
     when, pos, headingRef:th.ref,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
     heading:th.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
-    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false
+    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false, full:!!(j && j.full)
   }, extra);
 }
 function stampLines(m, live = false) {
@@ -1105,7 +1144,10 @@ function stampLines(m, live = false) {
 }
 
 /* ================= image pipeline ================= */
-const OUTPUT = { edge:2048, target:350 * 1024 };   // every photo: 2048 px long edge, best quality under 350 KB
+const OUTPUT = { edge:2048, target:350 * 1024 };
+// Full quality (per job, HQ button): the camera's full resolution (capped at 4032 px so the square image
+// stays inside iPhone's canvas limit) and light JPEG compression, no size target. Typically 2–5 MB.
+const FULL = { edge:4032, q:0.92 };   // every photo: 2048 px long edge, best quality under 350 KB
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
 function downscale(src, sw, sh, tw, th) {
   let cur = src, cw = sw, ch = sh;
@@ -1277,7 +1319,7 @@ function addInfoBand(c, m) {
 async function processFrame(src, crop, rotation, meta) {
   const { sx, sy, cw, ch } = crop;
   const full = canvas(cw, ch); full.getContext("2d").drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
-  const [tw, th] = fitBox(cw, ch, OUTPUT.edge);
+  const [tw, th] = fitBox(cw, ch, meta.full ? FULL.edge : OUTPUT.edge);
   let c = downscale(full, cw, ch, tw, th);
   if (meta.fsrc) meta.fpx = meta.fsrc * (tw / cw);   // focal length in output pixels
   full.width = full.height = 0;
@@ -1292,7 +1334,8 @@ async function processFrame(src, crop, rotation, meta) {
 async function composeFinal(c, meta) {
   let p = c;
   if (meta.level && meta.pitch != null && !meta.imported) { p = canvas(c.width, c.height); p.getContext("2d").drawImage(c, 0, 0); drawZeroLine(p, meta); }
-  const enc = await encodeToTarget(addInfoBand(p, meta), OUTPUT.target);
+  const band = addInfoBand(p, meta);
+  const enc = meta.full ? { blob:await toBlob(band, FULL.q), q:FULL.q, canvas:band } : await encodeToTarget(band, OUTPUT.target);
   let blob = enc.blob;
   try { blob = await addExif(blob, meta, enc.canvas.width, enc.canvas.height); } catch (e) { console.warn("exif", e); }
   return { blob, w:enc.canvas.width, h:enc.canvas.height, q:enc.q };
@@ -1850,7 +1893,9 @@ function renderLabels() {
   const j = curJob(), counts = countLabels();
   S.sel = S.sel.filter(l => shotList(j).includes(l));
   $("lGrid").innerHTML = tilesHTML(j, S.sel, counts);
-  $("lSel").innerHTML = S.sel.length ? `Next photo: <b>${esc(labelText(S.sel))}</b>` : `No label · shoot now, label later`;
+  const full = !!(j && j.full);
+  $("lSel").innerHTML = (S.sel.length ? `Next photo: <b>${esc(labelText(S.sel))}</b>` : `No label · shoot now, label later`) + (full ? `<span class="hqtag">FULL QUALITY</span>` : "");
+  $("hqBtn").setAttribute("aria-pressed", full);
   const unl = curPhotos().filter(isUnl).length;
   $("toLabelBtn").hidden = !unl; $("toLabelBtn").textContent = `To label (${unl})`;
 }
@@ -1868,7 +1913,13 @@ function tapLabel(l, add = false) {
   S.sel = sel; S.fresh = false;
   if (current) { current.sel = sel; save(); }
   renderLabels();
+  if (selStrict() && loopOn && !loopFast) { clearTimeout(loopT); fastTick(); }   // LOS picked: full speed now
 }
+$("hqBtn").addEventListener("click", () => {
+  const j = curJob(); if (!j) return;
+  j.full = !j.full; save(); renderLabels();
+  toast(j.full ? "<b>Full quality on</b><br>Photos aren’t compressed (about 2–5 MB each). Turns off for the next job." : "Full quality off · photos compressed for low signal", 2800);
+});
 $("toLabelBtn").addEventListener("click", () => openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)));
 /* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
 let otherCb = null;
@@ -2117,6 +2168,30 @@ $("startBtn").addEventListener("click", () => {
 
 applyRot();
 window.addEventListener("resize", applyRot);
+/* Back button (Android): close whatever is open, one layer at a time, instead of leaving the app.
+   With nothing open, the first back says "press back again"; a second back within 2.5 s leaves.
+   Works by keeping one extra history entry above the app (re-added on the next tap, which is
+   also what Chrome requires before it lets a page handle back). iPhone has no back button. */
+let backGuard = false, lastBack = 0;
+function armBack() { if (backGuard) return; try { history.pushState({ fieldcam:1 }, ""); backGuard = true; } catch {} }
+document.addEventListener("pointerdown", armBack, true);
+function closeTopLayer() {
+  if (!$("otherBar").hidden) { $("otherBar").hidden = true; $("inOther").blur(); otherCb = null; return true; }
+  if (!$("noteBar").hidden) { $("noteBar").hidden = true; $("inNote").blur(); return true; }
+  if ($("sorter").classList.contains("open")) { $("sClose").click(); return true; }
+  if ($("viewer").classList.contains("open")) { $("viewer").classList.remove("open"); return true; }
+  if (document.querySelector(".sheet.open")) { closeSheets(); return true; }
+  if ($("snack").classList.contains("show")) { hideSnack(); return true; }
+  return false;
+}
+window.addEventListener("popstate", () => {
+  backGuard = false;
+  if (closeTopLayer()) { armBack(); return; }
+  if (Date.now() - lastBack < 2500) { history.back(); return; }   // second back: leave
+  lastBack = Date.now();
+  toast("Press back again to close Field Cam", 2500);
+  armBack();
+});
 /* Updates: the service worker fetches new files in the background. When a new version has taken over,
    offer a one-tap reload instead of running the old copy until the app is fully closed.
    Also checks for a new version whenever the app comes back to the foreground. */

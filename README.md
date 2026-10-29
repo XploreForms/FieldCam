@@ -1,4 +1,4 @@
-# Field Cam (v3.6.0)
+# Field Cam (v3.7.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -112,6 +112,27 @@ once they have a photo.
 - **Import:** gallery › **Import from photo library** (e.g. an eCoverage screenshot). Imports get the
   label picked at the time, or go to To label.
 
+## Full quality (HQ)
+The **HQ** button (top-right of the camera) switches the current job to full quality: photos keep
+the camera's full resolution (as much as the phone gives a web app, up to 4032 px wide) with light
+compression and no size limit, typically 2–5 MB each instead of under 350 KB. The info band is still
+added. While it's on, **FULL QUALITY** shows next to "Next photo". It stays on for that job and is
+off again for the next job, so nobody leaves it on by accident. Turning it on or off affects photos
+taken afterwards, not ones already taken.
+
+## Battery
+- The camera preview, GPS and tilt updates pause whenever the camera isn't in view: app in the
+  background, start screen, gallery, photo viewer, label sorter, or any sheet open. They resume the
+  moment the camera screen is back. The camera stays connected while paused, so iPhones don't ask
+  for permission again.
+- The tilt readout runs at full screen speed (about 60 times a second) only when a line-of-sight
+  label is picked; otherwise it updates 4 times a second.
+
+## Back button (Android)
+Back closes whatever is open (a sheet, the photo viewer, the sorter, the note box) one layer at a
+time. With nothing open, the first back shows "Press back again to close Field Cam"; a second back
+within a couple of seconds leaves. iPhones have no back button.
+
 ## Appearance
 Settings › Appearance: **Dark** (default: true black, which switches pixels off on the OLED screens
 most iPhones have and saves battery) or **Light** (easier to read in bright sun). Both use the Xplore
@@ -145,8 +166,7 @@ other label the tilt is just a small number and the stamp records the value only
   Store apps. Motion & Orientation is asked on every launch (Apple rule); camera and location are
   usually asked once per launch. Setting Settings › Apps › Safari › Camera and Location to
   **Allow** can reduce the prompts.
-- Tilt, skew and the 0° line redraw every screen frame (about 60 times a second); GPS and
-  address text update twice a second.
+- Tilt, skew and the 0° line redraw every screen frame on LOS shots (see Battery).
 - Rear camera only; never falls back to the selfie camera.
 - Zoom starts at 1× every time and **1× is the minimum**: no ultra-wide, and pinch can't go wider.
   Tele uses the real telephoto lens where exposed; 2× / 3× / pinch crop. Any zoom other than 1×
