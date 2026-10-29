@@ -1,4 +1,4 @@
-# Field Cam (v3.7.1)
+# Field Cam (v3.7.2)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -137,6 +137,12 @@ within a couple of seconds leaves. iPhones have no back button.
 Settings › Appearance: **Dark** (default: true black, which switches pixels off on the OLED screens
 most iPhones have and saves battery) or **Light** (easier to read in bright sun). Both use the Xplore
 greens. The camera overlays (tilt readout, zoom, after-shot note) stay dark in both, over the picture.
+
+## Text size
+Settings › Text size: **Normal** or **Large**. Large makes all the app's text and buttons bigger
+(label tiles go to two columns, with larger header, zoom, HQ, after-shot note, sheets, gallery and
+start screen) for techs who find the normal size hard to read. The stamp on saved photos doesn't
+change. Saved per phone.
 
 ## Camera screen
 Kept clear on purpose: just the picture, a small zoom pill along its bottom edge (left edge when

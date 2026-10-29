@@ -315,6 +315,53 @@ html[data-theme="light"] .lt[aria-pressed="true"]{background:var(--accent);borde
 html[data-theme="light"] .lt[aria-pressed="true"] i{color:#fff}
 html[data-theme="light"] .thumbbtn{border-color:var(--fg)}
 html[data-theme="light"] .gps.ok .dot{background:#14B84A;box-shadow:none}
+/* Large text (Settings › Text size): everything the tech reads or taps gets bigger; photo stamps don't change */
+html[data-text="large"] body{font-size:18px}
+html[data-text="large"] label{font-size:14.5px}
+html[data-text="large"] input{font-size:19px;padding:13px 14px}
+html[data-text="large"] .btn{min-height:54px;font-size:18px}
+html[data-text="large"] .btn.sm{min-height:44px;font-size:16px;padding:0 14px}
+html[data-text="large"] .hint{font-size:16px}
+html[data-text="large"] .stats{font-size:15px}
+html[data-text="large"] .sheet h2{font-size:22px}
+html[data-text="large"] .seg button{min-height:52px}
+html[data-text="large"] .seg button b{font-size:17px}
+html[data-text="large"] .seg button span{font-size:13px}
+html[data-text="large"] .toast{font-size:17px;padding:12px 18px}
+html[data-text="large"] .jobpill b{font-size:18px}
+html[data-text="large"] .jobpill span{font-size:15px}
+html[data-text="large"] .lhead{font-size:17px;min-height:38px}
+html[data-text="large"] .notebtn{width:42px;height:42px}
+html[data-text="large"] .lgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+html[data-text="large"] .lt{font-size:16px;min-height:48px;padding:5px 10px}
+html[data-text="large"] .lt i{font-size:13px}
+html[data-text="large"] .lt span{padding-right:24px}
+html[data-text="large"] .zoombar button{min-width:46px;height:38px;font-size:16px}
+html[data-text="large"] .vfctl .hq{font-size:15px;height:42px;min-width:56px}
+html[data-text="large"] .vfctl button{width:42px;height:42px}
+html[data-text="large"] .snack div{font-size:16.5px}
+html[data-text="large"] .snack div span{font-size:14.5px}
+html[data-text="large"] .snack .btn{font-size:16px;min-height:44px}
+html[data-text="large"] .snack img{width:48px;height:48px}
+html[data-text="large"] .snack div b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+html[data-text="large"] .install{font-size:15px}
+html[data-text="large"] #hLevel{font-size:13px}
+html[data-text="large"] .hud.free #hTilt{font-size:21px}
+html[data-text="large"] .sidewarn b{font-size:21px}
+html[data-text="large"] .sidewarn span{font-size:16px}
+html[data-text="large"] .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+html[data-text="large"] .tile .lab{font-size:14.5px}
+html[data-text="large"] .vtop .meta{font-size:14.5px}
+html[data-text="large"] .warnbox p,html[data-text="large"] .prev b{font-size:17px}
+html[data-text="large"] .prev span{font-size:14px}
+html[data-text="large"] .updbar{font-size:16.5px}
+html[data-text="large"] .resume .rjob{font-size:18px}
+html[data-text="large"] .resume .rmeta{font-size:14px}
+html[data-text="large"] .start h1{font-size:24px}
+html[data-text="large"] .start .hello{font-size:15px}
+html[data-text="large"] .start .seg button{min-height:48px}
+html[data-text="large"] .start .seg button b{font-size:16px}
+html[data-text="large"] .start .install{font-size:14.5px}
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 160px);transform:translate(-50%,-20px);z-index:50;background:var(--ink-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast b{font-family:var(--mono);color:var(--accent)}
@@ -434,10 +481,11 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   <header><h2>Settings</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
     <div><label>Appearance</label><div class="seg two" id="themeSeg" role="group"><button type="button" data-t="dark"><b>Dark</b><span>Black, saves battery</span></button><button type="button" data-t="light"><b>Light</b><span>Easier in bright sun</span></button></div></div>
+    <div><label>Text size</label><div class="seg two" id="textSeg" role="group"><button type="button" data-x="normal"><b>Normal</b></button><button type="button" data-x="large"><b>Large</b><span>Bigger text and buttons</span></button></div></div>
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.7.1 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.7.2 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -507,7 +555,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.7.1";
+const VERSION = "3.7.2";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -600,13 +648,17 @@ const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${jobTitle(j)}` : "";
 /* ================= stored state ================= */
 function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch { return d; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-let settings = Object.assign({ name:"", theme:"dark" }, load("fieldcam.settings", {}));
+let settings = Object.assign({ name:"", theme:"dark", text:"normal" }, load("fieldcam.settings", {}));
 // Dark (AMOLED black, default) or Light. Set before anything draws so there's no flash.
 function applyTheme() {
   const t = settings.theme === "light" ? "light" : "dark";
   document.documentElement.dataset.theme = t;
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t === "light" ? "#F3F6F4" : "#000000";
   document.querySelectorAll("#themeSeg [data-t]").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t));
+  const x = settings.text === "large" ? "large" : "normal";
+  document.documentElement.dataset.text = x;
+  document.querySelectorAll("#textSeg [data-x]").forEach(b => b.setAttribute("aria-pressed", b.dataset.x === x));
+  setTimeout(() => { try { if (S.started) { measureVf(); lastHz = ""; } } catch {} }, 50);   // label grid height changes
 }
 applyTheme();
 let jobs = load("fieldcam.jobs", {});          // job id -> { work, outcome, opt, ref, started, custom }
@@ -2043,6 +2095,7 @@ document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
 $("setBtn").addEventListener("click", () => { $("inName").value = settings.name; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
+$("textSeg").addEventListener("click", e => { const b = e.target.closest("[data-x]"); if (!b) return; settings.text = b.dataset.x; save(); applyTheme(); });
 $("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; settings.theme = b.dataset.t; save(); applyTheme(); });
 
 $("jobBtn").addEventListener("click", () => {
