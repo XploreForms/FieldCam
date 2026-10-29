@@ -43,17 +43,19 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 #app>*{min-width:0}
 
 /* top bar */
-.top{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));z-index:5}
-.pill{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:999px;background:var(--ink-3);white-space:nowrap;overflow:hidden}
-.jobpill{flex:1;min-width:0;justify-content:flex-start;gap:10px}
-.jobpill b{font-weight:650;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.top{display:flex;align-items:center;gap:4px;padding:calc(env(safe-area-inset-top,0px) + 4px) max(8px,env(safe-area-inset-right,0px)) 4px max(14px,env(safe-area-inset-left,0px));z-index:5}
+/* Slim header: plain text, no pill backgrounds. Job + progress (tap for job options) · GPS dot · settings */
+.pill{display:flex;align-items:center;gap:8px;min-height:36px;white-space:nowrap;overflow:hidden;background:none}
+.jobpill{flex:1;min-width:0;justify-content:flex-start;gap:8px;padding:0}
+.jobpill b{font-weight:650;font-size:15px;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .jobpill span{font:600 12px var(--mono);color:var(--accent);flex:none}
-.jobpill .chev{font-style:normal;color:var(--muted);font-size:12px;flex:none;margin-left:-4px}
-.gps{font-family:var(--mono);font-size:13px;padding:0 12px;flex:none}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--bad);flex:none}
+.jobpill .chev{font-style:normal;color:var(--muted);font-size:11px;flex:none;margin-left:-3px}
+.gps{flex:none;width:36px;justify-content:center;padding:0}
+.gps #gpsTxt{display:none}
+.gps .dot{width:9px;height:9px;border-radius:50%;background:var(--bad);flex:none}
 .gps.ok .dot{background:var(--signal);box-shadow:0 0 8px var(--signal)}
 .gps.meh .dot{background:var(--warn)}
-.iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--ink-3);flex:none}
+.iconbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:none;color:var(--muted);flex:none}
 .iconbtn svg{width:20px;height:20px}
 
 /* viewfinder */
@@ -313,7 +315,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <div id="app">
   <div class="top">
     <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b id="jobTxt">No job</b><span id="jobProg"></span><i class="chev" aria-hidden="true">▾</i></button>
-    <div class="pill gps" id="gpsChip"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
+    <div class="pill gps" id="gpsChip" title="GPS" aria-label="GPS"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
     <button class="iconbtn" id="setBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
 
@@ -372,6 +374,15 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   </div>
 </section>
 
+<!-- Save check: shown when required photos are missing, or after labelling photos on the way to saving -->
+<section class="sheet" id="saveSheet" aria-label="Save photos">
+  <header><h2 id="saveTitle">Save photos</h2><button class="btn" data-close>Cancel</button></header>
+  <div class="body">
+    <div id="saveMsg" style="display:grid;gap:10px"></div>
+    <div class="btnrow" style="flex-direction:column"><button class="btn primary big" id="saveBack">Take them now</button><button class="btn primary big" id="saveGo">Save</button></div>
+  </div>
+</section>
+
 <!-- Settings sheet -->
 <section class="sheet" id="setSheet" aria-label="Settings">
   <header><h2>Settings</h2><button class="btn" data-close>Done</button></header>
@@ -379,7 +390,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.4.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.4.3 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -448,7 +459,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.4.0";
+const VERSION = "3.4.3";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -484,7 +495,7 @@ const OUTCOMES = [
 ];
 const FIBRE_EXISTING = ["Total install overview","NID with door open","Fibre patch cable run","Cable entrypoint","Indoor cable run","ONT placement","Router placement","Light level measurement"];
 const FIBRE_DROP = ["MPT","Drop route","Drop attachment point (aerial)", ...FIBRE_EXISTING];
-const FW_SAT = ["Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Cable Run","Indoor Equipment","Equipment SNs","Signal Page"];
+const FW_SAT = ["Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Cable Run","Indoor Equipment"];
 const FW_NOT_REQ = ["Line of sight POVs to all viable towers","Testing locations","Overall structure"];
 const ALL_JOBS = ["INS","CON","REP"];
 const WORKFLOWS = [
@@ -493,13 +504,13 @@ const WORKFLOWS = [
   { work:["INS","CON"], outcome:"OK", opt:"Fibre (Drop Required)", code:"Fibre-DropRequired", shots:FIBRE_DROP },
   { work:["INS","CON"], outcome:"OK", opt:"Fixed Wireless", code:"FW", shots:FW_SAT, level:["CPE Line of Sight"] },
   { work:["INS","CON"], outcome:"OK", opt:"Satellite", code:"Sat", shots:FW_SAT },
-  { work:["INS"],       outcome:"OK", opt:"VAS", code:"VAS", shots:["Indoor Cable Run","Indoor Equipment","Equipment SNs"] },
+  { work:["INS"],       outcome:"OK", opt:"VAS", code:"VAS", shots:["Indoor Cable Run","Indoor Equipment"] },
   { work:["REP"], outcome:"OK", opt:"Fibre", code:"Fibre", shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","Fibre patch cable run","Cable entry point","Light level at ONT"] },
   { work:["REP"], outcome:"OK", opt:"Fixed Wireless", code:"FW", level:["CPE Line of Sight"],
     shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Equipment"] },
   { work:["REP"], outcome:"OK", opt:"Satellite", code:"Sat",
     shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","Line of Sight","System and Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Equipment"] },
-  { work:["REP"], outcome:"OK", opt:"VAS", code:"VAS", shots:["Issue found","Issue after repair","Indoor cable run","Indoor equipment","Equipment SNs"] },
+  { work:["REP"], outcome:"OK", opt:"VAS", code:"VAS", shots:["Issue found","Issue after repair","Indoor cable run","Indoor equipment"] },
   // Cannot Complete: form 15 has no pictures checklist; its no-show steps include a photo of the house
   ...["Fibre","Fixed Wireless","Satellite","VAS"].map(o => ({ work:ALL_JOBS, outcome:"CC", opt:o, code:{ "Fibre":"Fibre", "Fixed Wireless":"FW", "Satellite":"Sat", "VAS":"VAS" }[o], shots:[], optional:["House (customer no-show)"] })),
   // Not Required: forms 16.1–16.4 (Fixed Wireless), 17 (Satellite), 18 (unrelated to signal, no pictures checklist)
@@ -1480,8 +1491,40 @@ $("dlBtn").addEventListener("click", () => {
   const ps = curPhotos(), und = ps.filter(p => !p.downloaded);
   if (!ps.length) return toast("No photos in this job yet.");
   if (!und.length) return toast("Every photo in this job is saved. Use Save all in the gallery to save them again.", 3200);
-  downloadPhotos(und);
+  requestSave(und);
 });
+/* Saving a job's photos: every photo must be labelled first (the sorter opens, then saving carries on),
+   and missing required photos are flagged before anything is saved. */
+let saveIds = null;
+function requestSave(items) {
+  const unl = items.filter(isUnl);
+  if (unl.length) {
+    saveIds = items.map(p => p.id);
+    toast(`Label ${plural(unl.length, "photo")} first. Saving carries on after.`, 2600);
+    openSorter(unl.sort((a, b) => a.created - b.created).map(p => p.id), true);
+    return;
+  }
+  if (!missingShots().length && !items.some(p => p.pending)) { saveIds = null; return downloadPhotos(items); }
+  saveIds = items.map(p => p.id); openSaveSheet();
+}
+function saveItems() { return (saveIds || []).map(id => S.photos.find(p => p.id === id)).filter(Boolean); }
+function openSaveSheet() { renderSaveSheet(); openSheet("saveSheet"); }
+function renderSaveSheet() {
+  const items = saveItems(), miss = missingShots(), busy = items.some(p => p.pending);
+  $("saveTitle").textContent = miss.length ? "Photos missing" : `Save ${plural(items.length, "photo")}`;
+  $("saveMsg").innerHTML = miss.length
+    ? `<div class="warnbox"><p><b>No photo yet for:</b></p><p>${miss.map(esc).join("<br>")}</p></div><p class="hint">The job form needs these. Take them now, or save what you have.</p>`
+    : `<p class="hint">All labelled and every required photo taken ✓</p>`;
+  $("saveGo").textContent = busy ? "Updating labels…" : miss.length ? `Save ${plural(items.length, "photo")} anyway` : `Save ${plural(items.length, "photo")}`;
+  $("saveGo").disabled = busy || !items.length;
+  $("saveGo").className = miss.length ? "btn" : "btn primary big";
+  $("saveBack").hidden = !miss.length;
+}
+$("saveGo").addEventListener("click", async () => {   // straight from the tap (iPhone share sheet needs that)
+  const items = saveItems(); closeSheets();
+  if (await downloadPhotos(items)) saveIds = null;
+});
+$("saveBack").addEventListener("click", () => { saveIds = null; closeSheets(); });
 
 /* ================= gallery ================= */
 const urls = new Map();
@@ -1535,7 +1578,7 @@ $("grid").addEventListener("click", e => {
 });
 $("galLabel").addEventListener("click", () => openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)));
 $("selAllBtn").addEventListener("click", () => { const list = curPhotos(); if (S.selected.size === list.length) S.selected.clear(); else list.forEach(p => S.selected.add(p.id)); renderGallery(); });
-$("dlAllBtn").addEventListener("click", () => downloadPhotos(S.selected.size ? curPhotos().filter(p => S.selected.has(p.id)) : curPhotos()));
+$("dlAllBtn").addEventListener("click", () => requestSave(S.selected.size ? curPhotos().filter(p => S.selected.has(p.id)) : curPhotos()));
 $("delBtn").addEventListener("click", () => { $("delN").textContent = plural(S.selected.size, "photo"); $("delConfirm").hidden = false; });
 $("delNo").addEventListener("click", () => $("delConfirm").hidden = true);
 $("delYes").addEventListener("click", async () => { await removePhotos([...S.selected]); S.selected.clear(); $("delConfirm").hidden = true; renderGallery(); });
@@ -1614,7 +1657,7 @@ const endPt = e => {
 };
 st.addEventListener("pointerup", endPt); st.addEventListener("pointercancel", endPt);
 $("vClose").addEventListener("click", () => $("viewer").classList.remove("open"));
-$("vDl").addEventListener("click", async () => { if (S.viewing) { await downloadPhotos([S.viewing]); if ($("viewer").classList.contains("open")) openViewer(S.viewing.id); } });
+$("vDl").addEventListener("click", async () => { if (S.viewing) { if (isUnl(S.viewing)) return requestSave([S.viewing]); await downloadPhotos([S.viewing]); if ($("viewer").classList.contains("open")) openViewer(S.viewing.id); } });
 $("vLab").addEventListener("click", () => { if (S.viewing) openSorter([S.viewing.id]); });
 $("vDel").addEventListener("click", async e => {
   if (!S.viewing || !arm(e.currentTarget, "Tap again to delete")) return;
@@ -1711,10 +1754,10 @@ $("inOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preve
 
 /* Sorter: one photo at a time, tap what's in it (one or more), Next. Used for "To label", Change and Label. */
 const SO = { open:false, ids:[], i:0, sel:[], url:null, done:0 };
-function openSorter(ids) {
+function openSorter(ids, forSave = false) {
   ids = ids.filter(id => S.photos.some(p => p.id === id));
   if (!ids.length) return;
-  Object.assign(SO, { open:true, ids, i:0, done:0 });
+  Object.assign(SO, { open:true, ids, i:0, done:0, forSave });
   closeSheets(); $("viewer").classList.remove("open"); hideSnack();
   $("sorter").classList.add("open");
   showSort();
@@ -1770,6 +1813,9 @@ function closeSorter() {
   if (SO.url) { URL.revokeObjectURL(SO.url); SO.url = null; }
   renderAll();
   const left = curPhotos().filter(isUnl).length;
+  // On the way to saving and everything is labelled now: carry on (one more tap to save)
+  if (SO.forSave && saveIds && !saveItems().some(isUnl)) { openSaveSheet(); return; }
+  if (SO.forSave && saveIds && left) { toast(`${left} still to label. Saving needs every photo labelled.`, 2600); saveIds = null; return; }
   if (SO.done) toast(`Labelled ${plural(SO.done, "photo")}${left ? ` · ${left} still to label` : ""}`, 2400);
 }
 function refreshDeck() {
@@ -1779,7 +1825,7 @@ function refreshDeck() {
   $("dlCount").textContent = und || "";
   $("dlBtn").classList.toggle("has", und > 0);
 }
-function renderAll() { renderTop(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); }
+function renderAll() { renderTop(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); if ($("saveSheet").classList.contains("open")) renderSaveSheet(); }
 
 /* ================= sheets ================= */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }

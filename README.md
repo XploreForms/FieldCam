@@ -1,4 +1,4 @@
-# Field Cam (v3.4.0)
+# Field Cam (v3.4.3)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -113,8 +113,11 @@ once they have a photo.
 ## Camera screen
 Kept clear on purpose: just the picture, a small zoom pill along its bottom edge (left edge when
 the phone is sideways) and the flashlight in the top-right corner when the phone has one. Time, GPS
-and address aren't shown live (they're stamped on every photo; the GPS chip in the top bar shows
-whether there's a fix). Line-of-sight shots add the tilt readout, the centre ring and the 0° line.
+and address aren't shown live (they're stamped on every photo; the GPS dot in the top bar shows
+whether there's a fix: green good, amber fair, red none). Line-of-sight shots add the tilt readout, the centre ring and the 0° line.
+- **Saving checks:** every photo must be labelled before it can be saved; tapping Save with
+  unlabelled photos opens the sorter, and saving carries on once they're labelled. If any photo
+  the form needs hasn't been taken, Save lists them first: **Take them now** or **Save anyway**.
 - **Missing shots:** Finish job lists photos still to label, labels with no photo yet, and photos not saved.
 
 ## Horizontal photos
