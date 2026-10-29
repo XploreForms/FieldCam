@@ -1,6 +1,6 @@
 // Field Cam service worker: keeps the app working with no signal.
 // Bump VERSION whenever you upload changed files so phones pick up the update.
-const VERSION = "fieldcam-v3.2.1";
+const VERSION = "fieldcam-v3.2.4";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
