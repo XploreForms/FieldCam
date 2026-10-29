@@ -327,6 +327,17 @@ html.rot90 body{transform:rotate(-90deg) translateX(-100%)}
 html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 /* Rotation locked but phone held sideways: keep the readouts upright for the tech */
 /* r90: phone top points left, so the tech's "up" is the screen's right edge */
+/* Phone held sideways: warning card (turned to face the tech), shutter off, nothing else drawn */
+.sidewarn{position:absolute;left:50%;top:50%;width:min(300px,78vw);transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:8px;padding:18px 16px;border-radius:18px;background:rgba(10,18,17,.92);border:1px solid var(--warn);text-align:center;font-family:var(--sans);text-shadow:none;pointer-events:auto;z-index:6}
+.sidewarn svg{width:46px;height:46px;color:var(--warn)}
+.sidewarn b{font-size:17px}
+.sidewarn span{font-size:13px;color:var(--muted);line-height:1.35}
+.sidewarn .btn{margin-top:4px}
+.hud.side .sidewarn{display:flex}
+.hud.side .tiltbox,.hud.side .zeroline,.hud.side .reticle{display:none}
+.hud.side.r90 .sidewarn{transform:translate(-50%,-50%) rotate(90deg)}
+.hud.side.r270 .sidewarn{transform:translate(-50%,-50%) rotate(-90deg)}
+.shutter.sideoff{opacity:.35}
 .hud.r90 .tiltbox{top:50%;left:calc(100% - 44px);transform:translate(-50%,-50%) rotate(90deg)}
 .hud.r270 .tiltbox{top:50%;left:calc(44px + env(safe-area-inset-left,0px));transform:translate(-50%,-50%) rotate(-90deg)}
 .hud.r90 .zoomread{transform:translate(-50%,-50%) rotate(90deg)}
@@ -353,6 +364,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <div class="zoomread" id="zoomRead">1×</div>
       <div class="focusring" id="focusRing"></div>
       <div class="live" id="live"></div>
+      <div class="sidewarn" id="sideWarn"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="15" y="5" width="18" height="32" rx="3.5"/><path d="M22 32h4"/><path d="M38 19a14 14 0 0 1-3 17"/><path d="m37.5 31.5-2.5 4.5-4.7-1.6"/></svg><b>Turn your phone upright</b><span>Field Cam photos are taken with the phone upright so every job looks the same.</span><span>Need a different shot? Take it with the Camera app, then import it here.</span><button class="btn sm" id="sideImport">Import from photo library</button></div>
     </div>
     <div class="vfctl">
       <button class="hq" id="hqBtn" aria-pressed="false" aria-label="Full quality">HQ</button>
@@ -425,7 +437,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.7.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.7.1 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -495,7 +507,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.7.0";
+const VERSION = "3.7.1";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -608,7 +620,7 @@ const S = {
   stream:null, track:null, caps:{}, zoom:1, digitalZoom:1, torch:false, deviceId:null, lens:"wide", lenses:{}, lensesScanned:false, switching:false, rearRetry:false,
   heading:null, headingSrc:"", hx:null, hy:null, pitch:null, roll:0, rollQ:0, levelDev:null,
   pos:null, posAt:0, addr:null, addrPos:null, geoBusy:false, lastGeoTry:0,
-  note:"", fresh:true, sel:[], busy:false, paused:false, geoWatch:null, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
+  note:"", fresh:true, sel:[], busy:false, paused:false, geoWatch:null, sideways:false, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
 };
 const jobPhotos = sid => S.photos.filter(p => p.sessionId === sid);
 const curPhotos = () => current ? jobPhotos(current.id) : [];
@@ -778,7 +790,7 @@ function flashZoomRead() { const r = $("zoomRead"); r.classList.add("show"); cle
 const vfEl = $("vf"), vfPts = new Map();
 let vfPinch = null, vfTap = null;
 vfEl.addEventListener("pointerdown", e => {
-  if (e.target.closest(".vfctl, .notebar, .qcheck, .zoombar, .snack")) return;
+  if (e.target.closest(".vfctl, .notebar, .qcheck, .zoombar, .snack, .sidewarn")) return;
   const q = uiPt(e); vfPts.set(e.pointerId, q);
   vfTap = vfPts.size === 1 ? { x:q.x, y:q.y, t:Date.now() } : null;
   if (vfPts.size === 2) { const [a, b] = [...vfPts.values()]; vfPinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, z:curZoom() }; }
@@ -1060,6 +1072,11 @@ function fastTick() {
   const lvl = strict && p != null && Math.abs(p) <= LEVEL_TOL, near = strict && p != null && !lvl;
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
   const xt = extraTurn(); E.hud.classList.toggle("r90", xt === 90); E.hud.classList.toggle("r270", xt === 270);
+  // sideways for more than ~0.4 s (ignores a quick wobble) -> ask the tech to turn the phone upright
+  const sw = xt % 180 === 90, now = Date.now();
+  if (sw !== sideRaw) { sideRaw = sw; sideAt = now; }
+  const side = sideRaw && now - sideAt > 400;
+  if (side !== S.sideways) { S.sideways = side; E.hud.classList.toggle("side", side); E.shutter.classList.toggle("sideoff", side); if (side) hideSnack(); }
   if (xt % 180 !== frameTurn) { measureVf(); lastHz = ""; }   // phone turned: reshape the frame
   if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
   else { setText(E.tilt, fmtTilt(p)); setText(E.level, Math.abs(p) <= LEVEL_TOL ? "LEVEL ✓" : p > 0 ? "AIM LOWER" : "AIM HIGHER"); }
@@ -1099,6 +1116,7 @@ function slowTick() {
   setTimeout(slowTick, 500);
 }
 window.addEventListener("resize", () => { lastHz = ""; });
+let sideRaw = false, sideAt = 0;
 function hudTick() {
   Object.assign(hudEls, { hud:$("hud"), tilt:$("hTilt"), level:$("hLevel"), line:$("zeroLine"), head:$("hHead"), shutter:$("shutter") });
   measureVf(); startLoop(); slowTick();
@@ -1392,6 +1410,7 @@ async function capture(force = false) {
     return;
   }
   if (!v.videoWidth) { toast("Camera isn’t ready yet."); return; }
+  if (S.sideways) { try { navigator.vibrate && navigator.vibrate([30, 60, 30]); } catch {} return; }   // the card on screen explains
   S.busy = true; $("shutter").classList.add("busy");
   const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
   try { navigator.vibrate && navigator.vibrate(15); } catch {}
@@ -1469,6 +1488,7 @@ document.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Aud
 
 /* ================= import from library ================= */
 $("importBtn").addEventListener("click", () => { closeSheets(); $("fileIn").click(); });
+$("sideImport").addEventListener("click", () => $("fileIn").click());
 $("fileIn").addEventListener("change", async e => {
   const files = [...e.target.files]; e.target.value = "";
   if (!files.length || !current) return;

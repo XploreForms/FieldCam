@@ -1,4 +1,4 @@
-# Field Cam (v3.7.0)
+# Field Cam (v3.7.1)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -148,12 +148,16 @@ whether there's a fix: green good, amber fair, red none). Line-of-sight shots ad
   the form needs hasn't been taken, Save lists them first: **Take them now** or **Save anyway**.
 - **Missing shots:** Finish job lists photos still to label, labels with no photo yet, and photos not saved.
 
-## Horizontal photos
-The app stays upright (portrait) however the phone is held, like a phone with rotation lock on;
-there is no sideways layout. Photos still always save landscape 4:3: turning the phone sideways
-just turns the tilt readout to face the tech, and the saved photo comes out the right way up.
-Android keeps it upright through the install settings; iPhone web apps can't be locked, so the app
-turns itself back upright when the screen rotates.
+## Hold the phone upright
+Field Cam is used with the phone upright (portrait) so every job's photos look the same; the saved
+photo is always the same wide 4:3 frame. If the phone is turned sideways for more than a moment, the
+camera shows **Turn your phone upright** and the shutter won't fire. For a shot that really needs
+the phone sideways (or anything else the app can't take), use the phone's Camera app and bring it in
+with **Import from photo library** (button on that card, or in the gallery). Imported photos get the
+info band and labels like any other.
+
+The app layout never turns sideways either: Android keeps it upright through the install settings,
+and on iPhone the app turns itself back upright if the screen rotates.
 
 ## Tilt
 On level-guided photos the top readout shows tilt large (+ = aimed up) with LEVEL ✓ / AIM LOWER /
