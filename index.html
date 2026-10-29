@@ -77,7 +77,10 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .hud.free .tiltbox{padding:5px 12px}
 .hud.lvl #hLevel{background:var(--signal);color:var(--ink)}
 .hud.near #hLevel{background:var(--warn);color:var(--ink)}
-.tiltbox .sub{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:.02em}
+.tiltbox .sub{display:none}   /* direction and skew are stamped; the 0° line shows skew */
+/* Only line-of-sight shots get the tilt readout, centre ring and 0° line; everything else is just the picture */
+.hud.free .tiltbox,.hud.free .reticle{display:none}
+.live{display:none}           /* time / GPS / address are stamped on the photo; the GPS chip shows the fix */
 /* 0° dot: where the horizon (zero tilt) sits in the frame. Line it up with the centre ring to shoot level. */
 /* 0° line: where the horizon (zero tilt) sits in the frame. Line it up with the centre ring to shoot level. */
 .zeroline{position:absolute;left:50%;top:50%;width:0;height:0;transition:opacity .2s}
@@ -95,8 +98,8 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .focusring{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid var(--warn);border-radius:12px;opacity:0}
 .focusring.show{animation:ring .9s ease-out}
 @keyframes ring{0%{opacity:1;transform:scale(1.3)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
-.vfctl{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
-.vfctl button{width:40px;height:40px;border-radius:50%;background:rgba(10,18,17,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:center}
+.vfctl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:8px;pointer-events:auto;z-index:2}
+.vfctl button{width:36px;height:36px;border-radius:50%;background:rgba(10,18,17,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:center}
 .vfctl button.on{background:var(--accent);color:var(--ink)}
 .vfctl svg{width:18px;height:18px}
 .vfmsg{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
@@ -118,13 +121,13 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .live .note{color:var(--accent);font-weight:600}
 
 /* label grid: every checklist item visible, tap one or more before shooting (or none, and label later) */
-.lhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));font-size:13.5px;color:var(--muted);min-height:30px}
-.lhead span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lhead{display:flex;align-items:center;gap:8px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));font-size:13.5px;color:var(--muted);min-height:30px}
+.lhead span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lhead b{color:var(--accent)}
 .lhead .btn{flex:none;white-space:nowrap}
 .btn.warn{background:rgba(242,184,75,.16);color:var(--warn);box-shadow:inset 0 0 0 1px rgba(242,184,75,.45)}
-.lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
-.lt{position:relative;min-height:42px;padding:5px 8px;border-radius:10px;background:var(--ink-3);color:var(--fg);font-size:12.5px;font-weight:600;line-height:1.2;text-align:left;display:flex;align-items:center;overflow:hidden;box-shadow:inset 3px 0 0 var(--warn)}
+.lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
+.lt{position:relative;min-height:36px;padding:3px 8px;border-radius:9px;background:var(--ink-3);color:var(--fg);font-size:12px;font-weight:600;line-height:1.2;text-align:left;display:flex;align-items:center;overflow:hidden;box-shadow:inset 3px 0 0 var(--warn)}
 .lt span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:18px}
 .lt.done,.lt.opt{box-shadow:none}
 .lt.done{color:var(--muted)}
@@ -133,7 +136,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .lt[aria-pressed="true"] i{color:var(--ink)}
 .lt.other{color:var(--muted);font-weight:500}
 /* after-shot note: never blocks the shutter, fades by itself */
-.snack{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;align-items:center;padding:7px;border-radius:14px;background:rgba(10,18,17,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);z-index:3;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.snack{position:absolute;left:10px;right:10px;bottom:10px;z-index:5;display:flex;gap:8px;align-items:center;padding:7px;border-radius:14px;background:rgba(10,18,17,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
 .snack.show{opacity:1;transform:none;pointer-events:auto}
 .snack.warn{border-color:rgba(242,184,75,.55)}
 .snack img{width:40px;height:40px;border-radius:7px;object-fit:cover;flex:none}
@@ -157,9 +160,13 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 /* bottom deck */
 .deck{padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 10px);display:grid;grid-template-columns:minmax(0,1fr);gap:8px;background:var(--ink)}
 .deck>*{min-width:0}
-.zoombar{display:flex;justify-content:center;align-items:center;gap:6px;min-height:34px}
-.zoombar button{min-width:44px;height:34px;padding:0 10px;border-radius:17px;background:var(--ink-3);font:600 13px var(--mono);color:var(--muted)}
-.zoombar button[aria-pressed="true"]{background:var(--brand);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);min-width:52px}
+/* zoom sits on the picture, bottom centre, like the iPhone camera */
+.zoombar{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:3px;border-radius:999px;background:rgba(10,18,17,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2}
+.zoombar button{min-width:36px;height:30px;padding:0 8px;border-radius:15px;font:600 12.5px var(--mono);color:rgba(234,242,238,.85)}
+.zoombar button[aria-pressed="true"]{background:rgba(234,242,238,.18);color:var(--accent)}
+.notebtn{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ink-3);color:var(--muted)}
+.notebtn svg{width:17px;height:17px}
+.notebtn.on{background:var(--accent);color:var(--ink)}
 .row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))}
 .thumbbtn,.dlbtn{position:relative;width:56px;height:56px;border-radius:12px;background:var(--ink-3) center/cover no-repeat}
 .thumbbtn{justify-self:start;border:2px solid var(--line)}
@@ -286,27 +293,12 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast b{font-family:var(--mono);color:var(--accent)}
 
-/* Horizontal (phone turned sideways, rotation unlocked): camera-style layout.
-   Viewfinder left, shutter rail on the right, zoom up the left edge, checklist along the bottom. */
-@media (orientation:landscape) and (max-height:540px){
-  #app{grid-template-columns:minmax(0,1fr) minmax(220px,40%) calc(96px + env(safe-area-inset-right,0px));grid-template-rows:auto auto minmax(0,1fr)}
-  .top{grid-column:1/4;grid-row:1;padding-top:6px;padding-bottom:6px}
-  .pill,.iconbtn{min-height:34px;height:34px}
-  .iconbtn{width:34px}
-  .deck{display:contents}
-  .vf{grid-column:1;grid-row:2/4}
-  .lhead{grid-column:2;grid-row:2;background:var(--ink);padding:6px 10px 4px;min-height:0}
-  .lgrid{grid-column:2;grid-row:3;background:var(--ink);grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;overflow-y:auto;padding:0 10px calc(env(safe-area-inset-bottom,0px) + 8px)}
-  .lt{min-height:38px}
-  .zoombar{grid-column:1;grid-row:2/4;align-self:center;justify-self:start;flex-direction:column;margin-left:max(10px,env(safe-area-inset-left,0px));z-index:4;min-height:0}
-  .zoombar button{background:rgba(10,18,17,.7)}
-  .row{grid-column:3;grid-row:2/4;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:8px env(safe-area-inset-right,0px) calc(env(safe-area-inset-bottom,0px) + 8px) 0;background:var(--ink)}
-  .row>span{display:none}
-  .row .dlbtn{order:3}.row .shutter{order:2}.row .thumbbtn{order:1}
-  .shutter{width:70px;height:70px}.shutter i{width:54px;height:54px}
-  .thumbbtn,.dlbtn{width:50px;height:50px;justify-self:center}
-  .live{left:calc(64px + env(safe-area-inset-left,0px))}
-}
+/* Portrait only. Android: the manifest / orientation lock keep it upright. iPhone web apps can't be locked,
+   so when the screen turns sideways the whole app is turned back (html.rot90 / rot270) and behaves exactly
+   like a phone held sideways with rotation lock on (photo still comes out landscape). */
+html.rot90 body,html.rot270 body{position:fixed;top:0;left:0;width:var(--rh,100vh);height:var(--rw,100vw);overflow:hidden;transform-origin:0 0}
+html.rot90 body{transform:rotate(-90deg) translateX(-100%)}
+html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 /* Rotation locked but phone held sideways: keep the readouts upright for the tech */
 /* r90: phone top points left, so the tech's "up" is the screen's right edge */
 .hud.r90 .tiltbox{top:50%;left:calc(100% - 44px);transform:translate(-50%,-50%) rotate(90deg)}
@@ -338,9 +330,8 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     </div>
     <div class="vfctl">
       <button id="torchBtn" aria-label="Flashlight" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></button>
-      <button id="noteBtn" aria-label="Add a note to the next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
-      <button id="importBtn" aria-label="Import photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></button>
     </div>
+    <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
     <div class="notebar" id="otherBar" hidden><input id="inOther" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="What is this photo of?"><button class="btn" id="otherCancel">Cancel</button><button class="btn primary" id="otherDone">Use</button></div>
     <div class="notebar" id="noteBar" hidden><input id="inNote" maxlength="80" autocomplete="off" placeholder="Note for the next photo"><button class="btn" id="noteClear">Clear</button><button class="btn primary" id="noteDone">Done</button></div>
     <div class="snack" id="snack" aria-live="polite"><img id="snImg" alt=""><div><b id="snTitle"></b><span id="snText"></span></div><button class="btn" id="snRetake">Retake</button><button class="btn" id="snAct">Change</button></div>
@@ -348,9 +339,8 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
   </div>
 
   <div class="deck">
-    <div class="lhead"><span id="lSel"></span><button class="btn sm warn" id="toLabelBtn" hidden></button></div>
+    <div class="lhead"><span id="lSel"></span><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="notebtn" id="noteBtn" aria-label="Add a note to the next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button></div>
     <div class="lgrid" id="lGrid" role="group" aria-label="Photo label"></div>
-    <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
     <div class="row">
       <button class="thumbbtn" id="galBtn" aria-label="Open this job's photos"><span class="badge" id="galCount"></span></button>
       <button class="shutter" id="shutter" aria-label="Take photo"><i></i></button>
@@ -389,7 +379,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.2.5 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.4.0 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -400,6 +390,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div class="gtools"><span class="stats" id="galStats"></span><button class="btn sm" id="selAllBtn">Select all</button></div>
     <div class="grid" id="grid"></div>
     <button class="btn warn" id="galLabel" hidden></button>
+    <button class="btn" id="importBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Import from photo library</button>
     <div class="btnrow">
       <button class="btn primary" id="dlAllBtn">Save all</button>
       <button class="btn danger" id="delBtn" hidden>Delete</button>
@@ -457,9 +448,28 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "3.2.5";
+const VERSION = "3.4.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
+let ROT = 0;
+function applyRot() {
+  const a = window.__forceAngle != null ? window.__forceAngle : rawAngle();
+  const touch = window.__forceAngle != null || (window.matchMedia && matchMedia("(pointer:coarse)").matches);
+  const r = touch && innerWidth > innerHeight && (a === 90 || a === 270) ? a : 0;
+  const de = document.documentElement;
+  de.style.setProperty("--rw", innerWidth + "px"); de.style.setProperty("--rh", innerHeight + "px");
+  if (r === ROT) return;
+  ROT = r; de.classList.toggle("rot90", r === 90); de.classList.toggle("rot270", r === 270);
+  if (typeof measureVf === "function") setTimeout(() => { measureVf(); lastHz = ""; }, 30);
+}
+// Screen point -> point in the app's own (upright) coordinates
+function toUI(x, y) { return ROT === 90 ? { x:innerHeight - y, y:x } : ROT === 270 ? { x:y, y:innerWidth - x } : { x, y }; }
+function uiRect(el) {
+  const r = el.getBoundingClientRect(), a = toUI(r.left, r.top), b = toUI(r.right, r.bottom);
+  return { left:Math.min(a.x, b.x), top:Math.min(a.y, b.y), width:Math.abs(a.x - b.x), height:Math.abs(a.y - b.y) };
+}
+const uiPt = e => toUI(e.clientX, e.clientY);
 
 /* ================= JOB WORKFLOWS (from the JotForm job forms) =================
    Each workflow = one job form. Its "shots" are that form's Pictures Checklist, in order.
@@ -713,19 +723,19 @@ function flashZoomRead() { const r = $("zoomRead"); r.classList.add("show"); cle
 const vfEl = $("vf"), vfPts = new Map();
 let vfPinch = null, vfTap = null;
 vfEl.addEventListener("pointerdown", e => {
-  if (e.target.closest(".vfctl, .notebar, .qcheck")) return;
-  vfPts.set(e.pointerId, { x:e.clientX, y:e.clientY });
-  vfTap = vfPts.size === 1 ? { x:e.clientX, y:e.clientY, t:Date.now() } : null;
+  if (e.target.closest(".vfctl, .notebar, .qcheck, .zoombar, .snack")) return;
+  const q = uiPt(e); vfPts.set(e.pointerId, q);
+  vfTap = vfPts.size === 1 ? { x:q.x, y:q.y, t:Date.now() } : null;
   if (vfPts.size === 2) { const [a, b] = [...vfPts.values()]; vfPinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, z:curZoom() }; }
 });
 vfEl.addEventListener("pointermove", e => {
   if (!vfPts.has(e.pointerId)) return;
-  vfPts.set(e.pointerId, { x:e.clientX, y:e.clientY });
-  if (vfTap && Math.hypot(e.clientX - vfTap.x, e.clientY - vfTap.y) > 12) vfTap = null;
+  const q = uiPt(e); vfPts.set(e.pointerId, q);
+  if (vfTap && Math.hypot(q.x - vfTap.x, q.y - vfTap.y) > 12) vfTap = null;
   if (vfPinch && vfPts.size === 2) { const [a, b] = [...vfPts.values()]; setZoom(vfPinch.z * Math.hypot(a.x - b.x, a.y - b.y) / vfPinch.d); flashZoomRead(); }
 });
 vfEl.addEventListener("pointerup", e => {
-  if (vfTap && vfPts.size === 1 && Date.now() - vfTap.t < 350) focusAt(e.clientX, e.clientY);
+  if (vfTap && vfPts.size === 1 && Date.now() - vfTap.t < 350) { const q = uiPt(e); focusAt(q.x, q.y); }
   vfTap = null; vfPts.delete(e.pointerId); if (vfPts.size < 2) vfPinch = null;
 });
 vfEl.addEventListener("pointercancel", e => { vfTap = null; vfPts.delete(e.pointerId); if (vfPts.size < 2) vfPinch = null; });
@@ -734,13 +744,13 @@ document.addEventListener("gesturestart", e => e.preventDefault());
 async function focusAt(cx, cy) {
   if (!S.track) return;
   const sup = (navigator.mediaDevices.getSupportedConstraints && navigator.mediaDevices.getSupportedConstraints()) || {};
-  const fm = S.caps.focusMode || [], r = $("video").getBoundingClientRect(), adv = {};
+  const fm = S.caps.focusMode || [], r = uiRect($("video")), adv = {};
   if (sup.pointsOfInterest) adv.pointsOfInterest = [{ x:clamp((cx - r.left) / r.width, 0, 1), y:clamp((cy - r.top) / r.height, 0, 1) }];
   if (fm.includes("single-shot")) adv.focusMode = "single-shot"; else if (fm.includes("continuous")) adv.focusMode = "continuous";
   if (!adv.pointsOfInterest && !adv.focusMode) return;   // this phone doesn't let web apps steer focus; it autofocuses itself
   try {
     await S.track.applyConstraints({ advanced:[adv] });
-    const v = vfEl.getBoundingClientRect(), ring = $("focusRing");
+    const v = uiRect(vfEl), ring = $("focusRing");
     ring.style.left = (cx - v.left) + "px"; ring.style.top = (cy - v.top) + "px";
     ring.classList.remove("show"); void ring.offsetWidth; ring.classList.add("show");
     if (adv.focusMode === "single-shot" && fm.includes("continuous")) setTimeout(() => S.track && S.track.applyConstraints({ advanced:[{ focusMode:"continuous" }] }).catch(() => {}), 4000);
@@ -856,8 +866,8 @@ const measureVf = () => {
 window.addEventListener("resize", measureVf);
 $("video").addEventListener("loadedmetadata", () => { measureVf(); lastHz = ""; });
 $("video").addEventListener("resize", () => { measureVf(); lastHz = ""; });
-window.addEventListener("orientationchange", () => setTimeout(measureVf, 300));
-if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener("change", () => setTimeout(() => { measureVf(); lastHz = ""; }, 300));
+window.addEventListener("orientationchange", () => setTimeout(() => { applyRot(); measureVf(); lastHz = ""; }, 300));
+if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener("change", () => setTimeout(() => { applyRot(); measureVf(); lastHz = ""; }, 300));
 const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
 const hudEls = {};
 let lastHz = "", lastHzOn = null;
@@ -871,13 +881,17 @@ function focalSrc() {
   return long / 2 / TAN_HALF_LONG * zoomFactor();          // zoomFactor = hardware zoom / telephoto (digital zoom is a crop)
 }
 const zeroOffsetF = (p, f) => f * Math.tan(rad(p));        // pixels from centre to the horizon, for focal length f
-function uiAngle() { return (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (typeof window.orientation === "number" ? (window.orientation + 360) % 360 : 0); }
+function rawAngle() { if (window.__forceAngle != null) return window.__forceAngle; return (screen.orientation && typeof screen.orientation.angle === "number") ? screen.orientation.angle : (typeof window.orientation === "number" ? (window.orientation + 360) % 360 : 0); }
+// What the tech sees: the screen's angle minus the turn the app applies to stay upright
+function uiAngle() { return (rawAngle() - ROT + 360) % 360; }
 // How far the phone is turned beyond what the screen shows (0 normally; 90/270 when held sideways with rotation lock on)
 function extraTurn() { return ((S.rollQ - uiAngle()) % 360 + 360) % 360; }
 function horizonOffset(p) {
   const v = $("video"), vw = v.videoWidth || 4, vh = v.videoHeight || 3, W = vfEl.clientWidth, H = vfH;
   const scale = (FRAME.k || Math.max(W / vw, H / vh)) * (S.digitalZoom || 1);   // screen px per feed px
-  const side = extraTurn() % 180 === 90, lim = (side ? W : H) * 0.5;   // keep the line on screen
+  // Always the true horizon: when the phone points well up or down the line slides off the edge of the
+  // viewfinder (clipped) instead of sticking to it. Capped far off screen only to keep the numbers sane.
+  const lim = Math.max(W, H) * 3;
   return clamp(zeroOffsetF(p, focalSrc() * scale), -lim, lim);
 }
 function fastTick() {
@@ -1274,7 +1288,7 @@ $("noteClear").addEventListener("click", () => { S.note = ""; $("inNote").value 
 document.addEventListener("keydown", e => { if ((e.key === " " || e.key === "AudioVolumeUp") && $("start").hidden && !document.querySelector(".sheet.open")) { e.preventDefault(); capture(); } });
 
 /* ================= import from library ================= */
-$("importBtn").addEventListener("click", () => $("fileIn").click());
+$("importBtn").addEventListener("click", () => { closeSheets(); $("fileIn").click(); });
 $("fileIn").addEventListener("change", async e => {
   const files = [...e.target.files]; e.target.value = "";
   if (!files.length || !current) return;
@@ -1569,19 +1583,19 @@ document.addEventListener("keydown", e => {
 const st = $("vStage");
 st.addEventListener("pointerdown", e => {
   if (e.target.closest(".vnav")) return;
-  st.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  st.setPointerCapture(e.pointerId); pts.set(e.pointerId, uiPt(e));
   $("vImg").classList.remove("slide");
-  swipe = pts.size === 1 && Z.s === 1 ? { x0:e.clientX, y0:e.clientY } : null;
+  swipe = pts.size === 1 && Z.s === 1 ? (q => ({ x0:q.x, y0:q.y }))(uiPt(e)) : null;
   if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d:Math.hypot(a.x - b.x, a.y - b.y), s:Z.s }; }
   if (pts.size === 1) { const now = Date.now(); if (now - lastTap < 280) { Z = Z.s > 1 ? { s:1, x:0, y:0 } : { s:3, x:0, y:0 }; applyZ(); } lastTap = now; }
 });
 st.addEventListener("pointermove", e => {
   if (!pts.has(e.pointerId)) return;
-  const prev = pts.get(e.pointerId); pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  const prev = pts.get(e.pointerId), q = uiPt(e); pts.set(e.pointerId, q);
   if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; Z.s = clamp(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, 1, 8); }
-  else if (pts.size === 1 && Z.s > 1) { Z.x += e.clientX - prev.x; Z.y += e.clientY - prev.y; }
+  else if (pts.size === 1 && Z.s > 1) { Z.x += q.x - prev.x; Z.y += q.y - prev.y; }
   if (pts.size === 1 && swipe && Z.s === 1) {             // not zoomed: drag sideways to flip photos
-    const i = vList.indexOf(S.viewing && S.viewing.id), dx = e.clientX - swipe.x0;
+    const i = vList.indexOf(S.viewing && S.viewing.id), dx = q.x - swipe.x0;
     const edge = (dx > 0 && i <= 0) || (dx < 0 && i >= vList.length - 1);
     Z.x = edge ? dx * 0.3 : dx; Z.y = 0; applyZ(); return;
   }
@@ -1593,7 +1607,7 @@ const endPt = e => {
   if (!pts.has(e.pointerId)) return;
   pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
   if (swipe && !pts.size) {
-    const dx = e.clientX - swipe.x0, dy = e.clientY - swipe.y0; swipe = null;
+    const q = uiPt(e), dx = q.x - swipe.x0, dy = q.y - swipe.y0; swipe = null;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && stepViewer(dx < 0 ? 1 : -1)) return;
     if (Z.s === 1 && Z.x) { Z.x = 0; $("vImg").classList.add("slide"); applyZ(); }
   }
@@ -1886,6 +1900,7 @@ function beginSession() {
       startOrientation();
       setTimeout(() => { if (S.pitch == null) toast("No motion data: tilt and direction won’t be stamped. Check Motion &amp; Orientation access.", 4000); }, 3500);
     });
+    try { screen.orientation && screen.orientation.lock && screen.orientation.lock("portrait").catch(() => {}); } catch {}
     startCamera(); startGeo(); keepAwake();
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
     hudTick();
@@ -1916,6 +1931,8 @@ $("startBtn").addEventListener("click", () => {
   if (hadPrev) toast("The last job’s photos are under Previous jobs in the gallery.", 3200);
 });
 
+applyRot();
+window.addEventListener("resize", applyRot);
 (async function boot() {
   if (!standalone && !settings.name.trim()) { $("installTip").hidden = false; $("installTip").textContent = installText(); }
   $("installHelp").textContent = installText();

@@ -1,4 +1,4 @@
-# Field Cam (v3.2.5)
+# Field Cam (v3.4.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -105,14 +105,24 @@ once they have a photo.
   shows in the after-shot note with a **Retake** button (5 s, never blocks the shutter) and stays
   as a **!** badge on the gallery tile and in the sorter. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
   adjust after field use if it warns too often or not enough.
-- **Note:** the pencil button adds a note to the next photo (stamped as `Note: …`), then clears.
+- **Note:** the pencil button (right of "Next photo: …", above the labels) adds a note to the next
+  photo (stamped as `Note: …`), then clears. It turns green while a note is waiting.
+- **Import:** gallery › **Import from photo library** (e.g. an eCoverage screenshot). Imports get the
+  label picked at the time, or go to To label.
+
+## Camera screen
+Kept clear on purpose: just the picture, a small zoom pill along its bottom edge (left edge when
+the phone is sideways) and the flashlight in the top-right corner when the phone has one. Time, GPS
+and address aren't shown live (they're stamped on every photo; the GPS chip in the top bar shows
+whether there's a fix). Line-of-sight shots add the tilt readout, the centre ring and the 0° line.
 - **Missing shots:** Finish job lists photos still to label, labels with no photo yet, and photos not saved.
 
 ## Horizontal photos
-- **Rotation lock off:** turning the phone sideways switches to a camera-style layout: shutter,
-  gallery and save down the right, zoom up the left edge, checklist along the bottom.
-- **Rotation lock on:** the screen stays upright, the tilt readout turns to face the tech, and the
-  saved photo still comes out landscape.
+The app stays upright (portrait) however the phone is held, like a phone with rotation lock on;
+there is no sideways layout. Photos still always save landscape 4:3: turning the phone sideways
+just turns the tilt readout to face the tech, and the saved photo comes out the right way up.
+Android keeps it upright through the install settings; iPhone web apps can't be locked, so the app
+turns itself back upright when the screen rotates.
 
 ## Tilt
 On level-guided photos the top readout shows tilt large (+ = aimed up) with LEVEL ✓ / AIM LOWER /
