@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Field Cam</title>
-<meta name="theme-color" content="#0A1211">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,9 +15,9 @@
 <style>
 /* Layout: full-screen camera. Top bar (job + GPS), viewfinder with tilt-first HUD, bottom deck (shot labels, zoom, shutter, download). Sheets slide up over it. */
 :root{
-  --ink:#0A1211;        /* green-biased near black */
-  --ink-2:#121D1B;      /* sheet surface */
-  --ink-3:#1B2926;      /* inputs, chips */
+  --ink:#000000;        /* AMOLED black: black pixels are switched off on OLED screens (saves battery) */
+  --ink-2:#0C1311;      /* sheet surface */
+  --ink-3:#16201E;      /* inputs, tiles */
   --line:rgba(234,242,238,.12);
   --fg:#EAF2EE;
   --muted:#8FA59D;
@@ -30,6 +30,15 @@
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
+/* Light mode: same Xplore greens, tuned for reading in bright daylight (darker green and amber for text contrast) */
+html[data-theme="light"]{
+  --ink:#F3F6F4; --ink-2:#FFFFFF; --ink-3:#E2EAE6;
+  --line:rgba(0,43,43,.16); --fg:#0B201D; --muted:#4E625C;
+  --accent:#1F8A44; --warn:#B26F12; --bad:#C23B2C;
+  color-scheme:light;
+}
+/* Anything drawn over the camera picture (or a photo) keeps dark colours in both modes */
+.vf,.vstage,.sstage{--ink:#0A1211;--ink-2:#121D1B;--ink-3:#1B2926;--line:rgba(234,242,238,.12);--fg:#EAF2EE;--muted:#8FA59D;--accent:#58C774;--warn:#F2B84B;--bad:#FF6B5E;color:var(--fg)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;background:var(--ink);color:var(--fg);font:15px/1.4 var(--sans);overflow:hidden;overscroll-behavior:none}
@@ -49,6 +58,8 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .jobpill{flex:1;min-width:0;justify-content:flex-start;gap:8px;padding:0}
 .jobpill b{font-weight:650;font-size:15px;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .jobpill span{font:600 12px var(--mono);color:var(--accent);flex:none}
+.jobpill .jref{flex:none;overflow:visible;color:var(--fg)}
+.jobpill .jref+b{font-weight:500;color:var(--muted)}
 .jobpill .chev{font-style:normal;color:var(--muted);font-size:11px;flex:none;margin-left:-3px}
 .gps{flex:none;width:36px;justify-content:center;padding:0}
 .gps #gpsTxt{display:none}
@@ -222,7 +233,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
 .tile{position:relative;aspect-ratio:1;max-width:100%;border-radius:10px;overflow:hidden;background:var(--ink-3)}
 .tile img{width:100%;height:100%;object-fit:cover;display:block}
-.tile .lab{position:absolute;left:0;right:0;bottom:0;padding:16px 7px 5px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .lab{color:#fff;position:absolute;left:0;right:0;bottom:0;padding:16px 7px 5px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .ok{position:absolute;left:5px;top:5px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--ink);font:700 13px/22px var(--sans);text-align:center}
 .tile .sel{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);display:grid;place-items:center}
 .tile.selected{outline:3px solid var(--accent);outline-offset:-3px}
@@ -248,14 +259,14 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .vtop .meta b{color:var(--fg);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* start / new job */
-.start{position:fixed;inset:0;z-index:40;background:radial-gradient(120% 70% at 50% 0%,#0F3A35 0%,var(--brand) 45%,var(--ink) 100%);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px))}
+.start{position:fixed;inset:0;z-index:40;background:radial-gradient(120% 60% at 50% 0%,#0F3A35 0%,var(--brand) 30%,#000 70%);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px))}
 .start .inner{width:100%;max-width:440px;margin:0 auto;display:grid;gap:16px}
 .brandrow{display:flex;align-items:center;gap:14px}
 .mark{width:50px;height:50px;flex:none}
 .start h1{margin:0;font-size:26px;letter-spacing:-.02em}
 .start .hello{margin:0;color:var(--muted);font-size:14px}
 .start h2{margin:6px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.resume{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:4px}
+.resume{background:var(--ink-2);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:4px}
 .resume .rjob{font-size:17px;font-weight:700}
 .resume .rmeta{font:12.5px var(--mono);color:var(--muted);margin-bottom:8px}
 .err{color:var(--warn);font-size:14px;margin:0}
@@ -289,8 +300,18 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 /* Start button stays on screen even on the smallest phones */
 .startbar{position:sticky;bottom:calc(-1 * (env(safe-area-inset-bottom,0px) + 22px));padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 22px);display:grid;gap:8px}
 .start .btn.big{border-radius:10px}
-.install{font-size:13px;background:rgba(0,0,0,.25);border-radius:12px;padding:12px;color:var(--muted)}
+.install{font-size:13px;background:var(--ink-3);border-radius:12px;padding:12px;color:var(--muted)}
 
+.updbar{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 48px);z-index:60;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 14px;border-radius:12px;background:var(--ink-2);border:1px solid var(--accent);font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.updbar[hidden]{display:none}
+html[data-theme="light"] .start{background:radial-gradient(120% 60% at 50% 0%,#CFEFD9 0%,#EAF4EE 35%,var(--ink) 75%)}
+html[data-theme="light"] .start .mark circle:first-of-type,html[data-theme="light"] .start .mark path{stroke:#1F8A44}
+html[data-theme="light"] .lt{background:#fff;border:1px solid var(--line)}
+html[data-theme="light"] .lt.done{background:var(--ink-3);border-color:transparent}
+html[data-theme="light"] .lt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+html[data-theme="light"] .lt[aria-pressed="true"] i{color:#fff}
+html[data-theme="light"] .thumbbtn{border-color:var(--fg)}
+html[data-theme="light"] .gps.ok .dot{background:#14B84A;box-shadow:none}
 .toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 160px);transform:translate(-50%,-20px);z-index:50;background:var(--ink-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast b{font-family:var(--mono);color:var(--accent)}
@@ -314,7 +335,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <div id="app">
   <div class="top">
-    <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b id="jobTxt">No job</b><span id="jobProg"></span><i class="chev" aria-hidden="true">▾</i></button>
+    <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b class="jref" id="jobRef" hidden></b><b id="jobTxt">No job</b><span id="jobProg"></span><i class="chev" aria-hidden="true">▾</i></button>
     <div class="pill gps" id="gpsChip" title="GPS" aria-label="GPS"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
     <button class="iconbtn" id="setBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
@@ -383,14 +404,24 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   </div>
 </section>
 
+<!-- After everything is saved -->
+<section class="sheet" id="doneSheet" aria-label="Job saved">
+  <header><h2 id="doneTitle">All photos saved ✓</h2></header>
+  <div class="body">
+    <p class="hint" id="doneMsg"></p>
+    <div class="btnrow" style="flex-direction:column"><button class="btn primary big" id="doneNext">Start next job</button><button class="btn" id="doneKeep">Keep shooting</button></div>
+  </div>
+</section>
+
 <!-- Settings sheet -->
 <section class="sheet" id="setSheet" aria-label="Settings">
   <header><h2>Settings</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
+    <div><label>Appearance</label><div class="seg two" id="themeSeg" role="group"><button type="button" data-t="dark"><b>Dark</b><span>Black, saves battery</span></button><button type="button" data-t="light"><b>Light</b><span>Easier in bright sun</span></button></div></div>
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.4.3 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.6.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -456,10 +487,11 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="updbar" id="updBar" hidden><span>New version of Field Cam ready</span><button class="btn sm primary" id="updGo">Update</button></div>
 
 <script>
 "use strict";
-const VERSION = "3.4.3";
+const VERSION = "3.6.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -552,7 +584,15 @@ const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${jobTitle(j)}` : "";
 /* ================= stored state ================= */
 function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch { return d; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-let settings = Object.assign({ name:"" }, load("fieldcam.settings", {}));
+let settings = Object.assign({ name:"", theme:"dark" }, load("fieldcam.settings", {}));
+// Dark (AMOLED black, default) or Light. Set before anything draws so there's no flash.
+function applyTheme() {
+  const t = settings.theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t === "light" ? "#F3F6F4" : "#000000";
+  document.querySelectorAll("#themeSeg [data-t]").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t));
+}
+applyTheme();
 let jobs = load("fieldcam.jobs", {});          // job id -> { work, outcome, opt, ref, started, custom }
 let current = load("fieldcam.current", null);
 
@@ -830,25 +870,105 @@ function startGeo() {
   }, err => { if (err.code === 1) toast("Location is blocked. Photos will be stamped without coordinates.", 3500); },
   { enableHighAccuracy:true, maximumAge:3000, timeout:30000 });
 }
+// Street address for a position (OpenStreetMap). Returns "" if none, throws if offline / failed.
+async function lookupAddress(at) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${at.latitude.toFixed(6)}&lon=${at.longitude.toFixed(6)}`, { signal:ctl.signal, headers:{ "Accept-Language":"en-CA,en" } });
+    if (!r.ok) throw new Error("lookup " + r.status);
+    const a = (await r.json()).address || {};
+    const street = [a.house_number, a.road].filter(Boolean).join(" ");
+    const place = a.city || a.town || a.village || a.hamlet || a.municipality || a.county || "";
+    const prov = (a["ISO3166-2-lvl4"] || "").split("-")[1] || a.state || "";
+    const s = [street, place, prov].filter(Boolean).join(", ");
+    return s ? (a.house_number ? "" : "Near ") + s : "";
+  } finally { clearTimeout(t); }
+}
 async function maybeGeocode() {
   if (!S.pos || S.geoBusy || !navigator.onLine) return;
   const now = Date.now();
   if (S.addrPos && distM(S.addrPos, S.pos) < 40) return;
   if (now - S.lastGeoTry < 15000 || S.pos.accuracy > 150) return;
   S.lastGeoTry = now; S.geoBusy = true;
-  const at = { ...S.pos }, ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
-  try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${at.latitude.toFixed(6)}&lon=${at.longitude.toFixed(6)}`, { signal:ctl.signal, headers:{ "Accept-Language":"en-CA,en" } });
-    if (!r.ok) throw 0;
-    const a = (await r.json()).address || {};
-    const street = [a.house_number, a.road].filter(Boolean).join(" ");
-    const place = a.city || a.town || a.village || a.hamlet || a.municipality || a.county || "";
-    const prov = (a["ISO3166-2-lvl4"] || "").split("-")[1] || a.state || "";
-    const s = [street, place, prov].filter(Boolean).join(", ");
-    if (s) { S.addr = (a.house_number ? "" : "Near ") + s; S.addrPos = at; }
-  } catch {} finally { clearTimeout(t); S.geoBusy = false; }
+  const at = { ...S.pos };
+  try { const s = await lookupAddress(at); if (s) { S.addr = s; S.addrPos = at; } } catch {} finally { S.geoBusy = false; }
+  backfillAddresses();
 }
-window.addEventListener("online", maybeGeocode);
+window.addEventListener("online", () => { maybeGeocode(); backfillAddresses(); });
+/* Photos taken with no signal (or before the address came in) have coordinates but no street address.
+   Once there's signal, look it up and redraw their info band. Only photos not saved yet: saved files never change. */
+let backfillBusy = false;
+async function backfillAddresses() {
+  if (backfillBusy || !navigator.onLine) return;
+  const todo = () => S.photos.filter(p => p.meta && p.meta.pos && !p.meta.addr && !p.downloaded && !p.addrTried);
+  if (!todo().length) return;
+  backfillBusy = true;
+  const known = [];                                        // addresses found this run, reused for nearby photos
+  if (S.addr && S.addrPos) known.push({ pos:S.addrPos, addr:S.addr });
+  try {
+    for (const p of todo()) {
+      const pos = p.meta.pos;
+      let hit = known.find(k => distM(k.pos, pos) < 150);
+      if (!hit) {
+        if (pos.accuracy > 150) { p.addrTried = true; continue; }
+        await sleep(1100);                                  // OpenStreetMap asks for at most one lookup a second
+        const addr = await lookupAddress(pos);              // throws when the signal drops: stop and retry later
+        hit = { pos, addr }; known.push(hit);
+      }
+      p.addrTried = true;
+      if (!hit.addr || !S.photos.includes(p) || p.downloaded) continue;
+      p.meta.addr = hit.addr;
+      queueRestamp(p);
+    }
+  } catch {} finally { backfillBusy = false; }
+}
+
+/* ================= true north =================
+   Phones give a magnetic heading. Declination (how far magnetic north is from true north here) comes from
+   the IGRF-14 geomagnetic model, degrees 1-8, NOAA coefficients for 2025 with yearly change; about ±0.5°
+   across Canada (Cambridge ON −9.7°, Ottawa −12.7°, Calgary +14°, Vancouver +16°). Needs a GPS fix. */
+// IGRF-14 (NOAA, igrf14coeffs.txt) degree 1-8: [n, m, g2025, h2025, gSV, hSV]
+const IGRF = (`1 0 -29350.0 0 12.6 0|1 1 -1410.3 4545.5 10.0 -21.5|2 0 -2556.2 0 -11.2 0|2 1 2950.9 -3133.6 -5.3 -27.3|2 2 1648.7 -814.2 -8.3 -11.1|`+
+`3 0 1360.9 0 -1.5 0|3 1 -2404.2 -56.9 -4.4 3.8|3 2 1243.8 237.6 0.4 -0.2|3 3 453.4 -549.6 -15.6 -3.9|`+
+`4 0 894.7 0 -1.7 0|4 1 799.6 278.6 -2.3 -1.3|4 2 55.8 -134.0 -5.8 4.1|4 3 -281.1 212.0 5.4 1.6|4 4 12.0 -375.4 -6.8 -4.1|`+
+`5 0 -232.9 0 0.6 0|5 1 369.0 45.3 1.3 -0.5|5 2 187.2 220.0 0.0 2.1|5 3 -138.7 -122.9 0.7 0.5|5 4 -141.9 42.9 2.3 1.7|5 5 20.9 106.2 1.0 1.9|`+
+`6 0 64.3 0 -0.2 0|6 1 63.8 -18.4 -0.3 0.3|6 2 76.7 16.8 0.8 -1.6|6 3 -115.7 48.9 1.2 -0.4|6 4 -40.9 -59.8 -0.8 0.8|6 5 14.9 10.9 0.4 0.7|6 6 -60.8 72.8 0.9 0.9|`+
+`7 0 79.6 0 -0.1 0|7 1 -76.9 -48.9 -0.1 0.6|7 2 -8.8 -14.4 -0.1 0.5|7 3 59.3 -1.0 0.5 -0.7|7 4 15.8 23.5 -0.1 0.0|7 5 2.5 -7.4 -0.8 -0.9|7 6 -11.2 -25.1 -0.8 0.5|7 7 14.3 -2.2 0.9 -0.3|`+
+`8 0 23.1 0 -0.1 0|8 1 10.9 7.2 0.2 -0.3|8 2 -17.5 -12.6 0.0 0.4|8 3 2.0 11.5 0.4 -0.3|8 4 -21.8 -9.7 -0.1 0.4|8 5 16.9 12.7 0.3 -0.5|8 6 14.9 0.7 0.1 -0.6|8 7 -16.8 -5.2 0.0 0.3|8 8 1.0 3.9 0.3 0.2`).split("|").map(r => r.trim().split(/\s+/).map(Number));
+// Magnetic declination (degrees, + = east) at sea level, spherical Earth, Schmidt semi-normalized harmonics.
+function declination(lat, lon, year) {
+  const N = 8, t = Math.max(-5, Math.min(10, year - 2025)), th = (90 - lat) * Math.PI / 180, ph = lon * Math.PI / 180;
+  const c = Math.cos(th), s = Math.max(1e-9, Math.sin(th));
+  const P = [], dP = [];
+  for (let n = 0; n <= N; n++) { P.push(new Array(N + 1).fill(0)); dP.push(new Array(N + 1).fill(0)); }
+  P[0][0] = 1;
+  for (let n = 1; n <= N; n++) {
+    for (let m = 0; m <= n; m++) {
+      if (n === m) {
+        const k = n === 1 ? 1 : Math.sqrt((2 * n - 1) / (2 * n));
+        P[n][n] = k * s * P[n - 1][n - 1]; dP[n][n] = k * (c * P[n - 1][n - 1] + s * dP[n - 1][n - 1]);
+      } else {
+        const a = Math.sqrt(n * n - m * m), b = n > 1 ? Math.sqrt((n - 1) * (n - 1) - m * m) : 0;
+        const p2 = n > 1 ? P[n - 2][m] : 0, dp2 = n > 1 ? dP[n - 2][m] : 0;
+        P[n][m] = ((2 * n - 1) * c * P[n - 1][m] - b * p2) / a;
+        dP[n][m] = ((2 * n - 1) * (c * dP[n - 1][m] - s * P[n - 1][m]) - b * dp2) / a;
+      }
+    }
+  }
+  let X = 0, Y = 0;
+  for (const [n, m, g0, h0, gs, hs] of IGRF) {
+    const g = g0 + gs * t, h = h0 + hs * t, cm = Math.cos(m * ph), sm = Math.sin(m * ph);
+    X += (g * cm + h * sm) * dP[n][m];
+    Y += m * (g * sm - h * cm) * P[n][m] / s;
+  }
+  return Math.atan2(Y, X) * 180 / Math.PI;
+}
+const yearNow = d => d.getFullYear() + (d.getMonth() + d.getDate() / 31) / 12;
+function trueHeading(mag, pos, when) {
+  if (mag == null) return { heading:null, ref:"" };
+  if (!pos) return { heading:mag, ref:"M" };
+  return { heading:(mag + declination(pos.latitude, pos.longitude, yearNow(when)) + 360) % 360, ref:"T" };
+}
 
 /* ================= HUD ================= */
 const gpsFresh = () => S.pos && Date.now() - S.posAt < 60000;
@@ -932,7 +1052,7 @@ function fastTick() {
   E.shutter.classList.toggle("locked", povBlocked());
   requestAnimationFrame(fastTick);
 }
-let lastLive = "";
+let lastLive = "", slowN = 0;
 function slowTick() {
   const chip = $("gpsChip");
   chip.classList.remove("ok", "meh");
@@ -940,6 +1060,7 @@ function slowTick() {
   else setText($("gpsTxt"), S.pos ? "GPS old" : "GPS…");
   const html = (S.note ? `<div class="note">Note: ${esc(S.note)}</div>` : "") + stampLines(snapshot(), true).map(l => `<div${l.pending ? ' class="pending"' : ""}>${esc(l.t)}</div>`).join("");
   if (html !== lastLive) { $("live").innerHTML = html; lastLive = html; }
+  if (++slowN % 40 === 0) backfillAddresses();           // every ~20 s
   setTimeout(slowTick, 500);
 }
 window.addEventListener("resize", () => { lastHz = ""; });
@@ -951,10 +1072,11 @@ function hudTick() {
 /* ================= stamp content ================= */
 function snapshot(extra = {}) {
   const j = curJob();
+  const when = new Date(), pos = gpsFresh() ? { ...S.pos } : null, th = trueHeading(S.heading, pos, when);
   return Object.assign({
-    when:new Date(), pos:gpsFresh() ? { ...S.pos } : null,
+    when, pos, headingRef:th.ref,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
-    heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
+    heading:th.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
     job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false
   }, extra);
 }
@@ -973,7 +1095,7 @@ function stampLines(m, live = false) {
   if (!live) {
     const parts = [];
     if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
-    if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
+    if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)}${m.headingRef === "M" ? " (mag)" : ""}`);
     if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
     if (parts.length) L.push({ t:parts.join(" · ") });
     if (m.tech) L.push({ t:"Tech: " + m.tech });
@@ -1064,7 +1186,7 @@ function bandContent(m) {
   A.push(fmtTime(m.when) + (m.imported ? " (photo time)" : ""));
   A.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}` : "No GPS fix");
   const dir = [];
-  if (m.heading != null) dir.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
+  if (m.heading != null) dir.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)}${m.headingRef === "M" ? " (mag)" : ""}`);
   if (m.pos && m.pos.altitude != null) dir.push(`Elev ${Math.round(m.pos.altitude)} m`);
   if (dir.length) A.push(dir.join(" · "));
   if (m.addr) A.push(m.addr);
@@ -1191,9 +1313,13 @@ async function relabel(rec, labels) {
   if (rec.meta) Object.assign(rec.meta, { labels:[...labels], label:labelText(labels), unlabelled:!labels.length,
     level:labels.some(l => isLevelShot(l, j)), job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : rec.meta.job });
   rec.downloaded = false;
-  if (rec.meta) rec.pending = true;
   try { await DB.put(rec); } catch {}
-  if (rec.meta) renderQ = renderQ.then(() => restamp(rec)).catch(e => { console.error(e); rec.pending = false; });
+  if (rec.meta) queueRestamp(rec);
+}
+function queueRestamp(rec) {
+  rec.pending = true; renderAll();
+  renderQ = renderQ.then(() => restamp(rec)).catch(e => { console.error(e); rec.pending = false; });
+  return renderQ;
 }
 async function restamp(rec) {
   if (!S.photos.includes(rec)) return;
@@ -1310,7 +1436,7 @@ $("fileIn").addEventListener("change", async e => {
       const ex = readExif(await file.arrayBuffer());
       const url = URL.createObjectURL(file), img = new Image();
       img.src = url; await img.decode();
-      const meta = snapshot({ imported:true, heading:ex.dir ?? null, pitch:null, addr:null,
+      const meta = snapshot({ imported:true, heading:ex.dir ?? null, headingRef:ex.dir != null ? (ex.dirRef === "M" ? "M" : "T") : "", pitch:null, addr:null,
         when:ex.date || new Date(file.lastModified || Date.now()),
         pos:ex.lat != null ? { latitude:ex.lat, longitude:ex.lon, accuracy:ex.acc ?? 10, altitude:ex.alt ?? null } : null });
       if (meta.pos && S.addr && S.addrPos && distM(S.addrPos, meta.pos) < 150) meta.addr = S.addr;
@@ -1367,7 +1493,7 @@ async function addExif(blob, m, w, h) {
       if (m.pos.altitude != null) gps.push({ tag:0x0005, type:1, count:1, bytes:[m.pos.altitude < 0 ? 1 : 0] }, { tag:0x0006, type:5, count:1, bytes:rat(Math.abs(m.pos.altitude), 100) });
       if (m.pos.accuracy != null) gps.push({ tag:0x001F, type:5, count:1, bytes:rat(m.pos.accuracy, 100) });
     }
-    if (m.heading != null) gps.push(A(0x0010, "M"), { tag:0x0011, type:5, count:1, bytes:rat(m.heading, 100) });
+    if (m.heading != null) gps.push(A(0x0010, m.headingRef === "M" ? "M" : "T"), { tag:0x0011, type:5, count:1, bytes:rat(m.heading, 100) });
     ifd0.push({ tag:0x8825, type:4, count:1, ptr:"gps" });
   }
   const o0 = 8, oE = o0 + ifdSize(ifd0), oG = oE + ifdSize(exif), ptrs = { exif:oE, gps:oG };
@@ -1411,7 +1537,7 @@ function parseTiff(v, t, out) {
     const la = val(2), lo = val(4);
     if (la && lo) { out.lat = (la[0] + la[1] / 60 + la[2] / 3600) * (val(1) === "S" ? -1 : 1); out.lon = (lo[0] + lo[1] / 60 + lo[2] / 3600) * (val(3) === "W" ? -1 : 1); }
     const al = val(6); if (al) out.alt = al[0] * (val(5) === 1 ? -1 : 1);
-    const di = val(0x11); if (di) out.dir = di[0];
+    const di = val(0x11); if (di) { out.dir = di[0]; out.dirRef = val(0x10) || "T"; }
     const he = val(0x1F); if (he) out.acc = he[0];
   }
 }
@@ -1454,7 +1580,7 @@ async function downloadPhotos(items) {
   if (!items.length || dlBusy) return false;
   const unl = items.filter(isUnl);
   if (unl.length) { toast(`Label ${plural(unl.length, "photo")} first, then save.`, 2600); openSorter(unl.map(p => p.id)); return false; }
-  if (items.some(p => p.pending)) { toast("Updating the stamp on a relabelled photo. Tap Save again in a second.", 2600); return false; }
+  if (items.some(p => p.pending)) { toast("Updating a photo’s stamp. Tap Save again in a second.", 2600); return false; }
   const list = [...items].sort((a, b) => a.created - b.created);
   if (isIOS && navigator.canShare && navigator.share) {
     const files = list.map(p => new File([p.blob], fileNameFor(p), { type:"image/jpeg", lastModified:p.created }));
@@ -1504,9 +1630,19 @@ function requestSave(items) {
     openSorter(unl.sort((a, b) => a.created - b.created).map(p => p.id), true);
     return;
   }
-  if (!missingShots().length && !items.some(p => p.pending)) { saveIds = null; return downloadPhotos(items); }
+  if (!missingShots().length && !items.some(p => p.pending)) { saveIds = null; return downloadPhotos(items).then(ok => { if (ok) afterSave(); return ok; }); }
   saveIds = items.map(p => p.id); openSaveSheet();
 }
+// Whole job saved, nothing missing, nothing to label: offer the next job
+function afterSave() {
+  const ps = curPhotos();
+  if (!current || !ps.length || ps.some(p => !p.downloaded || isUnl(p)) || missingShots().length) return;
+  const j = curJob();
+  $("doneMsg").textContent = `${plural(ps.length, "photo")} for ${j && j.ref ? j.ref + " · " : ""}${jobShort(j).replace(j && j.ref ? j.ref + " · " : "", "")} are saved. They stay on this phone under Previous jobs.`;
+  setTimeout(() => openSheet("doneSheet"), 400);
+}
+$("doneNext").addEventListener("click", () => { closeSheets(); finishJob(); });
+$("doneKeep").addEventListener("click", closeSheets);
 function saveItems() { return (saveIds || []).map(id => S.photos.find(p => p.id === id)).filter(Boolean); }
 function openSaveSheet() { renderSaveSheet(); openSheet("saveSheet"); }
 function renderSaveSheet() {
@@ -1515,14 +1651,14 @@ function renderSaveSheet() {
   $("saveMsg").innerHTML = miss.length
     ? `<div class="warnbox"><p><b>No photo yet for:</b></p><p>${miss.map(esc).join("<br>")}</p></div><p class="hint">The job form needs these. Take them now, or save what you have.</p>`
     : `<p class="hint">All labelled and every required photo taken ✓</p>`;
-  $("saveGo").textContent = busy ? "Updating labels…" : miss.length ? `Save ${plural(items.length, "photo")} anyway` : `Save ${plural(items.length, "photo")}`;
+  $("saveGo").textContent = busy ? "Updating stamps…" : miss.length ? `Save ${plural(items.length, "photo")} anyway` : `Save ${plural(items.length, "photo")}`;
   $("saveGo").disabled = busy || !items.length;
   $("saveGo").className = miss.length ? "btn" : "btn primary big";
   $("saveBack").hidden = !miss.length;
 }
 $("saveGo").addEventListener("click", async () => {   // straight from the tap (iPhone share sheet needs that)
   const items = saveItems(); closeSheets();
-  if (await downloadPhotos(items)) saveIds = null;
+  if (await downloadPhotos(items)) { saveIds = null; afterSave(); }
 });
 $("saveBack").addEventListener("click", () => { saveIds = null; closeSheets(); });
 
@@ -1692,7 +1828,8 @@ function countLabels() { const c = {}; for (const p of curPhotos()) for (const l
 function renderTop() {
   const j = curJob(), req = baseShots(j), counts = countLabels();
   const w = wfFor(j), sh = w ? `${byId(JOB_TYPES, j.work).name} · ${w.outcome === "NR" ? "NR · " + w.code.replace("-", " ") : w.code.replace("-", " ") + (w.outcome === "CC" ? " · Can’t complete" : "")}` : "";
-  $("jobTxt").textContent = j ? (j.ref ? `${j.ref} · ${sh}` : sh) : "No job";
+  $("jobRef").textContent = j && j.ref ? j.ref : ""; $("jobRef").hidden = !(j && j.ref);
+  $("jobTxt").textContent = j ? sh : "No job";
   $("jobProg").textContent = j && req.length ? `${req.filter(l => counts[l]).length}/${req.length}` : "";
 }
 // Tiles: every checklist item for the job, a ✓ + count once photographed; items still needed have an amber edge.
@@ -1835,6 +1972,7 @@ document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
 $("setBtn").addEventListener("click", () => { $("inName").value = settings.name; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
+$("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; settings.theme = b.dataset.t; save(); applyTheme(); });
 
 $("jobBtn").addEventListener("click", () => {
   const j = curJob(); if (!j) return;
@@ -1905,7 +2043,7 @@ async function renderStorage() {
 }
 const SAVE_HINT = isIOS
   ? "Save opens the iPhone share sheet: tap “Save N Images” to put them in Photos, or “Save to Files” to keep the file names. Then attach them in FSL."
-  : "Each photo downloads as its own file, named with the job type and label, ready to attach in FSL.";
+  : "Each photo downloads as its own file, named with the date, SA-# and label, ready to attach in FSL.";
 function installText() {
   if (standalone) return "Installed on this phone. It opens full-screen and works with no signal.";
   if (isIOS) return "Install: tap the Share button in Safari, then “Add to Home Screen”. It then opens full-screen and works with no signal.";
@@ -1979,6 +2117,25 @@ $("startBtn").addEventListener("click", () => {
 
 applyRot();
 window.addEventListener("resize", applyRot);
+/* Updates: the service worker fetches new files in the background. When a new version has taken over,
+   offer a one-tap reload instead of running the old copy until the app is fully closed.
+   Also checks for a new version whenever the app comes back to the foreground. */
+function setupUpdates() {
+  const sw = navigator.serviceWorker, had = !!sw.controller;
+  sw.register("sw.js").then(reg => {
+    const check = () => { if (document.visibilityState === "visible" && navigator.onLine) reg.update().catch(() => {}); };
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("online", check);
+    setInterval(check, 30 * 60 * 1000);
+  }).catch(() => {});
+  sw.addEventListener("controllerchange", () => { if (had) $("updBar").hidden = false; });
+}
+$("updGo").addEventListener("click", async () => {
+  $("updGo").disabled = true;
+  while (S.busy) await sleep(200);           // never interrupt a photo being saved
+  await renderQ.catch(() => {});             // or a stamp being redrawn
+  location.reload();
+});
 (async function boot() {
   if (!standalone && !settings.name.trim()) { $("installTip").hidden = false; $("installTip").textContent = installText(); }
   $("installHelp").textContent = installText();
@@ -1987,7 +2144,7 @@ window.addEventListener("resize", applyRot);
   catch { toast("Photo storage is unavailable in this browser mode.", 4000); }
   if (current && !jobs[current.id]) current = null;
   if (current) S.sel = [...(current.sel || [])];
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && location.protocol === "https:") setupUpdates();
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) showVfMsg("This browser can’t use the camera. Open Field Cam in Safari.");
   showStart();
 })();

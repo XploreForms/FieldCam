@@ -1,4 +1,4 @@
-# Field Cam (v3.4.3)
+# Field Cam (v3.6.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -53,6 +53,8 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
    download only opens a preview. On Android/computers each photo downloads as its own file.
    Tap a gallery photo to view it full screen; **swipe left/right** (or the arrows) to flip
    through the job's photos, pinch or double-tap to zoom. Save or Delete applies to the photo shown.
+   When every photo in the job is saved and nothing the form needs is missing, the app offers
+   **Start next job** (or Keep shooting).
 5. In FSL, attach the photos from Photos or Files.
 6. Tap the job name at the top (▾) → **Start a new job** (keeps this job's photos under
    Previous jobs) or **Cancel this job** (wrong form picked etc.: deletes its photos after
@@ -110,6 +112,11 @@ once they have a photo.
 - **Import:** gallery › **Import from photo library** (e.g. an eCoverage screenshot). Imports get the
   label picked at the time, or go to To label.
 
+## Appearance
+Settings › Appearance: **Dark** (default: true black, which switches pixels off on the OLED screens
+most iPhones have and saves battery) or **Light** (easier to read in bright sun). Both use the Xplore
+greens. The camera overlays (tilt readout, zoom, after-shot note) stay dark in both, over the picture.
+
 ## Camera screen
 Kept clear on purpose: just the picture, a small zoom pill along its bottom edge (left edge when
 the phone is sideways) and the flashlight in the top-right corner when the phone has one. Time, GPS
@@ -144,10 +151,17 @@ other label the tilt is just a small number and the stamp records the value only
 - Zoom starts at 1× every time and **1× is the minimum**: no ultra-wide, and pinch can't go wider.
   Tele uses the real telephoto lens where exposed; 2× / 3× / pinch crop. Any zoom other than 1×
   is noted on the info band.
-- Compass is magnetic north (about 10° off true north in Southern Ontario).
-- Address lookup uses OpenStreetMap's free service; with no data, coordinates are still stamped.
+- **Compass is true north** (matches Google Maps and tower bearings), corrected from the phone's
+  magnetic reading using the IGRF-14 geomagnetic model for wherever the photo is taken (about −10°
+  around Cambridge, +16° in Vancouver). Needs a GPS fix; without one the heading is stamped as
+  magnetic, marked `(mag)`. Phone compasses are only good to about ±5°, worse near metal.
+- Address lookup uses OpenStreetMap's free service. Photos taken with no signal get coordinates
+  only; once there's signal the app looks up their addresses and redraws their info band (only for
+  photos not yet saved; saved files never change).
 - Location, time and direction are also written into the JPEG metadata.
 
 ## Updating
-Edit files, bump `VERSION` in `sw.js` and `index.html`, upload. Phones update next time the
-app opens with signal.
+Edit files, bump `VERSION` in `sw.js` and `index.html`, upload. The app checks for a new version
+whenever it's opened or brought back to the front with signal. When one has downloaded, a bar
+says **New version of Field Cam ready · Update**; tapping it reloads (it waits for any photo being
+saved). Photos and the current job are kept.
