@@ -60,10 +60,8 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .vf{position:relative;overflow:hidden;background:#000;min-height:0;touch-action:none}
 /* The camera frame: exactly what gets saved (always landscape 4:3 in the world) */
 .frame{position:absolute;left:50%;top:50%;width:75%;height:100%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
-/* Square viewfinder; the feed is sized so the whole 4:3 photo area fits inside it, nothing cropped */
+/* Square viewfinder: shows the centre of the 4:3 photo (sides trimmed on screen only; the saved photo is the full 4:3) */
 .vf video{position:absolute;left:50%;top:50%;width:100%;height:100%;object-fit:fill;transform-origin:center;translate:-50% -50%}
-/* the 4:3 area that gets saved: outlined, everything outside it dimmed (context only) */
-.capbox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2000px rgba(0,0,0,.5);outline:1px solid rgba(255,255,255,.7);pointer-events:none}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 .flash.go{animation:flash .28s ease-out}
 @keyframes flash{0%{opacity:.85}100%{opacity:0}}
@@ -113,28 +111,52 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .qcheck b{display:block;color:var(--warn);font-size:14px}
 .qcheck span{display:block;font-size:12.5px;color:var(--muted)}
 .qcheck .btn{min-height:38px;padding:0 12px;font-size:14px}
+#otherBar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);bottom:auto;z-index:60;border:1px solid var(--line)}
 .notebar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;align-items:center;padding:8px;border-radius:14px;background:rgba(10,18,17,.9);z-index:3}
 .notebar input{flex:1;min-width:0;padding:9px 11px}
 .notebar .btn{min-height:40px;padding:0 12px}
 .live .note{color:var(--accent);font-weight:600}
 
-.guide{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));font-size:13.5px;color:var(--muted);min-height:32px}
-.guide span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.guide b{color:var(--fg)}
-.guide .btn{flex:none;white-space:nowrap}
-.guide.done span{color:var(--accent)}
+/* label grid: every checklist item visible, tap one or more before shooting (or none, and label later) */
+.lhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px));font-size:13.5px;color:var(--muted);min-height:30px}
+.lhead span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lhead b{color:var(--accent)}
+.lhead .btn{flex:none;white-space:nowrap}
+.btn.warn{background:rgba(242,184,75,.16);color:var(--warn);box-shadow:inset 0 0 0 1px rgba(242,184,75,.45)}
+.lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
+.lt{position:relative;min-height:42px;padding:5px 8px;border-radius:10px;background:var(--ink-3);color:var(--fg);font-size:12.5px;font-weight:600;line-height:1.2;text-align:left;display:flex;align-items:center;overflow:hidden;box-shadow:inset 3px 0 0 var(--warn)}
+.lt span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:18px}
+.lt.done,.lt.opt{box-shadow:none}
+.lt.done{color:var(--muted)}
+.lt i{position:absolute;right:5px;top:5px;font:700 10.5px/1 var(--mono);font-style:normal;color:var(--accent)}
+.lt[aria-pressed="true"]{background:var(--accent);color:var(--ink);box-shadow:none}
+.lt[aria-pressed="true"] i{color:var(--ink)}
+.lt.other{color:var(--muted);font-weight:500}
+/* after-shot note: never blocks the shutter, fades by itself */
+.snack{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:8px;align-items:center;padding:7px;border-radius:14px;background:rgba(10,18,17,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);z-index:3;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.snack.show{opacity:1;transform:none;pointer-events:auto}
+.snack.warn{border-color:rgba(242,184,75,.55)}
+.snack img{width:40px;height:40px;border-radius:7px;object-fit:cover;flex:none}
+.snack div{flex:1;min-width:0;font-size:13.5px;line-height:1.3}
+.snack div b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snack div span{display:block;font-size:12px;color:var(--muted)}
+.snack.warn div span{color:var(--warn)}
+.snack .btn{min-height:38px;padding:0 12px;font-size:14px;flex:none}
+/* sorter: label photos taken without a label (or change a photo's labels) */
+.sorter .sstage{flex:1;position:relative;min-height:0;display:grid;place-items:center;background:#000}
+.sorter .sstage img{max-width:100%;max-height:100%;object-fit:contain}
+.qflag{position:absolute;left:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(10,18,17,.8);color:var(--warn);font-size:12.5px;font-weight:600}
+.spanel{background:var(--ink);padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 10px);display:grid;gap:10px;max-height:58%;overflow-y:auto}
+.spanel .lgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.spanel .btnrow{padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));flex-wrap:nowrap}
+.spanel .btnrow .btn{flex:none}.spanel .btnrow .grow{flex:1}
+.tile .qf{position:absolute;left:5px;top:5px;width:22px;height:22px;border-radius:50%;background:var(--warn);color:var(--ink);font:700 13px/22px var(--sans);text-align:center}
+.tile .ok+.qf{left:31px}
+.tile.unl .lab{color:var(--warn)}
 
 /* bottom deck */
-.deck{padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 12px);display:grid;grid-template-columns:minmax(0,1fr);gap:10px;background:var(--ink)}
+.deck{padding:6px 0 calc(env(safe-area-inset-bottom,0px) + 10px);display:grid;grid-template-columns:minmax(0,1fr);gap:8px;background:var(--ink)}
 .deck>*{min-width:0}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));scrollbar-width:none;scroll-padding-inline:12px}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;background:var(--ink-3);font-size:14px;color:var(--muted)}
-.chip.done{color:var(--fg)}
-
-.chip .c{min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--brand);color:var(--accent);font:700 11px/19px var(--mono);text-align:center}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--ink);font-weight:600}
-.chip[aria-pressed="true"] .c{background:var(--ink);color:var(--accent)}
 .zoombar{display:flex;justify-content:center;align-items:center;gap:6px;min-height:34px}
 .zoombar button{min-width:44px;height:34px;padding:0 10px;border-radius:17px;background:var(--ink-3);font:600 13px var(--mono);color:var(--muted)}
 .zoombar button[aria-pressed="true"]{background:var(--brand);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);min-width:52px}
@@ -237,17 +259,18 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 /* Horizontal (phone turned sideways, rotation unlocked): camera-style layout.
    Viewfinder left, shutter rail on the right, zoom up the left edge, checklist along the bottom. */
 @media (orientation:landscape) and (max-height:540px){
-  #app{grid-template-columns:minmax(0,1fr) calc(96px + env(safe-area-inset-right,0px));grid-template-rows:auto minmax(0,1fr) auto auto}
-  .top{grid-column:1/3;grid-row:1;padding-top:6px;padding-bottom:6px}
+  #app{grid-template-columns:minmax(0,1fr) minmax(220px,40%) calc(96px + env(safe-area-inset-right,0px));grid-template-rows:auto auto minmax(0,1fr)}
+  .top{grid-column:1/4;grid-row:1;padding-top:6px;padding-bottom:6px}
   .pill,.iconbtn{min-height:34px;height:34px}
   .iconbtn{width:34px}
   .deck{display:contents}
-  .vf{grid-column:1;grid-row:2}
-  .guide{grid-column:1;grid-row:3;background:var(--ink);padding-top:6px;min-height:30px}
-  .chips{grid-column:1;grid-row:4;background:var(--ink);padding-top:6px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
-  .zoombar{grid-column:1;grid-row:2;align-self:center;justify-self:start;flex-direction:column;margin-left:max(10px,env(safe-area-inset-left,0px));z-index:4;min-height:0}
+  .vf{grid-column:1;grid-row:2/4}
+  .lhead{grid-column:2;grid-row:2;background:var(--ink);padding:6px 10px 4px;min-height:0}
+  .lgrid{grid-column:2;grid-row:3;background:var(--ink);grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;overflow-y:auto;padding:0 10px calc(env(safe-area-inset-bottom,0px) + 8px)}
+  .lt{min-height:38px}
+  .zoombar{grid-column:1;grid-row:2/4;align-self:center;justify-self:start;flex-direction:column;margin-left:max(10px,env(safe-area-inset-left,0px));z-index:4;min-height:0}
   .zoombar button{background:rgba(10,18,17,.7)}
-  .row{grid-column:2;grid-row:2/5;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:8px env(safe-area-inset-right,0px) calc(env(safe-area-inset-bottom,0px) + 8px) 0;background:var(--ink)}
+  .row{grid-column:3;grid-row:2/4;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:8px env(safe-area-inset-right,0px) calc(env(safe-area-inset-bottom,0px) + 8px) 0;background:var(--ink)}
   .row>span{display:none}
   .row .dlbtn{order:3}.row .shutter{order:2}.row .thumbbtn{order:1}
   .shutter{width:70px;height:70px}.shutter i{width:54px;height:54px}
@@ -273,7 +296,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
   </div>
 
   <div class="vf" id="vf">
-    <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video><div class="capbox" id="capBox"></div></div>
+    <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video></div>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
       <div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
@@ -290,13 +313,13 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     </div>
     <div class="notebar" id="otherBar" hidden><input id="inOther" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="What is this photo of?"><button class="btn" id="otherCancel">Cancel</button><button class="btn primary" id="otherDone">Use</button></div>
     <div class="notebar" id="noteBar" hidden><input id="inNote" maxlength="80" autocomplete="off" placeholder="Note for the next photo"><button class="btn" id="noteClear">Clear</button><button class="btn primary" id="noteDone">Done</button></div>
-    <div class="qcheck" id="qBanner" hidden><img id="qImg" alt=""><div><b id="qTitle"></b><span id="qText"></span></div><button class="btn primary" id="qRetake">Retake</button><button class="btn" id="qKeep">Keep</button></div>
+    <div class="snack" id="snack" aria-live="polite"><img id="snImg" alt=""><div><b id="snTitle"></b><span id="snText"></span></div><button class="btn" id="snRetake">Retake</button><button class="btn" id="snAct">Change</button></div>
     <div class="flash" id="flash"></div>
   </div>
 
   <div class="deck">
-    <div class="guide" id="guide"><span id="guideTxt"></span><button class="btn sm" id="guideNext">Next ›</button></div>
-    <div class="chips" id="chips" role="group" aria-label="Photo label"></div>
+    <div class="lhead"><span id="lSel"></span><button class="btn sm warn" id="toLabelBtn" hidden></button></div>
+    <div class="lgrid" id="lGrid" role="group" aria-label="Photo label"></div>
     <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
     <div class="row">
       <button class="thumbbtn" id="galBtn" aria-label="Open this job's photos"><span class="badge" id="galCount"></span></button>
@@ -324,7 +347,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     </div>
     <div class="warnbox" id="finishConfirm" hidden>
       <div id="finishMsg" style="display:grid;gap:6px"></div>
-      <div class="btnrow"><button class="btn primary" id="finishDl">Save, then finish</button><button class="btn" id="finishKeep">Keep shooting</button><button class="btn" id="finishYes">Finish anyway</button></div>
+      <div class="btnrow"><button class="btn warn" id="finishLabel">Label photos</button><button class="btn primary" id="finishDl">Save, then finish</button><button class="btn" id="finishKeep">Keep shooting</button><button class="btn" id="finishYes">Finish anyway</button></div>
     </div>
   </div>
 </section>
@@ -336,7 +359,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.1.0 · compass reads magnetic north</p>
+    <p class="stats">Field Cam v3.2.1 · compass reads magnetic north</p>
   </div>
 </section>
 
@@ -346,6 +369,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
   <div class="body">
     <div class="gtools"><span class="stats" id="galStats"></span><button class="btn sm" id="selAllBtn">Select all</button></div>
     <div class="grid" id="grid"></div>
+    <button class="btn warn" id="galLabel" hidden></button>
     <div class="btnrow">
       <button class="btn primary" id="dlAllBtn">Save all</button>
       <button class="btn danger" id="delBtn" hidden>Delete</button>
@@ -366,7 +390,17 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
     <button class="vnav prev" id="vPrev" aria-label="Previous photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="vnav next" id="vNext" aria-label="Next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="vcount" id="vCount"></div></div>
-  <div class="vbar"><button class="btn primary" id="vDl" style="flex:1">Save</button><button class="btn danger" id="vDel">Delete</button></div>
+  <div class="vbar"><button class="btn primary" id="vDl" style="flex:1">Save</button><button class="btn" id="vLab">Label</button><button class="btn danger" id="vDel">Delete</button></div>
+</div>
+
+<!-- Sorter: label photos taken with no label, or change a photo's labels -->
+<div class="viewer sorter" id="sorter">
+  <div class="vtop"><div class="meta" id="sMeta"></div><button class="btn" id="sClose">Close</button></div>
+  <div class="sstage"><img id="sImg" alt="Photo to label"><span class="qflag" id="sFlag" hidden></span></div>
+  <div class="spanel">
+    <div class="lgrid" id="sGrid" role="group" aria-label="Labels for this photo"></div>
+    <div class="btnrow"><button class="btn danger" id="sDel">Delete</button><button class="btn" id="sBack">‹</button><button class="btn primary grow" id="sNext">Next ›</button></div>
+  </div>
 </div>
 
 <!-- Start / new job -->
@@ -396,7 +430,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 <script>
 "use strict";
-const VERSION = "3.1.0";
+const VERSION = "3.2.1";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -482,7 +516,7 @@ const S = {
   stream:null, track:null, caps:{}, zoom:1, digitalZoom:1, torch:false, deviceId:null, lens:"wide", lenses:{}, lensesScanned:false, switching:false, rearRetry:false,
   heading:null, headingSrc:"", hx:null, hy:null, pitch:null, roll:0, rollQ:0, levelDev:null,
   pos:null, posAt:0, addr:null, addrPos:null, geoBusy:false, lastGeoTry:0,
-  note:"", fresh:true, busy:false, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
+  note:"", fresh:true, sel:[], busy:false, photos:[], selected:new Set(), viewing:null, wake:null, started:false, label:null
 };
 const jobPhotos = sid => S.photos.filter(p => p.sessionId === sid);
 const curPhotos = () => current ? jobPhotos(current.id) : [];
@@ -499,11 +533,14 @@ const LEVEL_TOL = 3;   // degrees either side of the horizon that count as "leve
 // Labels that get the full tilt check (big readout, 0° dot): radio/dish POV and LOS shots.
 // Every other label just shows a small tilt number.
 const isPOV = l => isLevelShot(l);
-// One photo can cover several checklist items: tap a second label to add it to the selection.
-// S.fresh = the selection was made by the app (start, after a shot, Next), so the tech's next tap replaces it.
-const selLabels = () => S.multi && S.multi.length ? S.multi : [S.label || OTHER];
-const labelsOf = p => p.labels && p.labels.length ? p.labels : [p.label || "Photo"];
+// S.sel = labels for the next photo (sticky, so a run of the same shot is shutter-only). Empty = label later.
+// S.fresh = a photo was just taken with this selection, so the next tap starts a new selection; further taps add/remove.
+const selLabels = () => S.sel;
+const isUnl = p => !!p.unlabelled;
+const labelsOf = p => p.labels && p.labels.length ? p.labels : p.unlabelled ? [] : [p.label || "Photo"];
 const labelText = ls => ls.join(" + ");
+const dispLabel = p => isUnl(p) ? "To label" : labelText(labelsOf(p));
+const flagText = p => p.qflag === "dark" ? "Looks too dark" : p.qflag === "blurry" ? "Might be blurry" : "";
 const selStrict = () => selLabels().some(isPOV);
 const povBlocked = () => false;   // no lock: the 0° dot guides the tech, and the stamp records the real tilt
 const BLUR_MIN = 60, DARK_MAX = 40;   // photo check thresholds (see quality())
@@ -775,8 +812,8 @@ const FRAME = { w:0, h:0 };
 // Photos are always landscape 4:3 in the world. Phone upright: a wide 4:3 frame on screen. Phone held sideways
 // with rotation lock on: the frame is tall on screen (it's wide in the world) and the photo is turned upright after.
 let frameTurn = 0;
-// The viewfinder itself is square. Inside it the camera feed is scaled so the whole 4:3 photo area fits
-// (FRAME = that area on screen, k = screen px per feed px); feed outside it shows dimmed for context.
+// The viewfinder is square and filled by the centre of the 4:3 photo area: the photo's long sides run
+// past the square edges on screen. FRAME = the full 4:3 area on screen, k = screen px per feed px.
 const capRatio = () => frameTurn === 90 ? 3 / 4 : 4 / 3;      // width ÷ height of the photo area on screen
 function capArea(vw, vh) { const r = capRatio(), w0 = vw / vh > r ? vh * r : vw; return { w0, h0:w0 / r }; }
 const measureVf = () => {
@@ -785,10 +822,9 @@ const measureVf = () => {
   const W = vfEl.clientWidth, H = vfH, side = Math.round(Math.min(W, H));
   const f = $("frame"); f.style.width = side + "px"; f.style.height = side + "px";
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, { w0, h0 } = capArea(vw, vh);
-  const k = Math.min(side / w0, side / h0);
+  const k = Math.max(side / w0, side / h0);   // fill the square (like object-fit: cover on the 4:3 area)
   v.style.width = (vw * k).toFixed(1) + "px"; v.style.height = (vh * k).toFixed(1) + "px";
   FRAME.w = Math.round(w0 * k); FRAME.h = Math.round(h0 * k); FRAME.k = k; FRAME.side = side;
-  const b = $("capBox"); b.style.width = FRAME.w + "px"; b.style.height = FRAME.h + "px";
 };
 window.addEventListener("resize", measureVf);
 $("video").addEventListener("loadedmetadata", () => { measureVf(); lastHz = ""; });
@@ -866,14 +902,14 @@ function snapshot(extra = {}) {
   return Object.assign({
     when:new Date(), pos:gpsFresh() ? { ...S.pos } : null,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
-    heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), note:S.note || "",
+    heading:S.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
     job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false
   }, extra);
 }
 function stampLines(m, live = false) {
   const L = [];
   if (!live) {
-    for (const l of (m.labels || [m.label || "Photo"])) L.push({ t:l, strong:true });
+    for (const l of (m.unlabelled ? ["Not labelled yet"] : m.labels || [m.label || "Photo"])) L.push({ t:l, strong:true });
     if (m.job) L.push({ t:[refLabel(m.job.ref), jobTitle(m.job)].filter(Boolean).join(" · ") });
     if (m.note) L.push({ t:"Note: " + m.note });
   }
@@ -965,28 +1001,43 @@ function drawZeroLine(c, m) {
   x.fillStyle = "#FFFFFF"; x.fillText("0°", 0, -lw * 2);
   x.restore();
 }
-// Info band added BELOW the photo (nothing covers the picture): labels across the top in green,
-// job / note / tech on the left, time / GPS / address / tilt on the right.
+// Info band added BELOW the photo (nothing covers the picture). Layout, all measured so it always fits:
+//   green rule · label(s) as a full-width title · two equal columns split by a thin centre line
+//   left = when / where (time, GPS, address)   right = what / who (job, tilt · facing · elev, tech, note)
+// Rows line up across the columns, padding is the same on both sides, and the whole block is centred
+// vertically in the band. The font shrinks (and long lines lose a wrap) until everything fits.
 function bandContent(m) {
-  const left = [], right = [];
-  if (m.job) left.push([refLabel(m.job.ref), jobTitle(m.job)].filter(Boolean).join(" · "));
-  if (m.note) left.push("Note: " + m.note);
-  if (m.tech) left.push("Tech: " + m.tech);
-  if (m.imported) left.push("Imported from photo library");
-  right.push(fmtTime(m.when) + (m.imported ? " (photo time)" : ""));
-  right.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` : "No GPS fix");
-  if (m.addr) right.push(m.addr);
-  const parts = [];
-  if (m.pitch != null) parts.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
-  if (m.heading != null) parts.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
-  if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
-  if (m.zoomLabel && m.zoomLabel !== "1×" && !m.imported) parts.push(`Zoom ${m.zoomLabel}`);
-  if (parts.length) right.push(parts.join(" · "));
-  return { title:(m.labels || [m.label || "Photo"]).join(" + "), left, right };
+  // left = when / where, right = what / who; short items so each fits on one line in most cases
+  const A = [], B = [];
+  A.push(fmtTime(m.when) + (m.imported ? " (photo time)" : ""));
+  A.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}  ±${Math.round(m.pos.accuracy)} m` : "No GPS fix");
+  const dir = [];
+  if (m.heading != null) dir.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)} (mag)`);
+  if (m.pos && m.pos.altitude != null) dir.push(`Elev ${Math.round(m.pos.altitude)} m`);
+  if (dir.length) A.push(dir.join(" · "));
+  if (m.addr) A.push(m.addr);
+  if (m.job) B.push(jobTitle(m.job));
+  const tilt = [];
+  if (m.pitch != null) tilt.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
+  if (m.zoomLabel && m.zoomLabel !== "1×" && !m.imported) tilt.push(`Zoom ${m.zoomLabel}`);
+  if (tilt.length) B.push(tilt.join(" · "));
+  if (m.tech) B.push("Tech: " + m.tech);
+  if (m.note) B.push("Note: " + m.note);
+  if (m.imported) B.push("Imported from photo library");
+  while (B.length - A.length >= 2) A.push(B.splice(B.length - 1, 1)[0]);   // keep the columns even
+  while (A.length - B.length >= 2) B.push(A.splice(A.length - 1, 1)[0]);
+  return { title:m.unlabelled ? "Not labelled yet" : (m.labels || [m.label || "Photo"]).join(" + "), ref:m.job ? refLabel(m.job.ref) : "", A, B };
 }
 function wrapText(ctx, text, maxW, maxLines) {
+  const words = [];
+  for (const w of String(text).split(" ")) {            // break any single word that is wider than the line
+    if (ctx.measureText(w).width <= maxW) { words.push(w); continue; }
+    let part = "";
+    for (const ch of w) { if (ctx.measureText(part + ch).width > maxW && part) { words.push(part); part = ch; } else part += ch; }
+    if (part) words.push(part);
+  }
   const out = []; let line = "";
-  for (const w of String(text).split(" ")) {
+  for (const w of words) {
     const t = line ? line + " " + w : w;
     if (ctx.measureText(t).width <= maxW || !line) line = t; else { out.push(line); line = w; }
   }
@@ -994,42 +1045,59 @@ function wrapText(ctx, text, maxW, maxLines) {
   if (out.length > maxLines) {
     out.length = maxLines;
     let l = out[maxLines - 1]; while (l.length > 1 && ctx.measureText(l + "…").width > maxW) l = l.slice(0, -1);
-    out[maxLines - 1] = l + "…";
+    out[maxLines - 1] = l.trimEnd() + "…";
   }
   return out;
 }
-// Final image is square: the photo on top, the info band filling the rest (512 px under a 2048 × 1536 photo).
-// Imported pictures of other shapes are centred on the same square canvas.
+// Final image is always a square with the same layout: a 4:3 photo area on top and the info band
+// (bottom quarter) below. Camera photos fill the photo area exactly; imported pictures of other
+// shapes are scaled to fit inside it, centred.
+function bandGeom(W0, H0) {
+  const S = Math.max(W0, H0), PH = Math.round(S * 0.75), sc = Math.min(1, S / W0, PH / H0);
+  const dw = Math.round(W0 * sc), dh = Math.round(H0 * sc);
+  return { S, PH, dw, dh, dx:Math.round((S - dw) / 2), dy:Math.round((PH - dh) / 2) };
+}
 function addInfoBand(c, m) {
-  const W0 = c.width, H0 = c.height, k = bandContent(m);
+  const k = bandContent(m), G = bandGeom(c.width, c.height), S = G.S;
   const F = (wt, sz) => `${wt} ${sz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
+  const rule = Math.max(3, Math.round(S * 0.0035)), room = S - G.PH - rule;
+  const padX = Math.round(S * 0.032), gutter = padX * 2, colW = (S - padX * 2 - gutter) / 2;
   const mc = canvas(1, 1).getContext("2d");
-  const layout = (S, fs) => {
-    const lh = Math.round(fs * 1.34), pad = Math.round(fs * 0.9), tfs = Math.round(fs * 1.18), tlh = Math.round(tfs * 1.3);
-    mc.font = F(700, tfs); const tl = wrapText(mc, k.title, S - pad * 2, 2);
-    const colW = (S - pad * 3) / 2; mc.font = F(500, fs);
-    const col = arr => arr.flatMap(t => wrapText(mc, t, colW, 2));
-    const L = col(k.left), R = col(k.right);
-    const need = Math.round(pad * 1.7 + tl.length * tlh + fs * 0.45 + Math.max(L.length, R.length, 1) * lh);
-    return { fs, lh, pad, tfs, tlh, tl, colW, L, R, need };
+  const layout = (fs, maxL) => {
+    const tfs = Math.round(fs * 1.25), tlh = Math.round(tfs * 1.28), lh = Math.round(fs * 1.42), gapT = Math.round(fs * 0.7);
+    mc.font = F(700, tfs);
+    const refW = k.ref ? mc.measureText(k.ref).width + padX : 0;    // SA-# sits at the right end of the title row
+    const title = wrapText(mc, k.title, S - padX * 2 - refW, maxL);
+    mc.font = F(500, fs);
+    const col = arr => arr.flatMap(t => wrapText(mc, t, colW, maxL));
+    const A = col(k.A), B = col(k.B), cut = [...title, ...A, ...B].some(t => t.endsWith("…"));
+    return { fs, tfs, tlh, lh, gapT, title, A, B, cut, h:title.length * tlh + gapT + Math.max(A.length, B.length, 1) * lh };
   };
-  // square side: at least the width; taller-than-wide imports need room for a minimum band too
-  let S = Math.max(W0, H0 + Math.round(W0 * 0.12));
-  let fs = Math.round(S * 0.026), L0 = layout(S, fs);
-  const bandH = S - H0;
-  while (L0.need > bandH && fs > 12) { fs -= 1; L0 = layout(S, fs); }
+  const fits = t => t.h + 2 * Math.round(room * 0.1) <= room;     // at least 10% of the band above and below
+  // 1) everything on one line, shrinking the text a little if needed; 2) let long items wrap;
+  // 3) last resort for very long notes: cut with "…". Nothing is cut while a smaller size or a wrap would fit.
+  let L = null;
+  for (const [maxL, minFs, allowCut] of [[1, Math.round(S * 0.019), false], [2, Math.round(S * 0.015), false], [3, 9, false], [2, 9, true]]) {
+    for (let fs = Math.round(S * 0.026); fs >= minFs && !L; fs--) { const t = layout(fs, maxL); if (fits(t) && (allowCut || !t.cut)) L = t; }
+    if (L) break;
+  }
+  if (!L) L = layout(9, 1);
   const out = canvas(S, S), x = out.getContext("2d");
   x.fillStyle = "#0B1413"; x.fillRect(0, 0, S, S);
-  x.drawImage(c, Math.round((S - W0) / 2), 0);
-  x.fillStyle = "#58C774"; x.fillRect(0, H0, S, Math.max(3, Math.round(fs * 0.14)));
-  const { lh, pad, tfs, tlh, tl, colW, L, R, need } = L0;
-  let y = H0 + Math.max(pad, Math.round((bandH - need) / 2) + pad * 0.9);   // centred in the band
-  x.textBaseline = "top";
-  x.font = F(700, tfs); x.fillStyle = "#58C774"; tl.forEach((t, i) => x.fillText(t, pad, y + i * tlh));
-  y += tl.length * tlh + fs * 0.45;
-  x.font = F(500, fs); x.fillStyle = "#E8EFEC";
-  L.forEach((t, i) => x.fillText(t, pad, y + i * lh));
-  R.forEach((t, i) => x.fillText(t, pad * 2 + colW, y + i * lh));
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
+  x.drawImage(c, G.dx, G.dy, G.dw, G.dh);
+  x.fillStyle = "#58C774"; x.fillRect(0, G.PH, S, rule);
+  let y = G.PH + rule + Math.round((room - L.h) / 2);             // same space above and below the text
+  x.textBaseline = "middle";
+  x.font = F(700, L.tfs); x.fillStyle = "#58C774";
+  if (k.ref) { x.textAlign = "right"; x.fillText(k.ref, S - padX, y + L.tlh / 2); x.textAlign = "left"; }
+  for (const t of L.title) { x.fillText(t, padX, y + L.tlh / 2); y += L.tlh; }
+  y += L.gapT;
+  x.font = F(500, L.fs); x.fillStyle = "#E8EFEC";
+  L.A.forEach((t, i) => x.fillText(t, padX, y + i * L.lh + L.lh / 2));
+  L.B.forEach((t, i) => x.fillText(t, padX + colW + gutter, y + i * L.lh + L.lh / 2));
+  const colH = Math.max(L.A.length, L.B.length) * L.lh;
+  x.fillStyle = "rgba(232,239,236,0.16)"; x.fillRect(Math.round(S / 2 - 1), y + L.lh * 0.15, 2, colH - L.lh * 0.3);   // centre divider
   return out;
 }
 async function processFrame(src, crop, rotation, meta) {
@@ -1041,12 +1109,55 @@ async function processFrame(src, crop, rotation, meta) {
   full.width = full.height = 0;
   c = rotate(c, rotation);
   const qc = quality(c);
-  if (meta.level && meta.pitch != null && !meta.imported) drawZeroLine(c, meta);
   const thumb = await makeThumb(c);              // gallery thumbnail shows the photo only
-  const enc = await encodeToTarget(addInfoBand(c, meta), OUTPUT.target);
+  const raw = await toBlob(c, 0.85);             // clean photo (no line, no band): re-stamped if the labels change
+  const fin = await composeFinal(c, meta);
+  return { ...fin, thumb, raw, pw:c.width, ph:c.height, qc };
+}
+// Photo -> (0° line on level shots) -> info band -> JPEG under the size target -> EXIF
+async function composeFinal(c, meta) {
+  let p = c;
+  if (meta.level && meta.pitch != null && !meta.imported) { p = canvas(c.width, c.height); p.getContext("2d").drawImage(c, 0, 0); drawZeroLine(p, meta); }
+  const enc = await encodeToTarget(addInfoBand(p, meta), OUTPUT.target);
   let blob = enc.blob;
   try { blob = await addExif(blob, meta, enc.canvas.width, enc.canvas.height); } catch (e) { console.warn("exif", e); }
-  return { blob, thumb, w:enc.canvas.width, h:enc.canvas.height, q:enc.q, qc };
+  return { blob, w:enc.canvas.width, h:enc.canvas.height, q:enc.q };
+}
+async function blobCanvas(blob) {
+  let img;
+  try { img = await createImageBitmap(blob); }
+  catch { const u = URL.createObjectURL(blob); img = new Image(); img.src = u; await img.decode(); URL.revokeObjectURL(u); }
+  const w = img.width || img.naturalWidth, h = img.height || img.naturalHeight, c = canvas(w, h);
+  c.getContext("2d").drawImage(img, 0, 0); if (img.close) img.close();
+  return c;
+}
+// Change a photo's labels: the file name follows at once; the stamp is redrawn in the background.
+let renderQ = Promise.resolve();
+async function relabel(rec, labels) {
+  const j = jobs[rec.sessionId] || null;
+  rec.labels = [...labels]; rec.label = labels[0] || ""; rec.unlabelled = !labels.length;
+  if (rec.meta) Object.assign(rec.meta, { labels:[...labels], label:labelText(labels), unlabelled:!labels.length,
+    level:labels.some(l => isLevelShot(l, j)), job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : rec.meta.job });
+  rec.downloaded = false;
+  if (rec.meta) rec.pending = true;
+  try { await DB.put(rec); } catch {}
+  if (rec.meta) renderQ = renderQ.then(() => restamp(rec)).catch(e => { console.error(e); rec.pending = false; });
+}
+async function restamp(rec) {
+  if (!S.photos.includes(rec)) return;
+  let c;
+  if (rec.raw) c = await blobCanvas(rec.raw);
+  else {   // clean copy already dropped (finished job): reuse the photo part of the stamped image
+    const f = await blobCanvas(rec.blob), G = bandGeom(rec.pw || f.width, rec.ph || Math.round(f.width * 0.75));
+    c = canvas(G.dw, G.dh); c.getContext("2d").drawImage(f, G.dx, G.dy, G.dw, G.dh, 0, 0, G.dw, G.dh);
+    if (rec.meta) rec.meta.level = false;   // the 0° line is already in that copy
+  }
+  const fin = await composeFinal(c, rec.meta);
+  c.width = c.height = 0;
+  Object.assign(rec, { blob:fin.blob, w:fin.w, h:fin.h, q:Math.round(fin.q * 100), pending:false });
+  try { await DB.put(rec); } catch {}
+  renderAll();
+  if ($("viewer").classList.contains("open") && S.viewing === rec) openViewer(rec.id);
 }
 
 /* ================= capture ================= */
@@ -1075,13 +1186,14 @@ async function capture(force = false) {
     grab.width = grab.height = 0;
     const rec = await storePhoto(out, meta);
     if (S.note) { S.note = ""; $("inNote").value = ""; $("noteBtn").classList.remove("on"); }
-    if (out.qc.dark || out.qc.blurry) showRetake(rec, out.qc);
-    else toast(`<b>${esc(meta.label)}</b> saved${autoAdvance(meta.labels)}`, 2600);
+    S.fresh = true; renderLabels();
+    showSnack(rec);
   } catch (e) { console.error(e); toast("Couldn’t save that photo. Try again."); }
   finally { S.busy = false; $("shutter").classList.remove("busy"); }
 }
 async function storePhoto(out, meta) {
-  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), sessionId:current.id, label:meta.labels[0], labels:meta.labels, job:meta.job,
+  const rec = { id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), sessionId:current.id, label:meta.labels[0] || "", labels:meta.labels, unlabelled:!meta.labels.length, job:meta.job,
+    meta, raw:out.raw || null, pw:out.pw, ph:out.ph, qflag:out.qc ? (out.qc.dark ? "dark" : out.qc.blurry ? "blurry" : "") : "",
     blob:out.blob, thumb:out.thumb, w:out.w, h:out.h, q:Math.round(out.q * 100), created:meta.when.getTime(), downloaded:false,
     note:meta.note || "", lat:meta.pos ? meta.pos.latitude : null, lon:meta.pos ? meta.pos.longitude : null, check:out.qc ? { mean:out.qc.mean, sharp:out.qc.sharp } : null };
   await DB.put(rec);
@@ -1100,30 +1212,34 @@ $("shutter").addEventListener("pointerdown", () => {
 $("shutter").addEventListener("click", () => { if (pressFired) { pressFired = false; return; } capture(false); });
 $("shutter").addEventListener("contextmenu", e => e.preventDefault());
 
-/* retake prompt after a dark or blurry shot */
-let qRec = null, qT = null;
-function showRetake(rec, qc) {
-  qRec = rec;
-  $("qImg").src = thumbURL(rec);
-  $("qTitle").textContent = qc.dark ? "Photo looks too dark" : "Photo might be blurry";
-  $("qText").textContent = qc.dark ? "Turn on the light or move closer, then retake." : "Hold still for a moment, then retake.";
-  $("qBanner").hidden = false; $("noteBar").hidden = true; $("otherBar").hidden = true;
-  clearTimeout(qT); qT = setTimeout(hideRetake, 8000);
-  try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch {}
+/* After each shot: a small note that fades by itself. Never blocks the next shot.
+   Labelled: "✓ Cable Run · Change". No label: "Saved to To label (3) · Label". Blurry/dark: adds Retake. */
+let snRec = null, snT = null;
+function showSnack(rec) {
+  snRec = rec;
+  const n = curPhotos().filter(isUnl).length, warn = !!rec.qflag;
+  $("snImg").src = thumbURL(rec);
+  $("snTitle").textContent = isUnl(rec) ? `Saved to To label (${n})` : "✓ " + dispLabel(rec);
+  $("snText").textContent = warn ? flagText(rec) + " · retake?" : isUnl(rec) ? "Label now or later" : "Wrong label? Tap Change";
+  $("snRetake").hidden = !warn;
+  $("snAct").textContent = isUnl(rec) ? "Label" : "Change";
+  const el = $("snack"); el.classList.toggle("warn", warn); el.classList.add("show");
+  $("noteBar").hidden = true;
+  clearTimeout(snT); snT = setTimeout(hideSnack, warn ? 5000 : 3000);
+  if (warn) try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch {}
 }
-function hideRetake() { clearTimeout(qT); $("qBanner").hidden = true; qRec = null; }
-$("qKeep").addEventListener("click", () => { const r = qRec; hideRetake(); if (r) { const t = autoAdvance(labelsOf(r)); if (t) toast(`Kept${t}`); } });
-$("qRetake").addEventListener("click", async () => {
-  if (!qRec) return hideRetake();
-  const rec = qRec; hideRetake();
-  const ls = labelsOf(rec); S.label = ls[0]; S.multi = ls.length > 1 ? [...ls] : null; S.fresh = false; if (current) { current.label = S.label; save(); }
-  if (rec.note) { S.note = rec.note; $("inNote").value = rec.note; }
+function hideSnack() { clearTimeout(snT); $("snack").classList.remove("show"); snRec = null; }
+$("snAct").addEventListener("click", () => { const r = snRec; hideSnack(); if (r) openSorter([r.id]); });
+$("snRetake").addEventListener("click", async () => {
+  const rec = snRec; hideSnack(); if (!rec) return;
+  S.sel = [...labelsOf(rec)]; S.fresh = false; if (current) { current.sel = S.sel; save(); }
+  if (rec.note) { S.note = rec.note; $("inNote").value = rec.note; $("noteBtn").classList.add("on"); }
   await removePhotos([rec.id]);
   toast("Deleted. Take it again.");
 });
 
 /* note for the next photo */
-$("noteBtn").addEventListener("click", () => { hideRetake(); $("otherBar").hidden = true; $("noteBar").hidden = false; $("inNote").value = S.note || ""; $("inNote").focus(); });
+$("noteBtn").addEventListener("click", () => { hideSnack(); $("otherBar").hidden = true; $("noteBar").hidden = false; $("inNote").value = S.note || ""; $("inNote").focus(); });
 $("inNote").addEventListener("input", () => { S.note = $("inNote").value.trim(); $("noteBtn").classList.toggle("on", !!S.note); });
 $("inNote").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("noteBar").hidden = true; $("inNote").blur(); } });
 $("noteDone").addEventListener("click", () => { $("noteBar").hidden = true; $("inNote").blur(); });
@@ -1153,8 +1269,9 @@ $("fileIn").addEventListener("change", async e => {
     } catch (err) { console.error(err); }
   }
   S.busy = false; $("shutter").classList.remove("busy");
-  if (S.multi) { S.multi = null; S.fresh = true; renderChips(); renderGuide(); }
-  toast(done ? `Imported ${done} as <b>${esc(labelText(selLabels()))}</b> · ${kb(total)}` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
+  const as = selLabels().length ? `as <b>${esc(labelText(selLabels()))}</b>` : "to To label";
+  S.fresh = true; renderLabels();
+  toast(done ? `Imported ${done} ${as} · ${kb(total)}` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
 });
 
 /* ================= EXIF write (IFD0 + Exif + GPS) ================= */
@@ -1250,10 +1367,9 @@ function parseTiff(v, t, out) {
 /* ================= file names and downloads ================= */
 const slug = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
 // Plain, readable file names:
-//   2026-10-27 1541 SA-01234567 FW Install - CPE Line of Sight (43.3601 -80.3123).jpg
-//   2026-10-27 1543 FW Install Not Required - LOS POVs 2 (43.3601 -80.3123).jpg
-// Date and time taken, SA-# (if entered), platform + work order (+ outcome unless Complete), photo name
-// (numbered only when there is more than one), GPS. Built at download time, so it follows the job as last set.
+//   2026-10-27 1541 SA-01234567 - CPE Line of Sight (43.3601 -80.3123).jpg
+//   2026-10-27 1543 - LOS POVs 2 (43.3601 -80.3123).jpg
+// Date and time taken, SA-# (if entered), photo name (numbered only when there is more than one), GPS.
 const FILE_LABEL = {   // shorter names for long checklist items (file name only; the stamp keeps the full wording)
   "Line of sight POVs to all viable towers":"LOS POVs",
   "Line of sight POVs":"LOS POVs",
@@ -1266,10 +1382,8 @@ const cleanName = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, ""
 function fileNameFor(p) {
   const j = jobs[p.sessionId] || p.job, d = new Date(p.created), w = wfFor(j);
   const key = labelText(labelsOf(p)), same = S.photos.filter(x => x.sessionId === p.sessionId && labelText(labelsOf(x)) === key).sort((a, b) => a.created - b.created);
-  const plat = w ? ({ FW:"FW", Sat:"Sat", Fibre:"Fibre", VAS:"VAS" }[w.code.split("-")[0]] || "") : "";
-  const job = w ? [plat, byId(JOB_TYPES, j.work).name, w.outcome === "OK" ? "" : byId(OUTCOMES, w.outcome).name].filter(Boolean).join(" ") : "";
-  const head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j && j.ref, job].filter(Boolean).join(" ");
-  const label = labelsOf(p).map(l => cleanName(FILE_LABEL[l] || l)).join(" + ") + (same.length > 1 ? " " + (same.indexOf(p) + 1) : "");
+  const head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j && j.ref].filter(Boolean).join(" ");
+  const label = (isUnl(p) ? "Unlabelled" : labelsOf(p).map(l => cleanName(FILE_LABEL[l] || l)).join(" + ")) + (same.length > 1 ? " " + (same.indexOf(p) + 1) : "");
   const gps = p.lat != null ? ` (${p.lat.toFixed(4)} ${p.lon.toFixed(4)})` : " (no GPS)";
   return `${head} - ${label}${gps}.jpg`;
 }
@@ -1285,7 +1399,10 @@ let dlBusy = false;
 // "Save to Files" keeps the file names. Other phones and computers download each file.
 // Must start straight from the tap (no awaits before share) or iOS refuses the share sheet.
 async function downloadPhotos(items) {
-  if (!items.length || dlBusy) return;
+  if (!items.length || dlBusy) return false;
+  const unl = items.filter(isUnl);
+  if (unl.length) { toast(`Label ${plural(unl.length, "photo")} first, then save.`, 2600); openSorter(unl.map(p => p.id)); return false; }
+  if (items.some(p => p.pending)) { toast("Updating the stamp on a relabelled photo. Tap Save again in a second.", 2600); return false; }
   const list = [...items].sort((a, b) => a.created - b.created);
   if (isIOS && navigator.canShare && navigator.share) {
     const files = list.map(p => new File([p.blob], fileNameFor(p), { type:"image/jpeg", lastModified:p.created }));
@@ -1297,9 +1414,9 @@ async function downloadPhotos(items) {
         await navigator.share({ files });
         for (const p of list) { p.downloaded = true; try { await DB.put(p); } catch {} }
         toast(`Saved ${plural(list.length, "photo")}`, 2600);
-        return;
+        return true;
       } catch (e) {
-        if (e && e.name === "AbortError") { toast("Not saved. Tap Save Images (Photos) or Save to Files.", 3200); return; }
+        if (e && e.name === "AbortError") { toast("Not saved. Tap Save Images (Photos) or Save to Files.", 3200); return false; }
         // share sheet unavailable here: fall through to plain downloads
       } finally { dlBusy = false; renderAll(); }
     }
@@ -1316,6 +1433,7 @@ async function downloadPhotos(items) {
   dlBusy = false;
   renderAll();
   if (n) toast(`Saved ${plural(n, "photo")}`, 3000);
+  return n > 0;
 }
 $("dlBtn").addEventListener("click", () => {
   const ps = curPhotos(), und = ps.filter(p => !p.downloaded);
@@ -1338,7 +1456,9 @@ function renderGallery() {
   $("dlAllBtn").textContent = S.selected.size ? `Save ${S.selected.size}` : `Save all ${list.length || ""}`.trim();
   $("dlAllBtn").disabled = !list.length;
   $("delBtn").hidden = !S.selected.size;
-  $("grid").innerHTML = list.length ? list.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(labelText(labelsOf(p)))}" loading="lazy">${p.downloaded ? '<span class="ok" title="Saved">✓</span>' : ""}<span class="lab">${esc(labelText(labelsOf(p)))}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("")
+  const unl = list.filter(isUnl).length;
+  $("galLabel").hidden = !unl; $("galLabel").textContent = `Label ${plural(unl, "photo")}`;
+  $("grid").innerHTML = list.length ? list.map(p => `<div class="tile${S.selected.has(p.id) ? " selected" : ""}${isUnl(p) ? " unl" : ""}" data-id="${p.id}"><img src="${thumbURL(p)}" alt="${esc(dispLabel(p))}" loading="lazy">${p.downloaded ? '<span class="ok" title="Saved">✓</span>' : ""}${p.qflag ? `<span class="qf" title="${esc(flagText(p))}">!</span>` : ""}<span class="lab">${esc(dispLabel(p))}</span><button class="sel" data-sel="${p.id}" aria-label="Select"></button></div>`).join("")
     : `<div class="empty" style="grid-column:1/-1">No photos in this job yet.</div>`;
   renderPrev();
 }
@@ -1372,6 +1492,7 @@ $("grid").addEventListener("click", e => {
   if (sel) { const id = sel.dataset.sel; S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); renderGallery(); return; }
   const t = e.target.closest(".tile"); if (t) openViewer(t.dataset.id);
 });
+$("galLabel").addEventListener("click", () => openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)));
 $("selAllBtn").addEventListener("click", () => { const list = curPhotos(); if (S.selected.size === list.length) S.selected.clear(); else list.forEach(p => S.selected.add(p.id)); renderGallery(); });
 $("dlAllBtn").addEventListener("click", () => downloadPhotos(S.selected.size ? curPhotos().filter(p => S.selected.has(p.id)) : curPhotos()));
 $("delBtn").addEventListener("click", () => { $("delN").textContent = plural(S.selected.size, "photo"); $("delConfirm").hidden = false; });
@@ -1398,7 +1519,8 @@ function openViewer(id, dir = 0) {
   $("vCount").hidden = vList.length < 2;
   S.viewing = p; if (vURL) URL.revokeObjectURL(vURL);
   vURL = URL.createObjectURL(p.blob); $("vImg").src = vURL;
-  $("vMeta").innerHTML = `<b>${esc(fileNameFor(p))}</b>${kb(p.blob.size)} · ${p.w}×${p.h} · q${p.q}${p.downloaded ? " · saved" : ""}`;
+  $("vMeta").innerHTML = `<b>${esc(isUnl(p) ? "To label · " + fileNameFor(p) : fileNameFor(p))}</b>${kb(p.blob.size)} · ${p.w}×${p.h} · q${p.q}${p.downloaded ? " · saved" : ""}${p.qflag ? ` · <span style="color:var(--warn)">${esc(flagText(p))}</span>` : ""}`;
+  $("vLab").textContent = isUnl(p) ? "Label" : "Change label";
   Z = { s:1, x:0, y:0 };
   const img = $("vImg"); img.classList.remove("slide");
   if (dir) { Z.x = dir * st.clientWidth * 0.35; applyZ(); void img.offsetWidth; img.classList.add("slide"); Z.x = 0; }
@@ -1451,7 +1573,8 @@ const endPt = e => {
 };
 st.addEventListener("pointerup", endPt); st.addEventListener("pointercancel", endPt);
 $("vClose").addEventListener("click", () => $("viewer").classList.remove("open"));
-$("vDl").addEventListener("click", async () => { if (S.viewing) { await downloadPhotos([S.viewing]); openViewer(S.viewing.id); } });
+$("vDl").addEventListener("click", async () => { if (S.viewing) { await downloadPhotos([S.viewing]); if ($("viewer").classList.contains("open")) openViewer(S.viewing.id); } });
+$("vLab").addEventListener("click", () => { if (S.viewing) openSorter([S.viewing.id]); });
 $("vDel").addEventListener("click", async e => {
   if (!S.viewing || !arm(e.currentTarget, "Tap again to delete")) return;
   const id = S.viewing.id, i = vList.indexOf(id);
@@ -1489,87 +1612,125 @@ function renderTop() {
   $("jobTxt").textContent = j ? (j.ref ? `${j.ref} · ${sh}` : sh) : "No job";
   $("jobProg").textContent = j && req.length ? `${req.filter(l => counts[l]).length}/${req.length}` : "";
 }
-function renderChips() {
-  const j = curJob(), counts = countLabels(), custom = (j && j.custom) || [];
-  if (S.label === OTHER || !shotList(j).includes(S.label)) { S.label = nextMissing(null) || shotList(j)[0]; S.multi = null; S.fresh = true; if (current) { current.label = S.label; save(); } }
-  // custom labels only stay in the row once they have a photo (or are selected), so typos drop away
-  const sel = selLabels();
-  const list = shotList(j).filter(l => !custom.includes(l) || counts[l] || sel.includes(l));
-  $("chips").innerHTML = list.map(l => { const n = counts[l] || 0; return `<button class="chip${n ? " done" : ""}" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}">${esc(l)}${n ? `<span class="c">✓${n > 1 ? n : ""}</span>` : ""}</button>`; }).join("");
-  const on = $("chips").querySelector('[aria-pressed="true"]');
-  if (on) { const c = $("chips"); const L = on.offsetLeft - 12, R = on.offsetLeft + on.offsetWidth + 12; if (L < c.scrollLeft) c.scrollLeft = L; else if (R > c.scrollLeft + c.clientWidth) c.scrollLeft = R - c.clientWidth; }
+// Tiles: every checklist item for the job, a ✓ + count once photographed; items still needed have an amber edge.
+const tileName = l => FILE_LABEL[l] || l;
+function tileList(j, sel, counts) {
+  const custom = (j && j.custom) || [];
+  return shotList(j).filter(l => !custom.includes(l) || counts[l] || sel.includes(l));   // typo'd custom labels drop away
 }
-$("chips").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if (!b || !current) return;
-  if (b.dataset.l === OTHER) { openOther(); return; }
-  selectLabel(b.dataset.l);
+function tilesHTML(j, sel, counts) {
+  const req = baseShots(j);
+  return tileList(j, sel, counts).map(l => {
+    if (l === OTHER) return `<button class="lt other opt" data-l="${OTHER}" aria-pressed="false"><span>Other…</span></button>`;
+    const n = counts[l] || 0, cls = n ? "done" : req.includes(l) ? "" : "opt";
+    return `<button class="lt ${cls}" data-l="${esc(l)}" aria-pressed="${sel.includes(l)}" title="${esc(l)}"><span>${esc(tileName(l))}</span>${n ? `<i>✓${n > 1 ? n : ""}</i>` : ""}</button>`;
+  }).join("");
+}
+function renderLabels() {
+  const j = curJob(), counts = countLabels();
+  S.sel = S.sel.filter(l => shotList(j).includes(l));
+  $("lGrid").innerHTML = tilesHTML(j, S.sel, counts);
+  $("lSel").innerHTML = S.sel.length ? `Next photo: <b>${esc(labelText(S.sel))}</b>` : `No label · shoot now, label later`;
+  const unl = curPhotos().filter(isUnl).length;
+  $("toLabelBtn").hidden = !unl; $("toLabelBtn").textContent = `To label (${unl})`;
+}
+$("lGrid").addEventListener("click", e => {
+  const b = e.target.closest(".lt"); if (!b || !current) return;
+  if (b.dataset.l === OTHER) return askOther(l => { tapLabel(l, true); toast(`Next photo: <b>${esc(labelText(S.sel))}</b>`); });
+  tapLabel(b.dataset.l);
 });
-// First tap after the app picked an item replaces it; further taps add or remove items for one photo.
-function selectLabel(l) {
-  let sel = S.fresh ? [] : [...selLabels()];
-  if (sel.includes(l)) { if (sel.length > 1) sel = sel.filter(x => x !== l); }
+// Tap = pick. Right after a shot the first tap starts a new pick; more taps add or remove items (one photo, several items).
+function tapLabel(l, add = false) {
+  let sel = S.fresh ? [] : [...S.sel];
+  if (S.fresh && S.sel.length === 1 && S.sel[0] === l && !add) sel = [];      // tap the lit tile again = no label
+  else if (sel.includes(l)) { if (!add) sel = sel.filter(x => x !== l); }
   else sel.push(l);
-  S.fresh = false;
-  S.label = sel[0]; S.multi = sel.length > 1 ? sel : null;
-  current.label = S.label; save(); renderChips(); renderGuide();
+  S.sel = sel; S.fresh = false;
+  if (current) { current.sel = sel; save(); }
+  renderLabels();
 }
+$("toLabelBtn").addEventListener("click", () => openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)));
 /* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
-function openOther() {
-  hideRetake(); $("noteBar").hidden = true;
+let otherCb = null;
+function askOther(cb) {
+  hideSnack(); $("noteBar").hidden = true; otherCb = cb;
   $("inOther").value = ""; $("otherBar").hidden = false; $("inOther").focus();
 }
 function useOther() {
-  const t = $("inOther").value.replace(/\s+/g, " ").trim();
-  $("otherBar").hidden = true; $("inOther").blur();
-  if (!t || !current) return;
-  const j = curJob(), match = shotList(j).find(l => l !== OTHER && l.toLowerCase() === t.toLowerCase());
-  const l = match || t;
+  const t = $("inOther").value.replace(/\s+/g, " ").trim(), cb = otherCb;
+  $("otherBar").hidden = true; $("inOther").blur(); otherCb = null;
+  if (!t || !current || !cb) return;
+  const j = jobs[SO.open ? (S.photos.find(p => p.id === SO.ids[SO.i]) || {}).sessionId : current.id] || curJob();
+  const match = shotList(j).find(l => l !== OTHER && l.toLowerCase() === t.toLowerCase());
   if (!match) j.custom = [...(j.custom || []), t];
-  if (!selLabels().includes(l) || S.fresh) selectLabel(l);
-  toast(`Label set: <b>${esc(labelText(selLabels()))}</b>`);
+  save(); cb(match || t);
 }
 $("otherDone").addEventListener("click", useOther);
-$("otherCancel").addEventListener("click", () => { $("otherBar").hidden = true; $("inOther").blur(); });
+$("otherCancel").addEventListener("click", () => { $("otherBar").hidden = true; $("inOther").blur(); otherCb = null; });
 $("inOther").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); useOther(); } });
-function nextMissing(after) {
-  const req = baseShots(curJob()), c = countLabels();
-  if (!req.length) return null;
-  const start = Math.max(0, req.indexOf(after) + 1);
-  for (let i = 0; i < req.length; i++) { const l = req[(start + i) % req.length]; if (!c[l]) return l; }
-  return null;
+
+/* Sorter: one photo at a time, tap what's in it (one or more), Next. Used for "To label", Change and Label. */
+const SO = { open:false, ids:[], i:0, sel:[], url:null, done:0 };
+function openSorter(ids) {
+  ids = ids.filter(id => S.photos.some(p => p.id === id));
+  if (!ids.length) return;
+  Object.assign(SO, { open:true, ids, i:0, done:0 });
+  closeSheets(); $("viewer").classList.remove("open"); hideSnack();
+  $("sorter").classList.add("open");
+  showSort();
 }
-function renderGuide() {
-  const req = baseShots(curJob()), c = countLabels(), done = req.filter(l => c[l]).length, g = $("guide");
-  g.classList.toggle("done", !!req.length && done === req.length);
-  let t, showNext = true;
-  if (!req.length) { t = "No required photos for this form · use Other as needed"; showNext = false; }
-  else if (done === req.length) { t = `All ${req.length} required photos taken ✓`; showNext = false; }
-  else if (S.multi) { t = `<b>${S.multi.length} items selected</b> · one photo covers all of them`; showNext = false; }
-  else if (req.includes(S.label)) {
-    const i = req.indexOf(S.label) + 1, n = c[S.label] || 0;
-    t = /^screenshot/i.test(S.label) ? `<b>${i} of ${req.length}</b> · add the screenshot with the picture button` : n && MULTI.test(S.label) ? `<b>${i} of ${req.length}</b> · take all you need, then Next` : `<b>${i} of ${req.length}</b> · ${esc(S.label)}`;
-  } else t = `${done} of ${req.length} required done`;
-  $("guideTxt").innerHTML = t;
-  $("guideNext").hidden = !showNext;
+function sortRec() { return S.photos.find(p => p.id === SO.ids[SO.i]); }
+function showSort() {
+  const p = sortRec(); if (!p) return closeSorter();
+  SO.sel = [...labelsOf(p)];
+  if (SO.url) URL.revokeObjectURL(SO.url);
+  SO.url = URL.createObjectURL(p.raw || p.blob); $("sImg").src = SO.url;
+  $("sFlag").hidden = !p.qflag; $("sFlag").textContent = "⚠ " + flagText(p);
+  renderSort();
 }
-$("guideNext").addEventListener("click", () => {
-  const l = nextMissing(S.label); if (!l || !current) return;
-  S.multi = null; S.fresh = true; S.label = l; current.label = l; save(); renderChips(); renderGuide();
+function renderSort() {
+  const p = sortRec(); if (!p) return;
+  const j = jobs[p.sessionId] || null, counts = {};
+  for (const x of jobPhotos(p.sessionId)) if (x !== p) for (const l of labelsOf(x)) counts[l] = (counts[l] || 0) + 1;
+  $("sGrid").innerHTML = tilesHTML(j, SO.sel, counts);
+  const many = SO.ids.length > 1, last = SO.i >= SO.ids.length - 1;
+  $("sMeta").innerHTML = `<b>${SO.sel.length ? esc(labelText(SO.sel)) : "Tap what’s in this photo"}</b>${many ? `Photo ${SO.i + 1} of ${SO.ids.length} · ` : ""}${esc(fmtTime(new Date(p.created)))}`;
+  $("sNext").textContent = !SO.sel.length ? (last ? "Close" : "Skip ›") : last ? "Done" : "Next ›";
+  $("sBack").hidden = !many || SO.i === 0;
+}
+$("sGrid").addEventListener("click", e => {
+  const b = e.target.closest(".lt"); if (!b) return;
+  const l = b.dataset.l;
+  if (l === OTHER) return askOther(t => { if (!SO.sel.includes(t)) SO.sel.push(t); renderSort(); });
+  SO.sel = SO.sel.includes(l) ? SO.sel.filter(x => x !== l) : [...SO.sel, l];
+  renderSort();
 });
-// After the first photo of a required label, move on to the next one still missing (not for multi-shot labels)
-function autoAdvance(labels) {
-  labels = [].concat(labels);
-  const wasMulti = labels.length > 1;
-  S.multi = null; S.fresh = true; S.label = labels[0];
-  renderChips(); renderGuide();
-  const req = baseShots(curJob()), c = countLabels(), last = labels[labels.length - 1];
-  const fresh = labels.some(l => req.includes(l) && c[l] === 1);
-  if (!fresh || (!wasMulti && MULTI.test(last))) return "";
-  const l = nextMissing(last);
-  if (!l) return " · all required photos taken";
-  S.label = l; if (current) { current.label = l; save(); }
-  renderChips(); renderGuide();
-  return ` · next: ${esc(l)}`;
+async function commitSort() {
+  const p = sortRec(); if (!p || !SO.sel.length) return;
+  if (labelText(SO.sel) !== labelText(labelsOf(p)) || isUnl(p)) { await relabel(p, SO.sel); SO.done++; }
+}
+$("sNext").addEventListener("click", async () => {
+  await commitSort();
+  if (SO.i >= SO.ids.length - 1) return closeSorter();
+  SO.i++; showSort();
+});
+$("sBack").addEventListener("click", async () => { await commitSort(); if (SO.i > 0) { SO.i--; showSort(); } });
+$("sDel").addEventListener("click", async e => {
+  if (!arm(e.currentTarget, "Tap again")) return;
+  const id = SO.ids[SO.i];
+  await removePhotos([id]);
+  SO.ids.splice(SO.i, 1);
+  if (!SO.ids.length) return closeSorter();
+  if (SO.i >= SO.ids.length) SO.i = SO.ids.length - 1;
+  showSort();
+});
+$("sClose").addEventListener("click", async () => { await commitSort(); closeSorter(); });
+function closeSorter() {
+  SO.open = false; $("sorter").classList.remove("open");
+  if (SO.url) { URL.revokeObjectURL(SO.url); SO.url = null; }
+  renderAll();
+  const left = curPhotos().filter(isUnl).length;
+  if (SO.done) toast(`Labelled ${plural(SO.done, "photo")}${left ? ` · ${left} still to label` : ""}`, 2400);
 }
 function refreshDeck() {
   const ps = curPhotos().sort((a, b) => b.created - a.created), und = ps.filter(p => !p.downloaded).length;
@@ -1578,7 +1739,7 @@ function refreshDeck() {
   $("dlCount").textContent = und || "";
   $("dlBtn").classList.toggle("has", und > 0);
 }
-function renderAll() { renderTop(); renderChips(); renderGuide(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); }
+function renderAll() { renderTop(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); }
 
 /* ================= sheets ================= */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
@@ -1608,22 +1769,26 @@ $("inRefEdit").addEventListener("change", () => {
 function missingShots() { const c = countLabels(); return baseShots(curJob()).filter(l => !c[l]); }
 $("finishBtn").addEventListener("click", () => {
   $("cancelConfirm").hidden = true;
-  const und = curPhotos().filter(p => !p.downloaded).length, miss = missingShots(), msgs = [];
+  const und = curPhotos().filter(p => !p.downloaded).length, miss = missingShots(), unl = curPhotos().filter(isUnl).length, msgs = [];
+  if (unl) msgs.push(`<p><b>${plural(unl, "photo")} still to label.</b> ${unl === 1 ? "It" : "They"} can’t be saved until labelled.</p>`);
   if (miss.length) msgs.push(`<p><b>No photo yet for:</b> ${miss.map(esc).join(", ")}.</p>`);
   if (und) msgs.push(`<p>${plural(und, "photo")} ${und === 1 ? "hasn’t" : "haven’t"} been saved. If you finish now ${und === 1 ? "it stays" : "they stay"} on this phone under Previous jobs.</p>`);
   if (!msgs.length) return finishJob();
   $("finishMsg").innerHTML = msgs.join("");
   $("finishDl").hidden = !und;
+  $("finishLabel").hidden = !unl;
   $("finishConfirm").hidden = false;
   $("finishConfirm").scrollIntoView({ block:"nearest", behavior:"smooth" });
 });
 $("finishKeep").addEventListener("click", () => { $("finishConfirm").hidden = true; closeSheets(); });
-$("finishDl").addEventListener("click", async () => { await downloadPhotos(curPhotos().filter(p => !p.downloaded)); finishJob(); });
+$("finishDl").addEventListener("click", async () => { if (await downloadPhotos(curPhotos().filter(p => !p.downloaded))) finishJob(); });
+$("finishLabel").addEventListener("click", () => openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)));
 $("finishYes").addEventListener("click", finishJob);
 function finishJob() {
-  S.multi = null;
   if (current && !curPhotos().length) delete jobs[current.id];   // nothing taken: don't keep an empty job
-  current = null; S.label = null; S.selected.clear(); save(); closeSheets(); showStart();
+  // drop the clean copies kept for relabelling (unlabelled photos keep theirs)
+  if (current) for (const p of curPhotos()) if (p.raw && !isUnl(p)) { delete p.raw; DB.put(p).catch(() => {}); }
+  current = null; S.sel = []; S.selected.clear(); save(); closeSheets(); showStart();
 }
 // Cancel this job: back out (e.g. wrong form picked). With photos, ask first; they're deleted.
 $("cancelJobBtn").addEventListener("click", () => {
@@ -1641,7 +1806,7 @@ async function cancelJob() {
   const id = current.id;
   await removePhotos(curPhotos().map(p => p.id));
   delete jobs[id];
-  current = null; S.label = null; S.multi = null; S.selected.clear(); S.note = ""; save();
+  current = null; S.sel = []; S.selected.clear(); S.note = ""; save();
   closeSheets(); showStart();
   toast("Job cancelled");
 }
@@ -1705,7 +1870,7 @@ function beginSession() {
 }
 $("inRef").addEventListener("input", () => { $("startErr").hidden = true; });
 $("inRef").addEventListener("blur", () => { $("inRef").value = normRef($("inRef").value); });
-$("resumeBtn").addEventListener("click", () => { S.label = current.label; beginSession(); });
+$("resumeBtn").addEventListener("click", () => { S.sel = [...(current.sel || [])]; beginSession(); });
 $("startBtn").addEventListener("click", () => {
   const name = settings.name.trim() || $("inName0").value.trim();
   const missing = [];
@@ -1719,8 +1884,8 @@ $("startBtn").addEventListener("click", () => {
   const hadPrev = curPhotos().length;
   const id = Date.now().toString(36);
   jobs[id] = { ...startSel, ref, started:Date.now() };
-  current = { id, label:null };
-  S.label = null; S.multi = null; S.selected.clear();
+  current = { id, sel:[] };
+  S.sel = []; S.selected.clear();
   beginSession();
   if (hadPrev) toast("The last job’s photos are under Previous jobs in the gallery.", 3200);
 });
@@ -1732,7 +1897,7 @@ $("startBtn").addEventListener("click", () => {
   try { await DB.open(); S.photos = (await DB.all()).sort((a, b) => b.created - a.created); }
   catch { toast("Photo storage is unavailable in this browser mode.", 4000); }
   if (current && !jobs[current.id]) current = null;
-  if (current) S.label = current.label;
+  if (current) S.sel = [...(current.sel || [])];
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) showVfMsg("This browser can’t use the camera. Open Field Cam in Safari.");
   showStart();
