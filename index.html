@@ -59,6 +59,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .jobpill b{font-weight:650;font-size:15px;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .jobpill span{font:600 12px var(--mono);color:var(--accent);flex:none}
 .jobpill .jref{flex:none;overflow:visible;color:var(--fg)}
+.jobpill .needout{flex:none;font-style:normal;font-size:12px;font-weight:700;color:var(--ink);background:var(--warn);padding:2px 7px;border-radius:6px}
 .jobpill .jref+b{font-weight:500;color:var(--muted)}
 .jobpill .chev{font-style:normal;color:var(--muted);font-size:11px;flex:none;margin-left:-3px}
 .gps{flex:none;width:36px;justify-content:center;padding:0}
@@ -230,6 +231,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .seg button span{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.2}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--ink)}
 .seg button[aria-pressed="true"] span{color:var(--brand)}
+.seg button:disabled{opacity:.28}
 
 /* gallery */
 .gtools{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -396,7 +398,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <div id="app">
   <div class="top">
-    <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b class="jref" id="jobRef" hidden></b><b id="jobTxt">No job</b><span id="jobProg"></span><i class="chev" aria-hidden="true">▾</i></button>
+    <button class="pill jobpill" id="jobBtn" aria-label="Job details"><b class="jref" id="jobRef" hidden></b><b id="jobTxt">No job</b><i class="needout" id="jobNeed" hidden>Outcome?</i><span id="jobProg"></span><i class="chev" aria-hidden="true">▾</i></button>
     <div class="pill gps" id="gpsChip" title="GPS" aria-label="GPS"><i class="dot"></i><span id="gpsTxt">GPS…</span></div>
     <button class="iconbtn" id="setBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
@@ -445,6 +447,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   <div class="body">
     <div><label for="inRefEdit">Account ID or SA-# <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
     <div class="picker" id="sheetPicker"></div>
+    <div class="picker" id="sheetOutcome"></div>
     <p class="hint" id="jobEditHint"></p>
     <div class="btnrow"><button class="btn primary" id="finishBtn">Start a new job</button><button class="btn danger" id="cancelJobBtn">Cancel this job</button></div>
     <div class="warnbox" id="cancelConfirm" hidden>
@@ -467,6 +470,16 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   </div>
 </section>
 
+<!-- Outcome, asked before saving if the tech hasn't picked it yet -->
+<section class="sheet" id="outSheet" aria-label="Job outcome">
+  <header><h2>What was the outcome?</h2><button class="btn" data-close>Cancel</button></header>
+  <div class="body">
+    <p class="hint">Needed before the photos are saved. It goes on every photo’s info band and sets which photos the job needs.</p>
+    <div class="picker" id="outPicker"></div>
+    <button class="btn primary big" id="outGo" disabled>Continue</button>
+  </div>
+</section>
+
 <!-- After everything is saved -->
 <section class="sheet" id="doneSheet" aria-label="Job saved">
   <header><h2 id="doneTitle">All photos saved ✓</h2></header>
@@ -485,7 +498,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.7.2 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.9.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -555,7 +568,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.7.2";
+const VERSION = "3.9.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -578,63 +591,148 @@ function uiRect(el) {
 }
 const uiPt = e => toUI(e.clientX, e.clientY);
 
-/* ================= JOB WORKFLOWS (from the JotForm job forms) =================
-   Each workflow = one job form. Its "shots" are that form's Pictures Checklist, in order.
-   level: line-of-sight photos: show the 0° dot and stamp it into the photo.
-   multi: photos where several shots are normal (the app won't auto-advance after the first).
-   "Other" is always added; it asks the tech what the photo is of. */
+/*CONFIG:BEGIN — generated by build.py from the Field Cam Outcomes and Photo Lists tools; regenerate, don't hand-edit */
+const SETUP = {"INS":{"Fibre (Existing Drop)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at NID","No Light at MPT","Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fibre (Drop Required)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at MPT","Flagging Required","Drop Installation Issue","Buried Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fibre (Drop Only)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Flagging Required","Drop Installation Issue","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fixed Wireless":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["No Serviceable Signal","Installation Objection"]}},"Satellite":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["NLOS","Installation Objection"]}},"VAS · XTV":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Unsafe Work Conditions","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWH":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Unsafe Work Conditions","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWR":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Unsafe Work Conditions","Customer No Show"]},"NR":{"on":true,"reasons":[]}}},"CON":{"Fibre (Existing Drop)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at NID","No Light at MPT","Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fibre (Drop Required)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at MPT","Flagging Required","Drop Installation Issue","Buried Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fixed Wireless":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["No Serviceable Signal","Installation Objection"]}},"Satellite":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["NLOS","Installation Objection"]}}},"REP":{"Fibre":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["CCO Ticket"]},"NR":{"on":true,"reasons":[]}},"Fixed Wireless":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Satellite":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XTV":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWH":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWR":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}}}};
+const PHOTOS = {"INS|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["Install Overview",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
+"INS|Fibre (Existing Drop)|CC|No Light at NID":[],
+"INS|Fibre (Existing Drop)|CC|No Light at MPT":[],
+"INS|Fibre (Existing Drop)|CC|Drop Required":[],
+"INS|Fibre (Existing Drop)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Fibre (Existing Drop)|NR|":[],
+"INS|Fibre (Drop Required)|OK|":[["MPT",1,0],["Drop route",1,0],["Drop attachment point (aerial)",1,0],["Total install overview",1,0],["NID with door open",1,0],["Fibre patch cable run",1,0],["Cable entrypoint",1,0],["Indoor cable run",1,0],["ONT placement",1,0],["Router placement",1,0],["Light level measurement",1,0]],
+"INS|Fibre (Drop Required)|CC|No Light at MPT":[],
+"INS|Fibre (Drop Required)|CC|Flagging Required":[],
+"INS|Fibre (Drop Required)|CC|Drop Installation Issue":[],
+"INS|Fibre (Drop Required)|CC|Buried Drop Required":[],
+"INS|Fibre (Drop Required)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Fibre (Drop Required)|NR|":[],
+"INS|Fibre (Drop Only)|OK|":[["MPT",1,0],["Drop route",1,0],["Drop attachment point (aerial)",1,0],["NID with door open",1,0],["Cable entrypoint",1,0],["Light level measurement",1,0]],
+"INS|Fibre (Drop Only)|CC|Flagging Required":[],
+"INS|Fibre (Drop Only)|CC|Drop Installation Issue":[],
+"INS|Fibre (Drop Only)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Fibre (Drop Only)|NR|":[],
+"INS|Fixed Wireless|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,1],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"INS|Fixed Wireless|CC|Customer Action Required":[],
+"INS|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[],
+"INS|Fixed Wireless|CC|Extra Resource Required":[],
+"INS|Fixed Wireless|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Fixed Wireless|NR|No Serviceable Signal":[["Line of sight POVs to all viable towers",1,1],["Testing locations",1,0],["Overall structure",1,0]],
+"INS|Fixed Wireless|NR|Installation Objection":[],
+"INS|Satellite|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,0],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"INS|Satellite|CC|Customer Action Required":[],
+"INS|Satellite|CC|Weather / Unsafe Work Conditions":[],
+"INS|Satellite|CC|Extra Resource Required":[],
+"INS|Satellite|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Satellite|NR|NLOS":[["Line of sight POVs",1,0],["Testing locations",1,0],["Overall structure",1,0]],
+"INS|Satellite|NR|Installation Objection":[],
+"INS|VAS · XTV|OK|":[["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"INS|VAS · XTV|CC|Customer Action Required":[],
+"INS|VAS · XTV|CC|Unsafe Work Conditions":[],
+"INS|VAS · XTV|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|VAS · XTV|NR|":[],
+"INS|VAS · XWH|OK|":[["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"INS|VAS · XWH|CC|Customer Action Required":[],
+"INS|VAS · XWH|CC|Unsafe Work Conditions":[],
+"INS|VAS · XWH|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|VAS · XWH|NR|":[],
+"INS|VAS · XWR|OK|":[["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"INS|VAS · XWR|CC|Customer Action Required":[],
+"INS|VAS · XWR|CC|Unsafe Work Conditions":[],
+"INS|VAS · XWR|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|VAS · XWR|NR|":[],
+"CON|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["Install Overview",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
+"CON|Fibre (Existing Drop)|CC|No Light at NID":[],
+"CON|Fibre (Existing Drop)|CC|No Light at MPT":[],
+"CON|Fibre (Existing Drop)|CC|Drop Required":[],
+"CON|Fibre (Existing Drop)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"CON|Fibre (Existing Drop)|NR|":[],
+"CON|Fibre (Drop Required)|OK|":[["MPT",1,0],["Drop route",1,0],["Drop attachment point (aerial)",1,0],["Total install overview",1,0],["NID with door open",1,0],["Fibre patch cable run",1,0],["Cable entrypoint",1,0],["Indoor cable run",1,0],["ONT placement",1,0],["Router placement",1,0],["Light level measurement",1,0]],
+"CON|Fibre (Drop Required)|CC|No Light at MPT":[],
+"CON|Fibre (Drop Required)|CC|Flagging Required":[],
+"CON|Fibre (Drop Required)|CC|Drop Installation Issue":[],
+"CON|Fibre (Drop Required)|CC|Buried Drop Required":[],
+"CON|Fibre (Drop Required)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"CON|Fibre (Drop Required)|NR|":[],
+"CON|Fixed Wireless|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,1],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"CON|Fixed Wireless|CC|Customer Action Required":[],
+"CON|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[],
+"CON|Fixed Wireless|CC|Extra Resource Required":[],
+"CON|Fixed Wireless|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"CON|Fixed Wireless|NR|No Serviceable Signal":[["Line of sight POVs to all viable towers",1,1],["Testing locations",1,0],["Overall structure",1,0]],
+"CON|Fixed Wireless|NR|Installation Objection":[],
+"CON|Satellite|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,0],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
+"CON|Satellite|CC|Customer Action Required":[],
+"CON|Satellite|CC|Weather / Unsafe Work Conditions":[],
+"CON|Satellite|CC|Extra Resource Required":[],
+"CON|Satellite|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"CON|Satellite|NR|NLOS":[["Line of sight POVs",1,0],["Testing locations",1,0],["Overall structure",1,0]],
+"CON|Satellite|NR|Installation Objection":[],
+"REP|Fibre|OK|":[["Issue(s) Found",1,0],["Issue Resolved After Repair",1,0],["Total Install Overview",1,0],["Fibre patch cable run",1,0],["Cable entry point",1,0],["Light level at ONT",1,0]],
+"REP|Fibre|CC|CCO Ticket":[],
+"REP|Fibre|NR|":[],
+"REP|Fixed Wireless|OK|":[["Issue(s) Found",1,0],["Issue Resolved After Repair",1,0],["Total Install Overview",1,0],["CPE Line of Sight",1,1],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Equipment",1,0]],
+"REP|Fixed Wireless|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|Fixed Wireless|NR|":[],
+"REP|Satellite|OK|":[["Issue(s) Found",1,0],["Issue Resolved After Repair",1,0],["Total Install Overview",1,0],["Line of Sight",1,0],["System and Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Equipment",1,0]],
+"REP|Satellite|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|Satellite|NR|":[],
+"REP|VAS · XTV|OK|":[["Issue found",1,0],["Issue after repair",1,0],["Indoor cable run",1,0],["Indoor equipment",1,0]],
+"REP|VAS · XTV|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|VAS · XTV|NR|":[],
+"REP|VAS · XWH|OK|":[["Issue found",1,0],["Issue after repair",1,0],["Indoor cable run",1,0],["Indoor equipment",1,0]],
+"REP|VAS · XWH|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|VAS · XWH|NR|":[],
+"REP|VAS · XWR|OK|":[["Issue found",1,0],["Issue after repair",1,0],["Indoor cable run",1,0],["Indoor equipment",1,0]],
+"REP|VAS · XWR|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|VAS · XWR|NR|":[]};
+/*CONFIG:END*/
+/* ================= JOBS =================
+   A job is chosen in two steps: work order + platform at the start, outcome (and its reason) during the
+   job, often only once the tech knows. Until then the Complete photo list is used.
+   SETUP (above) says which outcomes each work order + platform offers and their reasons; PHOTOS holds the
+   photo list for every work order | platform | outcome | reason as [name, required, 0° guide].
+   Both are generated from the Field Cam Outcomes and Photo Lists tools (see README).
+   Job: { work, plat, vas, outcome: null|"OK"|"CC"|"NR", reason, ref, ... }. "Other" is always added. */
 const JOB_TYPES = [ { id:"INS", name:"Install" }, { id:"CON", name:"Conversion" }, { id:"REP", name:"Repair" } ];
 const OUTCOMES = [
   { id:"OK", name:"Complete",        code:"Complete" },
   { id:"CC", name:"Cannot Complete", code:"CannotComplete" },
   { id:"NR", name:"Not Required",    code:"NotRequired" }
 ];
-const FIBRE_EXISTING = ["Total install overview","NID with door open","Fibre patch cable run","Cable entrypoint","Indoor cable run","ONT placement","Router placement","Light level measurement"];
-const FIBRE_DROP = ["MPT","Drop route","Drop attachment point (aerial)", ...FIBRE_EXISTING];
-const FW_SAT = ["Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Cable Run","Indoor Equipment"];
-const FW_NOT_REQ = ["Line of sight POVs to all viable towers","Testing locations","Overall structure"];
-const ALL_JOBS = ["INS","CON","REP"];
-const WORKFLOWS = [
-  // Complete: forms 02–14
-  { work:["INS","CON"], outcome:"OK", opt:"Fibre (Existing Drop)", code:"Fibre-ExistingDrop", shots:FIBRE_EXISTING },
-  { work:["INS","CON"], outcome:"OK", opt:"Fibre (Drop Required)", code:"Fibre-DropRequired", shots:FIBRE_DROP },
-  { work:["INS","CON"], outcome:"OK", opt:"Fixed Wireless", code:"FW", shots:FW_SAT, level:["CPE Line of Sight"] },
-  { work:["INS","CON"], outcome:"OK", opt:"Satellite", code:"Sat", shots:FW_SAT },
-  { work:["INS"],       outcome:"OK", opt:"VAS", code:"VAS", shots:["Indoor Cable Run","Indoor Equipment"] },
-  { work:["REP"], outcome:"OK", opt:"Fibre", code:"Fibre", shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","Fibre patch cable run","Cable entry point","Light level at ONT"] },
-  { work:["REP"], outcome:"OK", opt:"Fixed Wireless", code:"FW", level:["CPE Line of Sight"],
-    shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","CPE Line of Sight","CPE & Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Equipment"] },
-  { work:["REP"], outcome:"OK", opt:"Satellite", code:"Sat",
-    shots:["Issue(s) Found","Issue Resolved After Repair","Total Install Overview","Line of Sight","System and Mount Overview","Cable Run","Grounding Overview","Cable Entrypoint","Indoor Equipment"] },
-  { work:["REP"], outcome:"OK", opt:"VAS", code:"VAS", shots:["Issue found","Issue after repair","Indoor cable run","Indoor equipment"] },
-  // Cannot Complete: form 15 has no pictures checklist; its no-show steps include a photo of the house
-  ...["Fibre","Fixed Wireless","Satellite","VAS"].map(o => ({ work:ALL_JOBS, outcome:"CC", opt:o, code:{ "Fibre":"Fibre", "Fixed Wireless":"FW", "Satellite":"Sat", "VAS":"VAS" }[o], shots:[], optional:["House (customer no-show)"] })),
-  // Not Required: forms 16.1–16.4 (Fixed Wireless), 17 (Satellite), 18 (unrelated to signal, no pictures checklist)
-  { work:["INS","CON"], outcome:"NR", opt:"Signal Requirements Not Met", sub:"Fixed Wireless", code:"FW-SignalNotMet", shots:FW_NOT_REQ, level:[FW_NOT_REQ[0]] },
-  { work:["INS","CON"], outcome:"NR", opt:"Stop Sell Area", sub:"Fixed Wireless", code:"FW-StopSell", shots:FW_NOT_REQ, level:[FW_NOT_REQ[0]] },
-  { work:["INS","CON"], outcome:"NR", opt:"Not in Coverage Area", sub:"Fixed Wireless", code:"FW-NotInCoverage", shots:[...FW_NOT_REQ, "Screenshot of eCoverage showing customer outside of coverage"], level:[FW_NOT_REQ[0]] },
-  { work:["INS","CON"], outcome:"NR", opt:"NLOS", sub:"Fixed Wireless", code:"FW-NLOS", shots:FW_NOT_REQ, level:[FW_NOT_REQ[0]] },
-  { work:["INS","CON"], outcome:"NR", opt:"Satellite NLOS", sub:"Satellite", code:"Sat-NLOS", shots:["Line of sight POVs","Testing locations","Overall structure"] },
-  { work:ALL_JOBS, outcome:"NR", opt:"Unrelated to Signal", sub:"No pictures checklist", code:"Unrelated", shots:[] }
-];
 const MULTI = /POVs|locations|SNs|Issue/i;
 const OTHER = "Other";
 const byId = (arr, id) => arr.find(x => x.id === id) || {};
-const wfOptions = (work, outcome) => WORKFLOWS.filter(w => w.outcome === outcome && w.work.includes(work));
-const wfFor = j => j ? WORKFLOWS.find(w => w.outcome === j.outcome && w.work.includes(j.work) && w.opt === j.opt) || null : null;
-function baseShots(j) { const w = wfFor(j); return w ? w.shots : []; }                 // required: progress + missing-shot check
-function shotList(j) { const w = wfFor(j); return [...baseShots(j), ...((w && w.optional) || []), ...((j && j.custom) || []), OTHER]; }
-const isLevelShot = (label, j = curJob()) => !!((wfFor(j) || {}).level || []).includes(label);
-// Human titles
-function jobTitle(j) {   // e.g. "Install · Fixed Wireless · Complete" / "Install · Not Required · Fixed Wireless NLOS"
-  const w = wfFor(j); if (!w) return "Earlier job";
-  const work = byId(JOB_TYPES, j.work).name;
-  return w.outcome === "NR" ? `${work} · Not Required · ${w.sub && w.sub !== "No pictures checklist" && !w.opt.startsWith(w.sub) ? w.sub + " " : ""}${w.opt}` : `${work} · ${w.opt} · ${byId(OUTCOMES, w.outcome).name}`;
+const PLATFORMS = {
+  INS:["Fibre (Existing Drop)", "Fibre (Drop Required)", "Fibre (Drop Only)", "Fixed Wireless", "Satellite", "VAS"],
+  CON:["Fibre (Existing Drop)", "Fibre (Drop Required)", "Fixed Wireless", "Satellite"],
+  REP:["Fibre", "Fixed Wireless", "Satellite", "VAS"]
+};
+const platFamily = p => /^Fibre/.test(p || "") ? "Fibre" : p;
+const PLAT_SHORT = { "Fixed Wireless":"FW", "Satellite":"Sat", "VAS":"VAS", "Fibre":"Fibre" };
+const platShort = (p, j) => p === "VAS" && j && j.vas ? j.vas : PLAT_SHORT[platFamily(p)] || p || "";
+const VAS_TYPES = [ { id:"XTV", name:"XTV" }, { id:"XWH", name:"XWH" }, { id:"XWR", name:"XWR" } ];   // VAS breaks out into XTV / XWH / XWR
+const platName = j => j && j.plat === "VAS" && j.vas ? `VAS · ${j.vas}` : (j && j.plat) || "";
+const setupOf = j => j && j.work ? ((SETUP[j.work] || {})[platName(j)] || null) : null;
+const outcomeOn = (j, o) => { const s = setupOf(j); return !s || !!(s[o] && s[o].on); };
+const reasonsFor = (j, o) => { const s = setupOf(j); return (o && s && s[o] && s[o].reasons) || []; };
+// The photo list for the job as it stands (Complete until the outcome is picked; empty until a needed reason is picked)
+function photosOf(j) {
+  if (!j || !j.work) return [];
+  const o = j.outcome || "OK", rs = reasonsFor(j, o);
+  if (rs.length && !j.reason) return [];
+  return PHOTOS[`${j.work}|${platName(j)}|${o}|${rs.length ? j.reason : ""}`] || [];
 }
-function jobCode(j) {    // file-name part, platform-work order-outcome, e.g. FW-Install-Complete, Sat-Repair-CannotComplete
-  const w = wfFor(j); if (!w) return "Photo";
-  const plat = { FW:"FW", Sat:"Sat", Fibre:"Fibre", VAS:"VAS" }[w.code.split("-")[0]] || "";
-  return [plat, byId(JOB_TYPES, j.work).name, byId(OUTCOMES, w.outcome).code].filter(Boolean).join("-");
+const jobMeta = j => j ? { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null, ref:j.ref || "" } : null;
+const outcomeSet = j => !!(j && j.outcome && (!reasonsFor(j, j.outcome).length || j.reason));
+function baseShots(j) { return photosOf(j).filter(p => p[1]).map(p => p[0]); }      // required: progress + missing-shot check
+function shotList(j) { const ps = photosOf(j); return [...ps.filter(p => p[1]).map(p => p[0]), ...ps.filter(p => !p[1]).map(p => p[0]), ...((j && j.custom) || []), OTHER]; }
+const isLevelShot = (label, j = curJob()) => photosOf(j).some(p => p[0] === label && p[2]);
+// Human titles, e.g. "Install · Fixed Wireless · Not Required · No Serviceable Signal"
+function jobTitle(j) {
+  if (!j || !j.work || !("plat" in j)) return "Earlier job";
+  const base = `${byId(JOB_TYPES, j.work).name} · ${platName(j)}`;
+  if (!outcomeSet(j)) return base;
+  return `${base} · ${byId(OUTCOMES, j.outcome).name}${j.reason ? " · " + j.reason : ""}`;
 }
 // "sa 0123" -> "SA-0123"; anything else upper-cased with only letters, digits and dashes
 function normRef(v) {
@@ -663,6 +761,17 @@ function applyTheme() {
 applyTheme();
 let jobs = load("fieldcam.jobs", {});          // job id -> { work, outcome, opt, ref, started, custom }
 let current = load("fieldcam.current", null);
+const OLD_FW_NR = ["Signal Requirements Not Met", "Stop Sell Area", "Not in Coverage Area", "NLOS"];
+for (const j of Object.values(jobs)) {
+  if (!j) continue;
+  if (!("plat" in j) && j.opt) {          // jobs from before v3.8: work + outcome + platform/reason in one field
+    j.plat = j.outcome === "NR" ? (OLD_FW_NR.includes(j.opt) ? "Fixed Wireless" : j.opt === "Satellite NLOS" ? "Satellite" : null) : j.opt;
+    j.reason = null;
+  }
+  // reasons that no longer exist (outcomes were updated): the tech picks again before saving
+  if (j.outcome && !outcomeOn(j, j.outcome)) { j.outcome = null; j.reason = null; }
+  else if (j.reason && !reasonsFor(j, j.outcome).includes(j.reason)) j.reason = null;
+}
 
 function save() { store("fieldcam.settings", settings); store("fieldcam.jobs", jobs); store("fieldcam.current", current); }
 const curJob = () => current && jobs[current.id] ? jobs[current.id] : null;
@@ -1186,7 +1295,7 @@ function snapshot(extra = {}) {
     when, pos, headingRef:th.ref,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
     heading:th.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
-    job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : null, level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false, full:!!(j && j.full)
+    job:jobMeta(j), level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false, full:!!(j && j.full)
   }, extra);
 }
 function stampLines(m, live = false) {
@@ -1424,7 +1533,7 @@ async function relabel(rec, labels) {
   const j = jobs[rec.sessionId] || null;
   rec.labels = [...labels]; rec.label = labels[0] || ""; rec.unlabelled = !labels.length;
   if (rec.meta) Object.assign(rec.meta, { labels:[...labels], label:labelText(labels), unlabelled:!labels.length,
-    level:labels.some(l => isLevelShot(l, j)), job:j ? { work:j.work, outcome:j.outcome, opt:j.opt, ref:j.ref || "" } : rec.meta.job });
+    level:labels.some(l => isLevelShot(l, j)), job:j ? jobMeta(j) : rec.meta.job });
   rec.downloaded = false;
   try { await DB.put(rec); } catch {}
   if (rec.meta) queueRestamp(rec);
@@ -1673,7 +1782,7 @@ const FILE_LABEL = {   // shorter names for long checklist items (file name only
 };
 const cleanName = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/&/g, "and").replace(/[\\/:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim();
 function fileNameFor(p) {
-  const j = jobs[p.sessionId] || p.job, d = new Date(p.created), w = wfFor(j);
+  const j = jobs[p.sessionId] || p.job, d = new Date(p.created);
   const key = labelText(labelsOf(p)), same = S.photos.filter(x => x.sessionId === p.sessionId && labelText(labelsOf(x)) === key).sort((a, b) => a.created - b.created);
   const head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j && j.ref].filter(Boolean).join(" ");
   const label = (isUnl(p) ? "Unlabelled" : labelsOf(p).map(l => cleanName(FILE_LABEL[l] || l)).join(" + ")) + (same.length > 1 ? " " + (same.indexOf(p) + 1) : "");
@@ -1737,6 +1846,19 @@ $("dlBtn").addEventListener("click", () => {
 /* Saving a job's photos: every photo must be labelled first (the sorter opens, then saving carries on),
    and missing required photos are flagged before anything is saved. */
 let saveIds = null;
+let outSel = null;
+function openOutcomeSheet() {
+  const j = curJob(); if (!j) return;
+  outSel = { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null };
+  const draw = () => renderOutcomePicker($("outPicker"), outSel, () => { $("outGo").disabled = !outcomeSet(outSel); });
+  draw(); $("outGo").disabled = !outcomeSet(outSel);
+  openSheet("outSheet");
+}
+$("outGo").addEventListener("click", () => {
+  const j = curJob(); if (!j || !outSel) return;
+  j.outcome = outSel.outcome; j.reason = outSel.reason; jobChanged();
+  if (saveIds) openSaveSheet(); else closeSheets();   // one more tap saves (the save sheet shows any missing photos for this outcome)
+});
 function requestSave(items) {
   const unl = items.filter(isUnl);
   if (unl.length) {
@@ -1745,6 +1867,7 @@ function requestSave(items) {
     openSorter(unl.sort((a, b) => a.created - b.created).map(p => p.id), true);
     return;
   }
+  if (!outcomeSet(curJob())) { saveIds = items.map(p => p.id); toast("Pick the job outcome first.", 2200); openOutcomeSheet(); return; }
   if (!missingShots().length && !items.some(p => p.pending)) { saveIds = null; return downloadPhotos(items).then(ok => { if (ok) afterSave(); return ok; }); }
   saveIds = items.map(p => p.id); openSaveSheet();
 }
@@ -1908,7 +2031,7 @@ const endPt = e => {
 };
 st.addEventListener("pointerup", endPt); st.addEventListener("pointercancel", endPt);
 $("vClose").addEventListener("click", () => $("viewer").classList.remove("open"));
-$("vDl").addEventListener("click", async () => { if (S.viewing) { if (isUnl(S.viewing)) return requestSave([S.viewing]); await downloadPhotos([S.viewing]); if ($("viewer").classList.contains("open")) openViewer(S.viewing.id); } });
+$("vDl").addEventListener("click", async () => { if (S.viewing) { if (isUnl(S.viewing) || !outcomeSet(curJob())) return requestSave([S.viewing]); await downloadPhotos([S.viewing]); if ($("viewer").classList.contains("open")) openViewer(S.viewing.id); } });
 $("vLab").addEventListener("click", () => { if (S.viewing) openSorter([S.viewing.id]); });
 $("vDel").addEventListener("click", async e => {
   if (!S.viewing || !arm(e.currentTarget, "Tap again to delete")) return;
@@ -1921,37 +2044,68 @@ $("vDel").addEventListener("click", async e => {
 });
 
 /* ================= job picker ================= */
-function renderPicker(el, sel, onChange) {
-  const opts = sel.work && sel.outcome ? wfOptions(sel.work, sel.outcome) : [];
-  if (sel.opt && !opts.some(o => o.opt === sel.opt)) sel.opt = null;
-  const seg = (k, list, cls = "") => `<div class="seg${cls}" role="group">${list.map(o => `<button type="button" data-k="${k}" data-v="${esc(o.id)}" aria-pressed="${sel[k] === o.id}"><b>${esc(o.name)}</b>${o.sub ? `<span>${esc(o.sub)}</span>` : ""}</button>`).join("")}</div>`;
-  const third = sel.outcome === "NR" ? "Reason" : "Platform";
-  const w = wfFor(sel), shots = w ? [...w.shots] : [];
-  el.innerHTML = `<div><label>Work order</label>${seg("work", JOB_TYPES)}</div>
-    <div><label>Outcome</label>${seg("outcome", OUTCOMES)}</div>
-    ${opts.length ? `<div><label>${third}</label>${seg("opt", opts.map(o => ({ id:o.opt, name:o.opt })), " two")}</div>` : ""}`;
-  el.onclick = e => {
-    const b = e.target.closest("[data-k]"); if (!b) return;
-    sel[b.dataset.k] = b.dataset.v;
-    renderPicker(el, sel, onChange);
-    onChange && onChange();
-  };
+const segHTML = (k, list, cur, cls = "") => `<div class="seg${cls}" role="group">${list.map(o => `<button type="button" data-k="${k}" data-v="${esc(o.id)}" aria-pressed="${!o.off && cur === o.id}"${o.off ? " disabled" : ""}><b>${esc(o.name)}</b>${o.sub ? `<span>${esc(o.sub)}</span>` : ""}</button>`).join("")}</div>`;
+/* Fixed layout for muscle memory: every option keeps the same spot whatever the work order or platform.
+   Options that don't apply are greyed out, never removed, and no row appears or disappears. */
+const PLAT_SLOTS = ["Fibre (Existing Drop)", "Fibre (Drop Required)", "Fibre (Drop Only)", "Fixed Wireless", "Satellite", "VAS"];
+const platSlots = work => PLAT_SLOTS.map((p, i) => {
+  if (i === 0 && work === "REP") return { id:"Fibre", name:"Fibre" };          // Repair has a single Fibre form, in the first Fibre spot
+  return { id:p, name:p, off:!work || !PLATFORMS[work].includes(p) };
+});
+// Start of a job: work order, then platform
+function renderJobPicker(el, sel, onChange) {
+  const plats = sel.work ? PLATFORMS[sel.work] : [];
+  if (sel.plat && !plats.includes(sel.plat)) sel.plat = null;
+  if (sel.plat !== "VAS") sel.vas = null;
+  el.innerHTML = `<div><label>Work order</label>${segHTML("work", JOB_TYPES, sel.work)}</div>
+    <div><label>Platform</label>${segHTML("plat", platSlots(sel.work), sel.plat, " two")}</div>
+    ${sel.plat === "VAS" ? `<div><label>VAS service</label>${segHTML("vas", VAS_TYPES, sel.vas)}</div>` : ""}`;
+  el.onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; sel[b.dataset.k] = b.dataset.v; renderJobPicker(el, sel, onChange); onChange && onChange(); };
+}
+// During the job: outcome, then its reason when that outcome has reasons for this platform.
+// Outcomes keep fixed spots (greyed where not offered); reasons show only for the picked outcome.
+function renderOutcomePicker(el, sel, onChange) {
+  if (sel.outcome && !outcomeOn(sel, sel.outcome)) sel.outcome = null;
+  const reasons = sel.outcome ? reasonsFor(sel, sel.outcome) : [];
+  if (sel.reason && !reasons.includes(sel.reason)) sel.reason = null;
+  if (!reasons.length) sel.reason = null;
+  if (reasons.length === 1 && !sel.reason) sel.reason = reasons[0];
+  el.innerHTML = `<div><label>Outcome</label>${segHTML("outcome", OUTCOMES.map(o => ({ ...o, off:!outcomeOn(sel, o.id) })), sel.outcome)}</div>
+    ${reasons.length ? `<div><label>${esc(byId(OUTCOMES, sel.outcome).name)} reason</label>${segHTML("reason", reasons.map(r => ({ id:r, name:r })), sel.reason, " two")}</div>` : ""}`;
+  el.onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; sel[b.dataset.k] = b.dataset.v; if (b.dataset.k === "outcome") sel.reason = null; renderOutcomePicker(el, sel, onChange); onChange && onChange(); };
+}
+// Job details changed mid-job: redraw the info band on photos not saved yet (labels and file names follow anyway)
+function jobChanged() {
+  const j = curJob(); if (!j) return;
+  save(); renderAll();
+  for (const p of curPhotos()) if (p.meta && !p.downloaded) {
+    p.meta.job = jobMeta(j); p.meta.level = labelsOf(p).some(l => isLevelShot(l, j));
+    queueRestamp(p);
+  }
 }
 
 /* ================= top bar, chips, deck ================= */
 function countLabels() { const c = {}; for (const p of curPhotos()) for (const l of labelsOf(p)) c[l] = (c[l] || 0) + 1; return c; }
 function renderTop() {
   const j = curJob(), req = baseShots(j), counts = countLabels();
-  const w = wfFor(j), sh = w ? `${byId(JOB_TYPES, j.work).name} · ${w.outcome === "NR" ? "NR · " + w.code.replace("-", " ") : w.code.replace("-", " ") + (w.outcome === "CC" ? " · Can’t complete" : "")}` : "";
+  let sh = "";
+  if (j) {
+    const base = `${byId(JOB_TYPES, j.work).name} · ${platShort(j.plat, j)}`;
+    if (!outcomeSet(j) || j.outcome === "OK") sh = esc(base);
+    else sh = esc(`${base} · ${j.outcome === "NR" ? "NR" : "CC"}${j.reason ? " · " + j.reason : ""}`);
+  }
   $("jobRef").textContent = j && j.ref ? j.ref : ""; $("jobRef").hidden = !(j && j.ref);
-  $("jobTxt").textContent = j ? sh : "No job";
+  $("jobTxt").innerHTML = j ? sh : "No job";
+  $("jobNeed").hidden = !j || outcomeSet(j);
   $("jobProg").textContent = j && req.length ? `${req.filter(l => counts[l]).length}/${req.length}` : "";
 }
 // Tiles: every checklist item for the job, a ✓ + count once photographed; items still needed have an amber edge.
 const tileName = l => FILE_LABEL[l] || l;
 function tileList(j, sel, counts) {
   const custom = (j && j.custom) || [];
-  return shotList(j).filter(l => !custom.includes(l) || counts[l] || sel.includes(l));   // typo'd custom labels drop away
+  const list = shotList(j).filter(l => !custom.includes(l) || counts[l] || sel.includes(l));   // typo'd custom labels drop away
+  const extra = Object.keys(counts).filter(l => counts[l] && !list.includes(l));               // photos labelled under another outcome
+  return extra.length ? [...list.slice(0, -1), ...extra, OTHER] : list;
 }
 function tilesHTML(j, sel, counts) {
   const req = baseShots(j);
@@ -1963,7 +2117,7 @@ function tilesHTML(j, sel, counts) {
 }
 function renderLabels() {
   const j = curJob(), counts = countLabels();
-  S.sel = S.sel.filter(l => shotList(j).includes(l));
+  S.sel = S.sel.filter(l => tileList(j, S.sel, counts).includes(l));
   $("lGrid").innerHTML = tilesHTML(j, S.sel, counts);
   const full = !!(j && j.full);
   $("lSel").innerHTML = (S.sel.length ? `Next photo: <b>${esc(labelText(S.sel))}</b>` : `No label · shoot now, label later`) + (full ? `<span class="hqtag">FULL QUALITY</span>` : "");
@@ -2074,7 +2228,7 @@ function closeSorter() {
   renderAll();
   const left = curPhotos().filter(isUnl).length;
   // On the way to saving and everything is labelled now: carry on (one more tap to save)
-  if (SO.forSave && saveIds && !saveItems().some(isUnl)) { openSaveSheet(); return; }
+  if (SO.forSave && saveIds && !saveItems().some(isUnl)) { if (!outcomeSet(curJob())) openOutcomeSheet(); else openSaveSheet(); return; }
   if (SO.forSave && saveIds && left) { toast(`${left} still to label. Saving needs every photo labelled.`, 2600); saveIds = null; return; }
   if (SO.done) toast(`Labelled ${plural(SO.done, "photo")}${left ? ` · ${left} still to label` : ""}`, 2400);
 }
@@ -2100,24 +2254,38 @@ $("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data
 
 $("jobBtn").addEventListener("click", () => {
   const j = curJob(); if (!j) return;
-  const sel = { work:j.work, outcome:j.outcome, opt:j.opt };
-  renderPicker($("sheetPicker"), sel, () => { if (sel.work && sel.outcome && sel.opt) { Object.assign(jobs[current.id], sel); save(); renderAll(); } });
+  const sel = { work:j.work, plat:j.plat, vas:j.vas || null };
+  const out = { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null };
+  const drawOut = () => renderOutcomePicker($("sheetOutcome"), out, () => {
+    const jj = curJob();
+    if (!outcomeSet(out)) { if (jj.outcome !== out.outcome) { jj.outcome = out.outcome; jj.reason = null; jobChanged(); } return; }
+    jj.outcome = out.outcome; jj.reason = out.reason; jobChanged();
+  });
+  renderJobPicker($("sheetPicker"), sel, () => {
+    if (!sel.work || !sel.plat || (sel.plat === "VAS" && !sel.vas)) return;
+    const jj = curJob(); jj.work = sel.work; jj.plat = sel.plat; jj.vas = sel.vas || null;
+    if (jj.outcome && !outcomeOn(jj, jj.outcome)) { jj.outcome = null; jj.reason = null; }
+    else if (jj.reason && !reasonsFor(jj, jj.outcome).includes(jj.reason)) jj.reason = null;
+    Object.assign(out, { work:jj.work, plat:jj.plat, vas:jj.vas || null, outcome:jj.outcome || null, reason:jj.reason || null }); drawOut(); jobChanged();
+  });
+  drawOut();
   $("inRefEdit").value = j.ref || "";
   const n = curPhotos().length;
   $("jobEditHint").textContent = n
-    ? `${plural(n, "photo")} taken. Changes here update their file names and the photo list; the stamp already on a photo stays as it was.`
-    : "You can change these at any point during the job, for example if it turns out to be NLOS.";
+    ? `${plural(n, "photo")} taken. Changes here update the photo list and the info band on photos not saved yet.`
+    : "Pick the outcome once you know it. Everything here can be changed at any point during the job.";
   $("finishConfirm").hidden = true; $("cancelConfirm").hidden = true;
   openSheet("jobSheet");
 });
 $("inRefEdit").addEventListener("change", () => {
   const r = normRef($("inRefEdit").value);
-  $("inRefEdit").value = r; curJob().ref = r; save(); renderAll();
+  $("inRefEdit").value = r; curJob().ref = r; jobChanged();
 });
 function missingShots() { const c = countLabels(); return baseShots(curJob()).filter(l => !c[l]); }
 $("finishBtn").addEventListener("click", () => {
   $("cancelConfirm").hidden = true;
   const und = curPhotos().filter(p => !p.downloaded).length, miss = missingShots(), unl = curPhotos().filter(isUnl).length, msgs = [];
+  if (!outcomeSet(curJob())) msgs.push(`<p><b>No outcome picked yet.</b> Choose it above${curJob().outcome ? ", with its reason" : " (Complete, Cannot Complete or Not Required)"}.</p>`);
   if (unl) msgs.push(`<p><b>${plural(unl, "photo")} still to label.</b> ${unl === 1 ? "It" : "They"} can’t be saved until labelled.</p>`);
   if (miss.length) msgs.push(`<p><b>No photo yet for:</b> ${miss.map(esc).join(", ")}.</p>`);
   if (und) msgs.push(`<p>${plural(und, "photo")} ${und === 1 ? "hasn’t" : "haven’t"} been saved. If you finish now ${und === 1 ? "it stays" : "they stay"} on this phone under Previous jobs.</p>`);
@@ -2175,7 +2343,7 @@ function installText() {
 }
 
 /* ================= start / new job ================= */
-let startSel = { work:null, outcome:null, opt:null };
+let startSel = { work:null, plat:null };
 function showStart() {
   const named = !!settings.name.trim();
   $("nameBlock").hidden = named;
@@ -2188,9 +2356,9 @@ function showStart() {
     $("resumeMeta").textContent = `Current job · ${plural(ps.length, "photo")} · started ${fmtDay(new Date(j.started))}`;
   }
   $("newJobH").textContent = j ? "Or start a new job" : "New job";
-  startSel = { work:null, outcome:null, opt:null };
+  startSel = { work:null, plat:null, vas:null };
   $("inRef").value = "";
-  renderPicker($("startPicker"), startSel, () => { $("startErr").hidden = true; });
+  renderJobPicker($("startPicker"), startSel, () => { $("startErr").hidden = true; });
   $("startBtn").textContent = j ? "Start new job" : "Start job";
   $("startBtn").className = j ? "btn big" : "btn primary big";
   $("startErr").hidden = true;
@@ -2226,13 +2394,13 @@ $("startBtn").addEventListener("click", () => {
   const ref = normRef($("inRef").value);
   if (!name) missing.push("your name");
   if (!startSel.work) missing.push("work order");
-  if (!startSel.outcome) missing.push("outcome");
-  else if (!startSel.opt) missing.push(startSel.outcome === "NR" ? "reason" : "platform");
+  else if (!startSel.plat) missing.push("platform");
+  else if (startSel.plat === "VAS" && !startSel.vas) missing.push("VAS service (XTV, XWH or XWR)");
   if (missing.length) { $("startErr").textContent = "Still needed: " + missing.join(", ") + "."; $("startErr").hidden = false; return; }
   settings.name = name;
   const hadPrev = curPhotos().length;
   const id = Date.now().toString(36);
-  jobs[id] = { ...startSel, ref, started:Date.now() };
+  jobs[id] = { work:startSel.work, plat:startSel.plat, vas:startSel.vas || null, outcome:null, reason:null, ref, started:Date.now() };
   current = { id, sel:[] };
   S.sel = []; S.selected.clear();
   beginSession();

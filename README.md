@@ -1,4 +1,4 @@
-# Field Cam (v3.7.2)
+# Field Cam (v3.9.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -26,10 +26,20 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
 
 ## Tech workflow
 1. First launch only: enter name.
-2. Each work order: optionally enter the **Account ID or SA-#**, then pick the job form:
-   **Work order** (Install / Conversion / Repair) → **Outcome** (Complete / Cannot Complete /
-   Not Required) → **Platform** (or **Reason** for Not Required). The start screen previews the
-   photos that form needs. Can be changed mid-job from the top bar.
+2. Each work order: optionally enter the **Account ID or SA-#**, then pick the **Work order**
+   (Install / Conversion / Repair) and the **Platform** (Fibre existing drop / drop required /
+   drop only (Install only), Fixed Wireless, Satellite, VAS (Install and Repair)). VAS then asks **XTV, XWH or XWR**. That's all that's
+   needed to start shooting.
+   **Same spot every time:** every platform and every Not Required reason keep
+   the same position whatever the work order or platform. Options that don't apply are greyed out
+   instead of removed, so techs can tap from memory. The XTV/XWH/XWR row only appears when VAS is picked.
+   **The outcome comes later**, once the tech knows it: tap the job name at the top and pick
+   **Complete / Cannot Complete / Not Required** (plus the reason for Not Required: on Fixed
+   Wireless Signal Requirements Not Met, Stop Sell Area, Not in Coverage Area, NLOS; on Satellite,
+   Satellite NLOS; any platform, Unrelated to Signal). Until it's picked, the header shows an amber
+   **Outcome?** tag and the Complete photo list is used. Changing it switches the photo list and
+   redraws the info band on photos not saved yet; photos keep their labels. Saving asks for the
+   outcome first if it hasn't been picked.
 3. **Labels: pick first, or shoot first.** Every checklist item for the form shows as a tile under
    the viewfinder (items still needed have an amber edge; done ones show ✓ and a count). There is
    no set order and the shutter always works.
@@ -81,20 +91,25 @@ elevation, address. Right: job type, tilt, tech, note. The text is measured befo
 a little or wraps a long item rather than cutting it off, and the block is centred with equal space
 above and below. Only an extremely long note gets cut with "…".
 
-## Job forms and photo lists
-`WORKFLOWS` near the top of the script in `index.html` has one entry per JotForm, with its
-Pictures Checklist copied from the form:
+## Outcomes, reasons and photo lists
+These live in the `SETUP` and `PHOTOS` block at the top of the script in `index.html` (between
+`/*CONFIG:BEGIN` and `/*CONFIG:END*/`). Don't edit that block by hand: it's generated from two tools
+in Claude:
+- **Field Cam Outcomes**: for each work order + platform, which outcomes are offered (Complete /
+  Cannot Complete / Not Required) and the reasons techs pick from.
+- **Field Cam Photo Lists**: for each work order + platform + outcome + reason, the photos (in
+  order), whether each is required or optional, and which get the 0° horizon guide.
 
-| Outcome | Forms | Photos |
-|---|---|---|
-| Complete | Install / Conversion: Fibre (Existing Drop), Fibre (Drop Required), Fixed Wireless, Satellite; Install: VAS. Repair: Fibre, Fixed Wireless, Satellite, VAS | As on each form |
-| Cannot Complete | One form for all jobs (platform chosen for the file name) | Form has no checklist; optional "House (customer no-show)" |
-| Not Required | Fixed Wireless: Signal Requirements Not Met, Stop Sell Area, Not in Coverage Area, NLOS. Satellite NLOS. Unrelated to Signal (any job) | FW: LOS POVs to all viable towers, Testing locations, Overall structure (+ eCoverage screenshot for Not in Coverage). Sat: LOS POVs, Testing locations, Overall structure. Unrelated: none |
+Ask Claude to "apply the outcomes / photo lists"; it reads both tools and regenerates the block with
+`tools/build_config.py`.
 
-When a form changes, edit its `shots` list. `level` marks photos that get the 0° horizon line;
-`MULTI` marks items where several photos are normal. "Other" is always added: tapping it asks
-what the photo is of, and that text becomes the label. Custom labels stay for the rest of the job
-once they have a photo.
+How it behaves in the app:
+- Cannot Complete and Not Required ask for a reason when that platform has reasons (one reason is
+  picked automatically; none means no question). The reason shows on the info band and in the header.
+- Until the outcome (and reason) is picked, the Complete photo list is shown and the header has an
+  amber **Outcome?** tag. Saving asks for it first.
+- Required photos count toward progress and the missing-photo check; optional ones are offered
+  only. "Other" is always available. Photos keep their labels when the outcome changes.
 
 ## Photo checks
 - **Level guide (no lock):** on Fixed Wireless "CPE Line of Sight" and "Line of sight POVs to all
