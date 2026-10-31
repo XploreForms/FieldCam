@@ -1,4 +1,4 @@
-# Field Cam (v3.17.0)
+# Field Cam (v3.18.1)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -91,16 +91,23 @@ of whatever was copied: `SA-` + 6 digits first (also written `SA 123456`, `SA#12
 number on its own. iPhones show a small "Paste" bubble to confirm the first time; if the clipboard
 can't be read, long-press the box and paste as usual.
 
-## Job start card (divider)
-When a job's photos are saved, Field Cam also saves a bold yellow-and-black **JOB START** card
-(SA-#, work order · platform · outcome, date, tech). It's dated 2 seconds before the job's first
-photo, so in Photos, Files and FSL's photo picker every job's photos sit right after their own card:
-select the photos up to the card and you can't pick up another job's photos by mistake. Its file name
-is `… - 00 JOB START (divider).jpg`, so it sorts first in Files too. The card says not to upload it.
+## Job start and end cards (dividers)
+When a job's photos are saved, Field Cam also saves two divider cards around them:
+- a **green JOB START** card, dated 2 seconds before the job's first photo;
+- an **amber JOB END** card, dated 2 seconds after the job's last photo.
 
-It's saved once per job (again if "Save all" re-saves the job's first photo). It isn't a photo in the
-app: it never shows in the gallery or counts toward anything. The save message says
-"+ job start card".
+They're built to read at thumbnail size and to be tiny (about 12 KB each, 360 × 360): flat colour,
+a huge START or END, the SA-# large underneath, then work order · platform · time, and "Divider ·
+don't upload". In
+Photos, Files and FSL's photo picker each job's photos sit between its own two cards: select what's
+inside the brackets. Anything inside without the dark info band (a screenshot, an original from the
+phone's camera app) isn't a Field Cam photo and shouldn't go to FSL. File names
+`… - 00 JOB START (divider).jpg` and `… - zz JOB END (divider).jpg` sort around the photos in Files too.
+
+The start card is saved once, with the save that includes the job's first photo. The end card is saved
+with the save that includes the job's newest photo; if more photos are taken and saved later, a new end
+card follows them. Re-saving the same photos doesn't add cards. They aren't photos in the app: never in
+the gallery, never counted. The save message says "+ job start and end cards".
 
 ## Serial numbers (Complete jobs)
 On Complete jobs (or before the outcome is picked) a barcode button sits under HQ in the picture's
