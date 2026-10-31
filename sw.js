@@ -1,6 +1,6 @@
 // Field Cam service worker: keeps the app working with no signal.
 // Bump VERSION whenever you upload changed files so phones pick up the update.
-const VERSION = "fieldcam-v3.16.3";
+const VERSION = "fieldcam-v3.17.0";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 // Outside libraries kept for offline use (the S/N barcode scanner). Fetched best-effort at install,
 // so a phone with no signal still installs the app; otherwise they're cached the first time they load.

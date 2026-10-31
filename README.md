@@ -1,4 +1,4 @@
-# Field Cam (v3.16.3)
+# Field Cam (v3.17.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -90,6 +90,17 @@ the account number anywhere (FSL, a text, an email), tap Paste, and Field Cam pi
 of whatever was copied: `SA-` + 6 digits first (also written `SA 123456`, `SA#123456`), then a number next to "Account"/"Acct", then a single long
 number on its own. iPhones show a small "Paste" bubble to confirm the first time; if the clipboard
 can't be read, long-press the box and paste as usual.
+
+## Job start card (divider)
+When a job's photos are saved, Field Cam also saves a bold yellow-and-black **JOB START** card
+(SA-#, work order · platform · outcome, date, tech). It's dated 2 seconds before the job's first
+photo, so in Photos, Files and FSL's photo picker every job's photos sit right after their own card:
+select the photos up to the card and you can't pick up another job's photos by mistake. Its file name
+is `… - 00 JOB START (divider).jpg`, so it sorts first in Files too. The card says not to upload it.
+
+It's saved once per job (again if "Save all" re-saves the job's first photo). It isn't a photo in the
+app: it never shows in the gallery or counts toward anything. The save message says
+"+ job start card".
 
 ## Serial numbers (Complete jobs)
 On Complete jobs (or before the outcome is picked) a barcode button sits under HQ in the picture's

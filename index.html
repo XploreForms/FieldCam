@@ -650,7 +650,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.16.3";
+const VERSION = "3.17.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1954,6 +1954,64 @@ async function saveFile(name, blob) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 let dlBusy = false;
+/* Job divider card: saved with each job's photos, dated 2 s before the job's first photo, so in Photos,
+   Files and FSL's photo picker every job's photos sit right after their own bold "JOB START" card.
+   Techs select up to the card and never pick up another job's photos. Saved once per job (again if the
+   job's first photo is saved again). It isn't a photo record and never counts toward anything. */
+const firstOfJob = sid => S.photos.filter(p => p.sessionId === sid).sort((a, b) => a.created - b.created)[0];
+var divCache = new Map();   // sid -> { key, file }: drawn ahead of time so iPhone's share sheet opens straight from the tap
+const divKey = sid => { const f = firstOfJob(sid), j = jobs[sid] || (f && f.job) || {};
+  return f ? [f.created, j.ref, j.work, j.plat, j.vas, j.outcome, j.reason, settings.name].join("|") : ""; };
+var divT = null;
+function prepDividers() {
+  clearTimeout(divT);
+  divT = setTimeout(async () => {
+    const sids = new Set(S.photos.filter(p => !p.downloaded).map(p => p.sessionId));
+    if (current) sids.add(current.id);
+    for (const sid of sids) { const k = divKey(sid); if (!k || (divCache.get(sid) || {}).key === k) continue;
+      try { const f = await makeDivider(sid); if (f) divCache.set(sid, { key:k, file:f }); } catch {} }
+  }, 400);
+}
+async function makeDivider(sid) {
+  const first = firstOfJob(sid); if (!first) return null;
+  const j = jobs[sid] || first.job || {};
+  const when = new Date(first.created - 2000), Z = 1080, c = canvas(Z, Z), x = c.getContext("2d");
+  const F = (wt, sz) => `${wt} ${sz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
+  // caution-stripe border: unmistakable in a grid of thumbnails
+  x.fillStyle = "#F2B84B"; x.fillRect(0, 0, Z, Z);
+  x.save(); x.beginPath(); x.rect(0, 0, Z, Z); x.clip(); x.fillStyle = "#0B1413";
+  for (let i = -Z; i < Z * 2; i += 120) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 60, 0); x.lineTo(i + 60 - Z, Z); x.lineTo(i - Z, Z); x.closePath(); x.fill(); }
+  x.restore();
+  const m = 90; x.fillStyle = "#0B1413"; x.beginPath(); x.roundRect ? x.roundRect(m, m, Z - 2 * m, Z - 2 * m, 36) : x.rect(m, m, Z - 2 * m, Z - 2 * m); x.fill();
+  x.textAlign = "center"; x.textBaseline = "middle";
+  const fit = (t, wt, sz, maxW) => { x.font = F(wt, sz); while (sz > 20 && x.measureText(t).width > maxW) { sz -= 2; x.font = F(wt, sz); } return sz; };
+  const W = Z - 2 * m - 80;
+  x.fillStyle = "#F2B84B"; fit("JOB START", 800, 150, W); x.fillText("JOB START", Z / 2, 290);
+  const ref = j.ref ? refLabel(j.ref) : "No SA-# / account";
+  x.fillStyle = "#FFFFFF"; fit(ref, 800, 96, W); x.fillText(ref, Z / 2, 450);
+  const title = jobTitle({ ...j, outcome:j.outcome || null }) || "";
+  x.fillStyle = "#E8EFEC"; fit(title, 600, 52, W); x.fillText(title, Z / 2, 560);
+  const meta = `${fmtTime(when).replace(/:\d\d(?= )/, "")}${settings.name.trim() ? " · " + settings.name.trim() : ""}`;
+  x.fillStyle = "#8FA59D"; fit(meta, 500, 40, W); x.fillText(meta, Z / 2, 640);
+  x.fillStyle = "#58C774"; fit("This job’s photos follow this card", 600, 46, W); x.fillText("This job’s photos follow this card", Z / 2, 760);
+  x.fillStyle = "#8FA59D"; fit("Divider only · don’t upload this card to FSL", 500, 34, W); x.fillText("Divider only · don’t upload this card to FSL", Z / 2, 850);
+  let blob = await toBlob(c, 0.85);
+  try { blob = await addExif(blob, { when, tech:settings.name.trim(), labels:["Job start divider"], unlabelled:false, job:jobMeta(j.work ? j : null) }, Z, Z); } catch {}
+  const d = new Date(first.created), head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j.ref].filter(Boolean).join(" ");
+  return new File([blob], `${head} - 00 JOB START (divider).jpg`, { type:"image/jpeg", lastModified:when.getTime() });
+}
+// Dividers to save with this batch: one per job whose card hasn't been saved yet, or whose first photo is in the batch
+async function dividersFor(list) {
+  const out = [];
+  for (const sid of [...new Set(list.map(p => p.sessionId))]) {
+    const j = jobs[sid], first = firstOfJob(sid);
+    if (!first || (j && j.dividerSaved && !list.includes(first))) continue;
+    const hit = divCache.get(sid), f = hit && hit.key === divKey(sid) ? hit.file : await makeDivider(sid);
+    if (f) out.push({ sid, file:f, t:first.created - 2000 });
+  }
+  return out;
+}
+const markDividers = ds => { for (const d of ds) if (jobs[d.sid]) jobs[d.sid].dividerSaved = true; if (ds.length) save(); };
 // iPhone: web apps can't write into the Photos gallery directly (a download only opens a preview),
 // so photos go to the share sheet in one batch: "Save N Images" puts them in Photos,
 // "Save to Files" keeps the file names. Other phones and computers download each file.
@@ -1965,7 +2023,8 @@ async function downloadPhotos(items) {
   if (items.some(p => p.pending)) { toast("Updating a photo’s stamp. Tap Save again in a second.", 2600); return false; }
   const list = [...items].sort((a, b) => a.created - b.created);
   if (isIOS && navigator.canShare && navigator.share) {
-    const files = list.map(p => new File([p.blob], fileNameFor(p), { type:"image/jpeg", lastModified:p.created }));
+    const divs = await dividersFor(list);
+    const files = [...divs.map(d => d.file), ...list.map(p => new File([p.blob], fileNameFor(p), { type:"image/jpeg", lastModified:p.created }))];
     let ok = false;
     try { ok = navigator.canShare({ files }); } catch {}
     if (ok) {
@@ -1973,7 +2032,8 @@ async function downloadPhotos(items) {
       try {
         await navigator.share({ files });
         for (const p of list) { p.downloaded = true; p.savedAt = Date.now(); try { await DB.put(p); } catch {} }
-        toast(`Saved ${plural(list.length, "photo")}`, 2600);
+        markDividers(divs);
+        toast(`Saved ${plural(list.length, "photo")}${divs.length ? " + job start card" : ""}`, 2600);
         return true;
       } catch (e) {
         if (e && e.name === "AbortError") { toast("Not saved. Tap Save Images (Photos) or Save to Files.", 3200); return false; }
@@ -1983,6 +2043,8 @@ async function downloadPhotos(items) {
   }
   dlBusy = true;
   let n = 0;
+  const divs = await dividersFor(list), divOk = [];
+  for (const d of divs) { try { await saveFile(d.file.name, d.file); divOk.push(d); await sleep(700); } catch (e) { if (e && e.stop) { dlBusy = false; return false; } } }
   for (const p of list) {
     toast(`Saving ${n + 1} of ${list.length}…`, 1600);
     try { await saveFile(fileNameFor(p), p.blob); } catch (e) { if (e && e.stop) break; continue; }
@@ -1991,8 +2053,9 @@ async function downloadPhotos(items) {
     if (n < list.length) await sleep(700);
   }
   dlBusy = false;
+  if (n) markDividers(divOk);
   renderAll();
-  if (n) toast(`Saved ${plural(n, "photo")}`, 3000);
+  if (n) toast(`Saved ${plural(n, "photo")}${divOk.length ? " + job start card" : ""}`, 3000);
   return n > 0;
 }
 $("dlBtn").addEventListener("click", () => {
@@ -2581,7 +2644,7 @@ function refreshDeck() {
   $("dlCount").textContent = und || "";
   $("dlBtn").classList.toggle("has", und > 0);
 }
-function renderAll() { renderTop(); renderSerials(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); if ($("saveSheet").classList.contains("open")) renderSaveSheet(); }
+function renderAll() { prepDividers(); renderTop(); renderSerials(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); if ($("saveSheet").classList.contains("open")) renderSaveSheet(); }
 
 /* ================= sheets ================= */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
