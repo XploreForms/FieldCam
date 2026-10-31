@@ -650,7 +650,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.18.1";
+const VERSION = "3.18.3";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1980,21 +1980,27 @@ function prepDividers() {
 async function makeDivider(sid, kind) {
   const edge = edgeOfJob(sid, kind); if (!edge) return null;
   const start = kind === "start", j = jobs[sid] || edge.job || {};
-  const when = new Date(edge.created + (start ? -2000 : 2000)), Z = 360, c = canvas(Z, Z), x = c.getContext("2d");
-  // Built for thumbnails: small, flat colours (tiny JPEG), one huge word, SA-# big underneath
+  const when = new Date(edge.created + (start ? -2000 : 2000)), Z = 1080, c = canvas(Z, Z), x = c.getContext("2d");
+  // Built for thumbnails: flat colours (small JPEG), one huge word, SA-# and the time big underneath
   const F = (wt, sz) => `${wt} ${sz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
   const col = start ? "#58C774" : "#F2B84B";      // START green, END amber
   x.fillStyle = col; x.fillRect(0, 0, Z, Z);
   x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#0B1413";
-  const fit = (t, wt, sz, maxW) => { x.font = F(wt, sz); while (sz > 10 && x.measureText(t).width > maxW) { sz -= 1; x.font = F(wt, sz); } };
-  fit("JOB", 900, 46, 300); x.fillText("JOB", Z / 2, 52);
+  const fit = (t, wt, sz, maxW) => { x.font = F(wt, sz); while (sz > 10 && x.measureText(t).width > maxW) { sz -= 2; x.font = F(wt, sz); } };
+  const W = 990;
+  fit("JOB", 900, 130, 900); x.fillText("JOB", Z / 2, 130);
   const word = start ? "START" : "END";
-  fit(word, 900, 120, 330); x.fillText(word, Z / 2, 140);
-  x.fillRect(0, 222, Z, Z - 222);                    // dark lower block: SA-# and the short job line
-  x.fillStyle = "#FFFFFF"; fit(j.ref ? refLabel(j.ref) : "No SA-#", 800, 50, 330); x.fillText(j.ref ? refLabel(j.ref) : "No SA-#", Z / 2, 262);
-  const short = [j.work ? byId(JOB_TYPES, j.work).name : "", j.plat ? platShort(j.plat, j) : "", `${pad(when.getHours())}:${pad(when.getMinutes())}`].filter(Boolean).join(" · ");
-  x.fillStyle = col; fit(short, 700, 26, 330); x.fillText(short, Z / 2, 314);
-  x.fillStyle = "#8FA59D"; fit("Divider · don’t upload", 600, 16, 330); x.fillText("Divider · don’t upload", Z / 2, 342);
+  fit(word, 900, 340, W); x.fillText(word, Z / 2, 370);
+  x.fillRect(0, 600, Z, Z - 600);                    // dark lower block
+  const ref = j.ref ? refLabel(j.ref) : "No SA-#";
+  x.fillStyle = "#FFFFFF"; fit(ref, 800, 140, W); x.fillText(ref, Z / 2, 700);
+  const mon = when.toLocaleString("en-CA", { month:"short" }).replace(".", "");
+  const h12 = when.getHours() % 12 || 12, ap = when.getHours() < 12 ? "AM" : "PM";
+  const time = `${h12}:${pad(when.getMinutes())} ${ap} · ${mon} ${when.getDate()}`;   // 12-hour clock
+  x.fillStyle = col; fit(time, 800, 120, W); x.fillText(time, Z / 2, 838);
+  const short = [j.work ? byId(JOB_TYPES, j.work).name : "", j.plat ? platShort(j.plat, j) : ""].filter(Boolean).join(" · ");
+  x.fillStyle = "#E8EFEC"; fit(short, 700, 64, W); x.fillText(short, Z / 2, 953);
+  x.fillStyle = "#8FA59D"; fit("Divider · don’t upload", 600, 44, W); x.fillText("Divider · don’t upload", Z / 2, 1035);
   let blob = await toBlob(c, 0.45);   // flat colours + big text stay crisp even at low quality (~11 KB)
   try { blob = await addExif(blob, { when, tech:settings.name.trim(), labels:[start ? "Job start divider" : "Job end divider"], unlabelled:false, job:jobMeta(j.work ? j : null) }, Z, Z); } catch {}
   const d = when, head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j.ref].filter(Boolean).join(" ");

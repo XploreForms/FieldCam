@@ -1,4 +1,4 @@
-# Field Cam (v3.18.1)
+# Field Cam (v3.18.3)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -96,9 +96,9 @@ When a job's photos are saved, Field Cam also saves two divider cards around the
 - a **green JOB START** card, dated 2 seconds before the job's first photo;
 - an **amber JOB END** card, dated 2 seconds after the job's last photo.
 
-They're built to read at thumbnail size and to be tiny (about 12 KB each, 360 × 360): flat colour,
-a huge START or END, the SA-# large underneath, then work order · platform · time, and "Divider ·
-don't upload". In
+They're built to read at thumbnail size and stay small (1080 × 1080, about 45 KB each): flat colour,
+a huge START or END, the SA-# large underneath, the time (12-hour, e.g. 3:17 PM) and date large in the card's colour, then
+work order · platform and "Divider · don't upload". In
 Photos, Files and FSL's photo picker each job's photos sit between its own two cards: select what's
 inside the brackets. Anything inside without the dark info band (a screenshot, an original from the
 phone's camera app) isn't a Field Cam photo and shouldn't go to FSL. File names
