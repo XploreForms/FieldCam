@@ -650,7 +650,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.18.3";
+const VERSION = "3.18.4";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1440,7 +1440,7 @@ function stampLines(m, live = false) {
 }
 
 /* ================= image pipeline ================= */
-const OUTPUT = { edge:2048, target:496 * 1024 };   // JPEG budget; with the EXIF block the whole file stays under 500 KB
+const OUTPUT = { edge:2048, target:488 * 1024 };   // JPEG budget; with the EXIF block the whole file stays under 500 KB
 // Full quality (per job, HQ button): the camera's full resolution (capped at 4032 px so the square image
 // stays inside iPhone's canvas limit) and light JPEG compression, no size target. Typically 2–5 MB.
 const FULL = { edge:4032, q:0.92 };   // normal photos: 2048 px long edge, best quality under 500 KB
@@ -1857,12 +1857,37 @@ function buildIFD(entries, start, ptrs) {
   return dir.concat(data);
 }
 function ifdSize(entries) { let n = 2 + entries.length * 12 + 4; for (const e of entries) if (!e.ptr && e.bytes.length > 4) n += e.bytes.length + (e.bytes.length % 2); return n; }
+/* Photo metadata = the info band, as text. Same items as the band (labels, SA-#, job, when, GPS, facing/tilt,
+   elevation, zoom, tech, S/N, address, source), written where common apps look for it:
+   EXIF ImageDescription + UserComment (most tools), Windows Title / Subject / Comments / Tags (File Explorer ›
+   Properties › Details), and XMP title / description / keywords (iPhone Photos caption, Lightroom, etc.). */
+function metaText(m) {
+  const k = bandContent(m), labels = k.unl ? "Not labelled yet" : k.labels.join(" + ");
+  const parts = [labels, k.ref, ...k.items.map(([key, val]) => `${key}: ${val}`)].filter(Boolean);
+  return { title:labels, subject:[k.ref, m.job ? jobTitle(m.job) : ""].filter(Boolean).join(" · "), text:parts.join(" | "),
+    keywords:[...(k.unl ? [] : k.labels), k.ref, m.job && byId(JOB_TYPES, m.job.work).name, m.job && platName(m.job), m.job && m.job.outcome && byId(OUTCOMES, m.job.outcome).name, m.job && m.job.reason, "Field Cam"].filter(Boolean) };
+}
+const ucs2 = s => { const out = []; for (const ch of String(s)) { const c = ch.charCodeAt(0); out.push(c & 255, c >> 8); } out.push(0, 0); return out; };   // Windows XP* tags
+const xmlEsc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+function xmpPacket(t) {
+  const x = `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?><x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">`
+    + `<dc:title><rdf:Alt><rdf:li xml:lang="x-default">${xmlEsc(t.title)}</rdf:li></rdf:Alt></dc:title>`
+    + `<dc:description><rdf:Alt><rdf:li xml:lang="x-default">${xmlEsc(t.text)}</rdf:li></rdf:Alt></dc:description>`
+    + `<dc:subject><rdf:Bag>${t.keywords.map(k => `<rdf:li>${xmlEsc(k)}</rdf:li>`).join("")}</rdf:Bag></dc:subject>`
+    + `</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>`;
+  const body = [...new TextEncoder().encode("http://ns.adobe.com/xap/1.0/\0"), ...new TextEncoder().encode(x)];
+  return body.length + 2 > 65535 ? [] : [0xFF, 0xE1, ...u16(body.length + 2), ...body];
+}
 async function addExif(blob, m, w, h) {
   const d = m.when, dt = `${d.getFullYear()}:${pad(d.getMonth()+1)}:${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   const A = (tag, s) => { const b = asciiBytes(s); return { tag, type:2, count:b.length, bytes:b }; };
-  const desc = stampLines(m).map(l => l.t).join(" | ");
+  let mt; try { mt = metaText(m); } catch { const d0 = stampLines(m).map(l => l.t).join(" | "); mt = { title:d0, subject:"", text:d0, keywords:[] }; }
+  const desc = mt.text, X = (tag, s) => { const b = ucs2(s); return { tag, type:1, count:b.length, bytes:b }; };
   const ifd0 = [A(0x010E, desc), A(0x010F, "Field Cam"), A(0x0131, "Field Cam " + VERSION), A(0x0132, dt), { tag:0x8769, type:4, count:1, ptr:"exif" }];
   if (m.tech) ifd0.push(A(0x013B, m.tech));
+  ifd0.push(X(0x9C9B, mt.title), X(0x9C9C, mt.text), X(0x9C9E, mt.keywords.join("; ")));   // Windows Title, Comments, Tags
+  if (mt.subject) ifd0.push(X(0x9C9F, mt.subject));                                          // Windows Subject
+  ifd0.sort((a, b) => a.tag - b.tag);
   const uc = [65,83,67,73,73,0,0,0, ...asciiBytes(desc).slice(0, -1)];
   const exif = [A(0x9003, dt), A(0x9004, dt), A(0x9011, tzOffset(d)), { tag:0x9286, type:7, count:uc.length, bytes:uc },
     { tag:0xA002, type:4, count:1, bytes:u32(w) }, { tag:0xA003, type:4, count:1, bytes:u32(h) }];
@@ -1884,7 +1909,8 @@ async function addExif(blob, m, w, h) {
   const src = new Uint8Array(await blob.arrayBuffer());
   let rest = 2;
   if (src[2] === 0xFF && src[3] === 0xE0) rest = 4 + ((src[4] << 8) | src[5]);
-  return new Blob([new Uint8Array([0xFF,0xD8]), new Uint8Array(app1), src.subarray(rest)], { type:"image/jpeg" });
+  let xmp = []; try { xmp = xmpPacket(mt); } catch {}
+  return new Blob([new Uint8Array([0xFF,0xD8]), new Uint8Array(app1), new Uint8Array(xmp), src.subarray(rest)], { type:"image/jpeg" });
 }
 
 /* ================= EXIF read (imported photos) ================= */
@@ -2231,6 +2257,14 @@ function loadZXing() {
     sc.onload = () => res(!!window.ZXing); sc.onerror = () => { SC.zp = null; res(false); }; document.head.appendChild(sc); });
   return SC.zp;
 }
+function makeZX() {
+  try {
+    const Z = window.ZXing, BF = Z.BarcodeFormat, hints = new Map();
+    hints.set(Z.DecodeHintType.TRY_HARDER, true);
+    hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [BF.CODE_128, BF.CODE_39, BF.CODE_93, BF.EAN_13, BF.UPC_A, BF.ITF, BF.DATA_MATRIX, BF.QR_CODE].filter(x => x !== undefined));
+    SC.reader = new Z.MultiFormatReader(); SC.reader.setHints(hints); return true;
+  } catch { SC.reader = null; return false; }
+}
 async function makeDetector() {
   if (!("BarcodeDetector" in window)) return null;
   try {
@@ -2244,11 +2278,9 @@ async function startScan() {
   hideSnack();
   if (SC.bd === undefined) SC.bd = await makeDetector();
   if (!SC.bd && !SC.reader) {
-    if (!(await loadZXing())) return toast("The scanner didn’t load. Connect to the internet once, then try again.", 3600);
-    const Z = window.ZXing, BF = Z.BarcodeFormat, hints = new Map();
-    hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [BF.CODE_128, BF.CODE_39, BF.CODE_93, BF.EAN_13, BF.UPC_A, BF.ITF, BF.DATA_MATRIX, BF.QR_CODE].filter(x => x !== undefined));
-    SC.reader = new Z.MultiFormatReader(); SC.reader.setHints(hints);
+    if (!(await loadZXing()) || !makeZX()) return toast("The scanner didn’t load. Connect to the internet once, then try again.", 3600);
   }
+  if (SC.bd && !SC.reader) loadZXing().then(ok => { if (ok) makeZX(); });   // backup reader, loaded quietly
   SC.on = true; $("aim").hidden = false; $("scanTop").hidden = false; $("hud").classList.add("scan");
   $("shutter").classList.add("scanmode"); $("shutter").setAttribute("aria-label", "Scan barcode"); $("snBtn").classList.add("on");
   scanMsg("Red line on the <b style=\"font:inherit;color:inherit\">S/N</b> barcode, then tap the red button");
@@ -2259,6 +2291,18 @@ function stopScan() {
 }
 const scanMsg = html => { $("scanMsg").innerHTML = html; };
 const SCV = document.createElement("canvas"), SCG = SCV.getContext("2d", { willReadFrequently:true });
+const SCV2 = document.createElement("canvas"), SCG2 = SCV2.getContext("2d", { willReadFrequently:true });
+function zxRead(cv) {
+  if (!SC.reader) return null;
+  try {
+    const Z = window.ZXing;
+    const r = SC.reader.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(cv))));
+    return String(r.getText() || "").trim() || null;
+  } catch { return null; }
+}
+// Read what's in the red box. The camera feed is very high resolution, so the box is read sharp
+// (up to 2000 px wide, not shrunk to 1000: thin serial barcodes need every pixel), then a closer
+// look at the middle of the box. Built-in reader first where the phone has one, ZXing as well.
 async function readAim() {
   const v = $("video"); if (!v.videoWidth) return null;
   const vr = v.getBoundingClientRect(), ar = $("aim").getBoundingClientRect();   // video rect includes any zoom
@@ -2266,16 +2310,19 @@ async function readAim() {
   const sx = Math.max(0, (ar.left - vr.left) * kx), sy = Math.max(0, (ar.top - vr.top) * ky);
   const sw = Math.min(v.videoWidth - sx, ar.width * kx), sh = Math.min(v.videoHeight - sy, ar.height * ky);
   if (sw < 10 || sh < 10) return null;
-  const k = Math.min(1, 1000 / sw); SCV.width = Math.round(sw * k); SCV.height = Math.round(sh * k);
+  const k = Math.min(1, 2000 / sw); SCV.width = Math.round(sw * k); SCV.height = Math.round(sh * k);
   SCG.drawImage(v, sx, sy, sw, sh, 0, 0, SCV.width, SCV.height);
-  try {
-    if (SC.bd) { const r = await SC.bd.detect(SCV); return r && r.length ? String(r[0].rawValue || "").trim() || null : null; }
-    const Z = window.ZXing;
-    const r = SC.reader.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(SCV))));
-    return String(r.getText() || "").trim() || null;
-  } catch { return null; }
+  if (SC.bd) { try { const r = await SC.bd.detect(SCV); if (r && r.length) { const t = String(r[0].rawValue || "").trim(); if (t) return t; } } catch {} }
+  let t = zxRead(SCV); if (t) return t;
+  // closer look: middle 60% of the box at full camera resolution
+  const cw = sw * 0.6, cx = sx + sw * 0.2, k2 = Math.min(1, 2000 / cw);
+  SCV2.width = Math.round(cw * k2); SCV2.height = Math.round(sh * k2);
+  SCG2.drawImage(v, cx, sy, cw, sh, 0, 0, SCV2.width, SCV2.height);
+  if (SC.bd) { try { const r = await SC.bd.detect(SCV2); if (r && r.length) { const t2 = String(r[0].rawValue || "").trim(); if (t2) return t2; } } catch {} }
+  return zxRead(SCV2);
 }
 function aimFlash(cls) { const a = $("aim"); a.classList.remove("hit", "miss"); void a.offsetWidth; a.classList.add(cls); setTimeout(() => a.classList.remove(cls), 700); }
+const v0w = () => { const v = $("video"); return v.videoWidth + "×" + v.videoHeight; };
 // The shutter is the Scan button while scanning: tries for up to 2 s, then adds the serial straight away
 async function scanOnce() {
   if (SC.busy || !SC.on) return; SC.busy = true;
@@ -2284,7 +2331,7 @@ async function scanOnce() {
   while (!text && Date.now() < end && SC.on) { text = await readAim(); if (!text) await sleep(90); }
   SC.busy = false; sh.classList.remove("busy"); if (!SC.on) return;
   const fail = (msg, sub) => { aimFlash("miss"); try { navigator.vibrate && navigator.vibrate([30, 60, 30]); } catch {} scanMsg(`<span class="bad">${msg}</span>`); };
-  if (!text) return fail("No barcode read. Move closer or zoom in, then tap again.");
+  if (!text) return fail(`No barcode read. Fill the box with the barcode (about a hand’s width away, or zoom 2×), keep still, tap again. <small style="opacity:.6">[${SC.bd ? "built-in" + (SC.reader ? " + ZXing" : "") : SC.reader ? "ZXing" : "no reader"} · ${v0w()}]</small>`);
   const code = snKey(text), j = curJob();
   if (snIsMac(code)) return fail("That’s the MAC address. Scan the S/N barcode.");
   if ((j.serials || []).some(x => x.code === code)) return fail(`<b>${esc(code)}</b> is already on this job.`);

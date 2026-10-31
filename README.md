@@ -1,4 +1,4 @@
-# Field Cam (v3.18.3)
+# Field Cam (v3.18.4)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -125,7 +125,10 @@ to Cannot Complete or Not Required the scanner hides and the serials come off th
 kept in case it changes back).
 
 Scanning uses the phone's own barcode reader on Android and the ZXing library on iPhone (loaded from
-the jsDelivr CDN and kept for offline use by the service worker, the same as Stock Tracker).
+the jsDelivr CDN and kept for offline use by the service worker, the same as Stock Tracker); where the
+phone has its own reader, ZXing backs it up. The box is read at the camera's full sharpness (up to 2000 px
+wide) plus a closer look at its middle, so thin serial barcodes read. If nothing reads, fill the box with
+the barcode (about a hand's width away, or zoom 2×) and keep still. The strip shows which reader is in use.
 
 ## Auto-cleanup
 Field Cam keeps its own copy of every photo (for re-labelling and saving again). Once a photo has
@@ -138,6 +141,19 @@ current job's photos are never cleared. The number of days is `CLEAN_DAYS` in `i
 A short buzz when a line-of-sight shot becomes level, so the tech doesn't have to watch the screen.
 A small wobble at the edge doesn't re-buzz. Warnings (blurry or dark photo, shot blocked) still give
 a double buzz; normal shots don't vibrate. iPhones don't let web apps vibrate.
+
+## Photo metadata
+Everything on the info band is also written into the photo file, so it's searchable and survives if
+the band is cropped:
+- **EXIF:** date/time taken, GPS (latitude, longitude, elevation, accuracy), compass direction, tech
+  (Artist), and the full band text in ImageDescription and UserComment.
+- **Windows** (File Explorer › Properties › Details): Title = labels, Subject = SA-# · job,
+  Comments = full band text, Tags = labels, SA-#, work order, platform, outcome, reason.
+- **XMP** (iPhone/Mac Photos caption and keywords, Lightroom, etc.): title, description, keywords.
+
+The band text reads like:
+`Cable Run + Surge | SA-123456 | Job: Install · Fixed Wireless · Complete | When: … | GPS: … |
+Facing: 264° W · tilt +2.0° | Tech: … | S/N: … | Address: …`
 
 ## Info band
 Every saved image has the same layout: a 4:3 photo area (camera photos fill it; imports are scaled
