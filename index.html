@@ -108,13 +108,19 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .aim.hit{border-color:var(--signal)} .aim.hit i{background:var(--signal);box-shadow:0 0 6px var(--signal)}
 .aim.miss{border-color:var(--warn)}
 .hud.scan .tiltbox,.hud.scan .zeroline,.hud.scan .reticle{display:none}
-.scanbar{position:absolute;left:10px;right:10px;bottom:10px;z-index:6;display:grid;gap:8px;padding:10px;border-radius:14px;background:rgba(10,18,17,.92);border:1px solid var(--line)}
-.scanmsg{font-size:14px;line-height:1.35}
-.scanmsg b{font:700 16px var(--mono);color:var(--signal);word-break:break-all}
-.scanmsg small{display:block;color:var(--muted);font-size:12.5px}
-.scanmsg .bad{color:var(--warn)}
-.scanbtns{display:flex;gap:8px}.scanbtns .btn{flex:1;min-height:46px}
-.vf.scanning .zoombar{bottom:auto;top:10px}
+.scantop{position:absolute;left:10px;right:66px;top:10px;z-index:6;display:flex;align-items:center;gap:8px;padding:5px 5px 5px 12px;border-radius:12px;background:rgba(10,18,17,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:13px;line-height:1.3}
+.scantop span{flex:1;min-width:0}
+.scantop b{font:700 13px var(--mono);color:var(--signal);word-break:break-all}
+.scantop .bad{color:var(--warn)}
+.scantop .btn{flex:none;min-height:34px}
+.shutter .scanic{display:none;width:34px;height:34px;color:#fff}
+.shutter.scanmode{border-color:#FF4B3E}
+.shutter.scanmode i{display:none}
+.shutter.scanmode .scanic{display:block}
+.shutter.scanmode{background:#FF4B3E}
+.shutter.scanmode.busy{animation:pulse .9s infinite}
+.vfctl button.on{background:var(--accent);color:var(--ink)}
+html[data-text="large"] .scantop,html[data-text="large"] .scantop b{font-size:15.5px}
 .snlist{display:grid;gap:6px}
 .snlist .sn{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:10px;background:var(--ink-3)}
 .snlist .sn div{flex:1;min-width:0}
@@ -477,18 +483,18 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <button id="torchBtn" aria-label="Flashlight" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></button>
     </div>
     <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
-    <div class="scanbar" id="scanBar" hidden><div class="scanmsg" id="scanMsg"></div><div class="scanbtns"><button class="btn" id="scanCancel">Done</button><button class="btn" id="scanRetry" hidden>Rescan</button><button class="btn primary" id="scanGo">Scan</button><button class="btn primary" id="scanAdd" hidden>Add</button></div></div>
+    <div class="scantop" id="scanTop" hidden><span id="scanMsg"></span><button class="btn sm" id="scanCancel">Done</button></div>
     <div class="notebar" id="otherBar" hidden><input id="inOther" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="What is this photo of?"><button class="btn" id="otherCancel">Cancel</button><button class="btn primary" id="otherDone">Use</button></div>
     <div class="snack" id="snack" aria-live="polite"><img id="snImg" alt=""><div><b id="snTitle"></b><span id="snText"></span></div><button class="btn" id="snRetake">Retake</button><button class="btn" id="snAct">Change</button></div>
     <div class="flash" id="flash"></div>
   </div>
 
   <div class="deck">
-    <div class="lhead"><button class="btn sm outbtn" id="outBtn" hidden></button><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="btn sm newbtn" id="newBtn" aria-label="New job or start over">New job</button></div>
+    <div class="lhead"><button class="btn sm outbtn" id="outBtn" hidden></button><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="btn sm newbtn" id="newBtn" aria-label="New job or start over">New Job</button></div>
     <div class="lgrid" id="lGrid" role="group" aria-label="Photo label"></div>
     <div class="row">
       <button class="thumbbtn" id="galBtn" aria-label="Open this job's photos"><span class="badge" id="galCount"></span></button>
-      <button class="shutter" id="shutter" aria-label="Take photo"><i></i></button>
+      <button class="shutter" id="shutter" aria-label="Take photo"><i></i><svg class="scanic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M8 8v8M11 8v8M14 8v8M17 8v8"/></svg></button>
       <button class="dlbtn" id="dlBtn" aria-label="Save new photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 20h16"/></svg><span class="badge" id="dlCount"></span></button>
     </div>
   </div>
@@ -507,10 +513,10 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div class="picker" id="sheetOutcome"></div>
     <div id="snBlock" hidden><label>Serial numbers (stamped on this job’s photos)</label><div id="snList" class="snlist"></div></div>
     <p class="hint" id="jobEditHint"></p>
-    <div class="btnrow"><button class="btn primary" id="finishBtn">Start a new job</button><button class="btn danger" id="cancelJobBtn">Cancel this job</button></div>
+    <div class="btnrow"><button class="btn primary" id="finishBtn">Start a New Job</button><button class="btn danger" id="cancelJobBtn">Cancel this job</button></div>
     <div class="warnbox" id="cancelConfirm" hidden>
       <p id="cancelMsg"></p>
-      <div class="btnrow"><button class="btn danger" id="cancelYes">Delete and start over</button><button class="btn" id="cancelNo">Keep this job</button></div>
+      <div class="btnrow"><button class="btn danger" id="cancelYes">Delete and Start Over</button><button class="btn" id="cancelNo">Keep this job</button></div>
     </div>
     <div class="warnbox" id="finishConfirm" hidden>
       <div id="finishMsg" style="display:grid;gap:6px"></div>
@@ -539,18 +545,18 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <!-- New job / start over: one tap from the camera screen -->
 <section class="sheet" id="newSheet" aria-label="New job">
-  <header><h2>New job</h2><button class="btn" data-close>Cancel</button></header>
+  <header><h2>New Job</h2><button class="btn" data-close>Cancel</button></header>
   <div class="body">
     <div id="newMsg" style="display:grid;gap:8px"></div>
     <div class="btnrow" style="flex-direction:column">
       <button class="btn warn big" id="newLabel" hidden>Label photos first</button>
-      <button class="btn primary big" id="newSave" hidden>Save photos, then start new job</button>
-      <button class="btn primary big" id="newGo">Start new job</button>
-      <button class="btn danger" id="newOver">Start over (delete this job’s photos)</button>
+      <button class="btn primary big" id="newSave" hidden>Save Photos, Then Start New Job</button>
+      <button class="btn primary big" id="newGo">Start New Job</button>
+      <button class="btn danger" id="newOver">Start Over (delete this job’s photos)</button>
     </div>
     <div class="warnbox" id="newOverConfirm" hidden>
       <p id="newOverMsg"></p>
-      <div class="btnrow"><button class="btn danger" id="newOverYes">Delete and start over</button><button class="btn" id="newOverNo">Keep them</button></div>
+      <div class="btnrow"><button class="btn danger" id="newOverYes">Delete and Start Over</button><button class="btn" id="newOverNo">Keep them</button></div>
     </div>
   </div>
 </section>
@@ -560,7 +566,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   <header><h2 id="doneTitle">All photos saved ✓</h2></header>
   <div class="body">
     <p class="hint" id="doneMsg"></p>
-    <div class="btnrow" style="flex-direction:column"><button class="btn primary big" id="doneNext">Start next job</button><button class="btn" id="doneKeep">Keep shooting</button></div>
+    <div class="btnrow" style="flex-direction:column"><button class="btn primary big" id="doneNext">Start Next Job</button><button class="btn" id="doneKeep">Keep shooting</button></div>
   </div>
 </section>
 
@@ -573,7 +579,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.16.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.16.2 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -635,7 +641,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div class="picker" id="startPicker"></div>
     <div><label>Outcome <span style="text-transform:none;letter-spacing:0">(optional, can be set later)</span></label><button type="button" class="btn startout" id="startOutBtn" disabled>Select later</button></div>
     <div class="install" id="installTip" hidden></div>
-    <div class="startbar"><p class="err" id="startErr" hidden></p><button class="btn primary big" id="startBtn">Start job</button></div>
+    <div class="startbar"><p class="err" id="startErr" hidden></p><button class="btn primary big" id="startBtn">Start Job</button></div>
   </div>
 </div>
 
@@ -644,7 +650,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.16.0";
+const VERSION = "3.16.2";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1295,7 +1301,8 @@ const measureVf = () => {
   const f = $("frame"); f.style.width = W + "px"; f.style.height = H + "px";
   const zc = $("zclip"); zc.style.width = W + "px"; zc.style.height = H + "px";
   const bar = Math.round((H0 - H) / 2), ctl = document.querySelector(".vfctl");
-  if (ctl) ctl.style.top = (bar + 12) + "px";   // HQ + flashlight stay in the picture's top-right corner
+  if (ctl) ctl.style.top = (bar + 12) + "px";
+  const st0 = $("scanTop"); if (st0) st0.style.top = (bar + 12) + "px";   // HQ + flashlight stay in the picture's top-right corner
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, { w0, h0 } = capArea(vw, vh);
   const k = Math.max(W / w0, H / h0);   // fill the whole viewfinder edge to edge (like object-fit: cover on the 4:3 area)
   v.style.width = (vw * k).toFixed(1) + "px"; v.style.height = (vh * k).toFixed(1) + "px";
@@ -1768,7 +1775,7 @@ $("shutter").addEventListener("pointerdown", () => {
   pressT = setTimeout(() => { pressFired = true; $("shutter").classList.remove("hold"); capture(true); }, 800);
 });
 ["pointerup", "pointerleave", "pointercancel"].forEach(ev => $("shutter").addEventListener(ev, () => { clearTimeout(pressT); $("shutter").classList.remove("hold"); }));
-$("shutter").addEventListener("click", () => { if (pressFired) { pressFired = false; return; } if (SC.on) { if (!$("scanGo").hidden) $("scanGo").click(); return; } capture(false); });
+$("shutter").addEventListener("click", () => { if (pressFired) { pressFired = false; return; } if (SC.on) { scanOnce(); return; } capture(false); });
 $("shutter").addEventListener("contextmenu", e => e.preventDefault());
 
 /* After each shot: a small note that fades by itself. Never blocks the next shot.
@@ -2166,16 +2173,15 @@ async function startScan() {
     hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [BF.CODE_128, BF.CODE_39, BF.CODE_93, BF.EAN_13, BF.UPC_A, BF.ITF, BF.DATA_MATRIX, BF.QR_CODE].filter(x => x !== undefined));
     SC.reader = new Z.MultiFormatReader(); SC.reader.setHints(hints);
   }
-  SC.on = true; $("aim").hidden = false; $("scanBar").hidden = false; vfEl.classList.add("scanning"); $("hud").classList.add("scan");
-  scanRow(`Put the red line across the <b style="font:inherit;color:inherit">S/N</b> barcode, then tap Scan.<small>Pinch to zoom in on small labels. The flashlight helps in dark spots.</small>`);
+  SC.on = true; $("aim").hidden = false; $("scanTop").hidden = false; $("hud").classList.add("scan");
+  $("shutter").classList.add("scanmode"); $("shutter").setAttribute("aria-label", "Scan barcode"); $("snBtn").classList.add("on");
+  scanMsg("Red line on the <b style=\"font:inherit;color:inherit\">S/N</b> barcode, then tap the red button");
 }
 function stopScan() {
-  SC.on = false; SC.pending = null; $("aim").hidden = true; $("scanBar").hidden = true; vfEl.classList.remove("scanning"); $("hud").classList.remove("scan");
+  SC.on = false; SC.busy = false; $("aim").hidden = true; $("scanTop").hidden = true; $("hud").classList.remove("scan");
+  const sh = $("shutter"); sh.classList.remove("scanmode", "busy"); sh.setAttribute("aria-label", "Take photo"); $("snBtn").classList.remove("on");
 }
-function scanRow(html) {
-  SC.pending = null; $("scanMsg").innerHTML = html;
-  $("scanGo").hidden = false; $("scanGo").disabled = false; $("scanGo").textContent = "Scan"; $("scanAdd").hidden = true; $("scanRetry").hidden = true;
-}
+const scanMsg = html => { $("scanMsg").innerHTML = html; };
 const SCV = document.createElement("canvas"), SCG = SCV.getContext("2d", { willReadFrequently:true });
 async function readAim() {
   const v = $("video"); if (!v.videoWidth) return null;
@@ -2193,30 +2199,24 @@ async function readAim() {
     return String(r.getText() || "").trim() || null;
   } catch { return null; }
 }
-function aimFlash(cls) { const a = $("aim"); a.classList.remove("hit", "miss"); void a.offsetWidth; a.classList.add(cls); setTimeout(() => a.classList.remove(cls), 600); }
-$("scanGo").addEventListener("click", async () => {
+function aimFlash(cls) { const a = $("aim"); a.classList.remove("hit", "miss"); void a.offsetWidth; a.classList.add(cls); setTimeout(() => a.classList.remove(cls), 700); }
+// The shutter is the Scan button while scanning: tries for up to 2 s, then adds the serial straight away
+async function scanOnce() {
   if (SC.busy || !SC.on) return; SC.busy = true;
-  $("scanGo").disabled = true; $("scanGo").textContent = "Reading…"; $("scanMsg").innerHTML = "Hold steady…";
+  const sh = $("shutter"); sh.classList.add("busy"); scanMsg("Reading… hold steady");
   let text = null; const end = Date.now() + 2000;
   while (!text && Date.now() < end && SC.on) { text = await readAim(); if (!text) await sleep(90); }
-  SC.busy = false; if (!SC.on) return;
-  if (!text) { aimFlash("miss"); return scanRow(`<span class="bad">No barcode under the red line.</span><small>Move closer or zoom in, keep it steady, then tap Scan again.</small>`); }
+  SC.busy = false; sh.classList.remove("busy"); if (!SC.on) return;
+  const fail = (msg, sub) => { aimFlash("miss"); try { navigator.vibrate && navigator.vibrate([30, 60, 30]); } catch {} scanMsg(`<span class="bad">${msg}</span>`); };
+  if (!text) return fail("No barcode read. Move closer or zoom in, then tap again.");
   const code = snKey(text), j = curJob();
-  if (snIsMac(code)) { aimFlash("miss"); return scanRow(`<span class="bad">That’s the MAC address barcode.</span><small>Scan the serial number (S/N) instead.</small>`); }
-  if ((j.serials || []).some(x => x.code === code)) { aimFlash("miss"); return scanRow(`<b>${esc(code)}</b><small>Already added to this job.</small>`); }
-  aimFlash("hit");
+  if (snIsMac(code)) return fail("That’s the MAC address. Scan the S/N barcode.");
+  if ((j.serials || []).some(x => x.code === code)) return fail(`<b>${esc(code)}</b> is already on this job.`);
   const item = snItem(code);
-  SC.pending = { code, item };
-  $("scanMsg").innerHTML = `<b>${esc(code)}</b><small>${item ? esc(item) : "Item not recognised (it’ll still be stamped)"}</small>`;
-  $("scanGo").hidden = true; $("scanAdd").hidden = false; $("scanRetry").hidden = false;
-});
-$("scanRetry").addEventListener("click", () => scanRow("Put the red line across the S/N barcode, then tap Scan."));
-$("scanAdd").addEventListener("click", () => {
-  const j = curJob(); if (!j || !SC.pending) return;
-  j.serials = [...(j.serials || []), SC.pending];
-  const p = SC.pending; jobChanged();
-  scanRow(`Added <b>${esc(p.code)}</b>${p.item ? " · " + esc(p.item) : ""}<small>Scan another, or tap Done. It’s stamped on this job’s photos.</small>`);
-});
+  j.serials = [...(j.serials || []), { code, item }]; jobChanged();
+  aimFlash("hit"); try { navigator.vibrate && navigator.vibrate(40); } catch {}
+  scanMsg(`Added <b>${esc(code)}</b>${item ? " · " + esc(item) : ""}. Scan another or tap Done`);
+}
 $("scanCancel").addEventListener("click", stopScan);
 $("snBtn").addEventListener("click", () => SC.on ? stopScan() : startScan());
 function renderSerials() {
@@ -2661,7 +2661,7 @@ function openNewSheet() {
   $("newMsg").innerHTML = msgs.join("");
   $("newLabel").hidden = !unl;
   $("newSave").hidden = !und || !!unl;
-  $("newGo").textContent = und ? "Start new job without saving" : "Start new job";
+  $("newGo").textContent = und ? "Start New Job Without Saving" : "Start New Job";
   $("newGo").className = und ? "btn big" : "btn primary big";
   $("newOver").hidden = !ps.length;
   $("newOverConfirm").hidden = true;
@@ -2741,7 +2741,7 @@ function showStart() {
   $("inRef").value = "";
   renderJobPicker($("startPicker"), startSel, () => { $("startErr").hidden = true; drawStartOut(); });
   drawStartOut();
-  $("startBtn").textContent = j ? "Start new job" : "Start job";
+  $("startBtn").textContent = j ? "Start New Job" : "Start Job";
   $("startBtn").className = j ? "btn big" : "btn primary big";
   $("startErr").hidden = true;
   $("start").hidden = false;

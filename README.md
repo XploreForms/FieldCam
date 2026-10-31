@@ -1,4 +1,4 @@
-# Field Cam (v3.16.0)
+# Field Cam (v3.16.2)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -64,11 +64,11 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
    Tap a gallery photo to view it full screen; **swipe left/right** (or the arrows) to flip
    through the job's photos, pinch or double-tap to zoom. Save or Delete applies to the photo shown.
    When every photo in the job is saved and nothing the form needs is missing, the app offers
-   **Start next job** (or Keep shooting).
+   **Start Next Job** (or Keep shooting).
 5. In FSL, attach the photos from Photos or Files.
-6. **New job** (the + button just above the photo tiles): shows what's still unlabelled or unsaved,
-   then **Save photos, then start new job**, **Start new job** (unsaved photos stay on the phone under
-   Previous jobs) or **Start over** (wrong job picked etc.: deletes this job's photos after confirming
+6. **New Job** (the + button just above the photo tiles): shows what's still unlabelled or unsaved,
+   then **Save Photos, Then Start New Job**, **Start New Job** (unsaved photos stay on the phone under
+   Previous jobs) or **Start Over** (wrong job picked etc.: deletes this job's photos after confirming
    and goes back to the start screen). The same options are also in the job sheet (tap the job name).
 
 Previous jobs stay on the phone (gallery › Previous jobs) until deleted.
@@ -93,11 +93,13 @@ can't be read, long-press the box and paste as usual.
 
 ## Serial numbers (Complete jobs)
 On Complete jobs (or before the outcome is picked) a barcode button sits under HQ in the picture's
-top-right corner. Tap it, put the red line across the equipment's **S/N** barcode, and tap **Scan**
-(or the shutter). Field Cam reads it, names the item when it recognises the serial pattern (same
-list as Stock Tracker: Adtran router/extender, Nokia/Adtran ONTs, 5G and LTE CPEs, Hughes and
-SurfBeam modems and radios, Zyxel, set-top boxes), and **Add** puts it on the job. Scan as many as
-needed, then **Done**. MAC address barcodes and repeats are caught.
+top-right corner. Tap it: a red line appears in the picture and the shutter turns into a red
+**scan** button. Put the red line across the equipment's **S/N** barcode and tap the red button.
+Field Cam reads it and adds it to the job straight away, naming the item when it recognises the
+serial pattern (same list as Stock Tracker: Adtran router/extender, Nokia/Adtran ONTs, 5G and LTE
+CPEs, Hughes and SurfBeam modems and radios, Zyxel, set-top boxes). A slim strip at the top of the
+picture shows what was added. Scan as many as needed, then **Done** (or the barcode button again) and
+the shutter takes photos again. MAC address barcodes and repeats are caught.
 
 Scanned serials are stamped on every photo in the job as an **S/N** row, only while the outcome is
 Complete. They're listed in the job sheet (tap the job name) with **Remove**. If the outcome changes
