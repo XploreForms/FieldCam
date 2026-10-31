@@ -579,7 +579,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.16.2 · compass corrected to true north when there’s a GPS fix</p>
+    <div class="btnrow" style="align-items:center"><p class="stats" style="flex:1;margin:0">Field Cam v<span id="verTxt"></span> · compass corrected to true north when there’s a GPS fix</p><button class="btn sm" id="updCheck" style="flex:none">Check for updates</button></div>
   </div>
 </section>
 
@@ -646,11 +646,11 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="updbar" id="updBar" hidden><span>New version of Field Cam ready</span><button class="btn sm primary" id="updGo">Update</button></div>
+<div class="updbar" id="updBar" hidden><span id="updTxt">New version of Field Cam ready</span><button class="btn sm primary" id="updGo">Update</button></div>
 
 <script>
 "use strict";
-const VERSION = "3.16.2";
+const VERSION = "3.16.3";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -2818,26 +2818,57 @@ window.addEventListener("popstate", () => {
 /* Updates: the service worker fetches new files in the background. When a new version has taken over,
    offer a one-tap reload instead of running the old copy until the app is fully closed.
    Also checks for a new version whenever the app comes back to the foreground. */
+/* Updates. Two checks, so a new upload is noticed within minutes:
+   1) the service worker update (the normal way), and
+   2) reading the VERSION line straight from the live index.html with a cache-busting address, which skips
+      GitHub Pages' ~10 min server cache. Either one shows the "New version ready" bar. */
+let swReg = null, updShown = false;
+const verNum = v => String(v || "").split(".").map(n => parseInt(n, 10) || 0);
+const newer = (a, b) => { const x = verNum(a), y = verNum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+function showUpdate(v) {
+  if (updShown) return; updShown = true;
+  $("updTxt").textContent = v ? `Field Cam ${v} is ready` : "New version of Field Cam ready";
+  $("updBar").hidden = false;
+}
+async function liveVersion() {
+  try {
+    const r = await fetch(`index.html?check=${Date.now()}`, { cache:"no-store" });
+    if (!r.ok) return null;
+    const m = (await r.text()).match(/const VERSION = "([\d.]+)"/);
+    return m ? m[1] : null;
+  } catch { return null; }
+}
+async function checkForUpdate(manual) {
+  if (!navigator.onLine) { if (manual) toast("No connection. Try again when you have signal."); return; }
+  if (swReg) swReg.update().catch(() => {});
+  const v = await liveVersion();
+  if (v && newer(v, VERSION)) showUpdate(v);
+  else if (manual) toast(v ? `You’re on the newest version (${VERSION}).` : "Couldn’t reach the Field Cam site. Try again later.", 2600);
+}
 function setupUpdates() {
   const sw = navigator.serviceWorker, had = !!sw.controller;
-  sw.register("sw.js").then(reg => {
-    const check = () => { if (document.visibilityState === "visible" && navigator.onLine) reg.update().catch(() => {}); };
-    document.addEventListener("visibilitychange", check);
-    window.addEventListener("online", check);
-    setInterval(check, 30 * 60 * 1000);
-  }).catch(() => {});
-  sw.addEventListener("controllerchange", () => { if (had) $("updBar").hidden = false; });
+  sw.register("sw.js").then(reg => { swReg = reg; }).catch(() => {});
+  sw.addEventListener("controllerchange", () => { if (had) showUpdate(); });
+  const check = () => { if (document.visibilityState === "visible") checkForUpdate(false); };
+  document.addEventListener("visibilitychange", check);
+  window.addEventListener("online", check);
+  setInterval(check, 15 * 60 * 1000);
+  setTimeout(check, 4000);                     // shortly after opening
 }
+$("updCheck").addEventListener("click", () => checkForUpdate(true));
 $("updGo").addEventListener("click", async () => {
-  $("updGo").disabled = true;
+  $("updGo").disabled = true; $("updTxt").textContent = "Updating…";
   while (S.busy) await sleep(200);           // never interrupt a photo being saved
   await renderQ.catch(() => {});             // or a stamp being redrawn
+  try { if (swReg) await swReg.update(); } catch {}
+  try { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } catch {}   // app files only; photos live elsewhere
   location.reload();
 });
 (async function boot() {
   if (!standalone && !settings.name.trim()) { $("installTip").hidden = false; $("installTip").textContent = installText(); }
   $("installHelp").textContent = installText();
   $("saveHint").textContent = SAVE_HINT;
+  $("verTxt").textContent = VERSION;
   try { await DB.open(); S.photos = (await DB.all()).sort((a, b) => b.created - a.created); }
   catch { toast("Photo storage is unavailable in this browser mode.", 4000); }
   if (current && !jobs[current.id]) current = null;

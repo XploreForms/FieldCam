@@ -1,4 +1,4 @@
-# Field Cam (v3.16.2)
+# Field Cam (v3.16.3)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -253,7 +253,13 @@ other label the tilt is just a small number and the stamp records the value only
 - Location, time and direction are also written into the JPEG metadata.
 
 ## Updating
-Edit files, bump `VERSION` in `sw.js` and `index.html`, upload. The app checks for a new version
-whenever it's opened or brought back to the front with signal. When one has downloaded, a bar
-says **New version of Field Cam ready · Update**; tapping it reloads (it waits for any photo being
-saved). Photos and the current job are kept.
+Edit files, bump `VERSION` in `sw.js` and `index.html` (same number), upload all changed files.
+
+The app checks for a new version a few seconds after it opens, whenever it's brought back to the
+front, and every 15 minutes, all with signal. It reads the version straight from the live site with
+an address that skips GitHub Pages' ~10 minute server cache, so a new upload is noticed within a
+couple of minutes (GitHub Pages itself takes about a minute to publish). A bar then says
+**Field Cam 3.x.x is ready · Update**; tapping it waits for any photo being saved, clears the old
+app files (never photos) and reloads. Photos and the current job are kept.
+
+**Settings › Check for updates** does the same check on demand and shows the version in use.
