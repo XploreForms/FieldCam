@@ -1,4 +1,4 @@
-# Field Cam (v3.9.0)
+# Field Cam (v3.12.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -33,13 +33,14 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
    **Same spot every time:** every platform and every Not Required reason keep
    the same position whatever the work order or platform. Options that don't apply are greyed out
    instead of removed, so techs can tap from memory. The XTV/XWH/XWR row only appears when VAS is picked.
-   **The outcome comes later**, once the tech knows it: tap the job name at the top and pick
-   **Complete / Cannot Complete / Not Required** (plus the reason for Not Required: on Fixed
-   Wireless Signal Requirements Not Met, Stop Sell Area, Not in Coverage Area, NLOS; on Satellite,
-   Satellite NLOS; any platform, Unrelated to Signal). Until it's picked, the header shows an amber
-   **Outcome?** tag and the Complete photo list is used. Changing it switches the photo list and
-   redraws the info band on photos not saved yet; photos keep their labels. Saving asks for the
-   outcome first if it hasn't been picked.
+   **Outcome: now or later.** If the tech already knows it, the start screen has an optional
+   **Outcome** button under Platform (same one-tap list, plus "Select later"). Otherwise it comes later,
+   once the tech knows it: tap the amber **Set outcome** button just
+   above the photo tiles (in thumb reach; it shows the chosen outcome afterwards) and tap the final outcome. It's one list, one tap: **Complete**, then each
+   **Cannot Complete** reason and each **Not Required** reason as its own button, each showing how
+   many listed photos it has (blank when there are none listed). Until it's picked, the Complete photo list is used. Changing it switches the
+   photo list and redraws the info band on photos not saved yet; photos keep their labels. Saving
+   asks for the outcome first if it hasn't been picked, then carries straight on.
 3. **Labels: pick first, or shoot first.** Every checklist item for the form shows as a tile under
    the viewfinder (items still needed have an amber edge; done ones show ✓ and a count). There is
    no set order and the shutter always works.
@@ -66,9 +67,10 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
    When every photo in the job is saved and nothing the form needs is missing, the app offers
    **Start next job** (or Keep shooting).
 5. In FSL, attach the photos from Photos or Files.
-6. Tap the job name at the top (▾) → **Start a new job** (keeps this job's photos under
-   Previous jobs) or **Cancel this job** (wrong form picked etc.: deletes its photos after
-   confirming and goes back to the start screen).
+6. **New job** (the + button just above the photo tiles): shows what's still unlabelled or unsaved,
+   then **Save photos, then start new job**, **Start new job** (unsaved photos stay on the phone under
+   Previous jobs) or **Start over** (wrong job picked etc.: deletes this job's photos after confirming
+   and goes back to the start screen). The same options are also in the job sheet (tap the job name).
 
 Previous jobs stay on the phone (gallery › Previous jobs) until deleted.
 
@@ -87,9 +89,9 @@ Names are built at save time, so they follow the SA-# and labels as last set.
 Every saved image has the same layout: a 4:3 photo area (camera photos fill it; imports are scaled
 to fit, centred) and the band below it. Band: label(s) in green with the SA-# at the right end of
 the same row, then two equal columns split by a thin centre line. Left: time, GPS, facing and
-elevation, address. Right: job type, tilt, tech, note. The text is measured before drawing: it shrinks
+elevation, address. Right: job type, tilt, tech. The text is measured before drawing: it shrinks
 a little or wraps a long item rather than cutting it off, and the block is centred with equal space
-above and below. Only an extremely long note gets cut with "…".
+above and below. Only an extremely long address or label gets cut with "…".
 
 ## Outcomes, reasons and photo lists
 These live in the `SETUP` and `PHOTOS` block at the top of the script in `index.html` (between
@@ -104,10 +106,11 @@ Ask Claude to "apply the outcomes / photo lists"; it reads both tools and regene
 `tools/build_config.py`.
 
 How it behaves in the app:
-- Cannot Complete and Not Required ask for a reason when that platform has reasons (one reason is
-  picked automatically; none means no question). The reason shows on the info band and in the header.
-- Until the outcome (and reason) is picked, the Complete photo list is shown and the header has an
-  amber **Outcome?** tag. Saving asks for it first.
+- The outcome picker is a single list: Complete, then every Cannot Complete and Not Required reason
+  for that platform as its own button (an outcome with no reasons is one button). One tap sets both
+  outcome and reason. The reason shows on the info band and in the header.
+- Until the outcome (and reason) is picked, the Complete photo list is shown and the button above the
+  tiles reads **Set outcome** in amber. Saving asks for it first.
 - Required photos count toward progress and the missing-photo check; optional ones are offered
   only. "Other" is always available. Photos keep their labels when the outcome changes.
 
@@ -122,8 +125,7 @@ How it behaves in the app:
   shows in the after-shot note with a **Retake** button (5 s, never blocks the shutter) and stays
   as a **!** badge on the gallery tile and in the sorter. Thresholds (`BLUR_MIN`, `DARK_MAX` in `index.html`) were set on test images;
   adjust after field use if it warns too often or not enough.
-- **Note:** the pencil button (right of "Next photo: …", above the labels) adds a note to the next
-  photo (stamped as `Note: …`), then clears. It turns green while a note is waiting.
+- **Anything not on the list:** use the **Other…** tile and type what the photo is of.
 - **Import:** gallery › **Import from photo library** (e.g. an eCoverage screenshot). Imports get the
   label picked at the time, or go to To label.
 
@@ -144,7 +146,7 @@ taken afterwards, not ones already taken.
   label is picked; otherwise it updates 4 times a second.
 
 ## Back button (Android)
-Back closes whatever is open (a sheet, the photo viewer, the sorter, the note box) one layer at a
+Back closes whatever is open (a sheet, the photo viewer, the sorter, the Other box) one layer at a
 time. With nothing open, the first back shows "Press back again to close Field Cam"; a second back
 within a couple of seconds leaves. iPhones have no back button.
 
@@ -164,6 +166,9 @@ Kept clear on purpose: just the picture, a small zoom pill along its bottom edge
 the phone is sideways) and the flashlight in the top-right corner when the phone has one. Time, GPS
 and address aren't shown live (they're stamped on every photo; the GPS dot in the top bar shows
 whether there's a fix: green good, amber fair, red none). Line-of-sight shots add the tilt readout, the centre ring and the 0° line.
+- **Viewfinder crop:** the picture fills the screen width but is never cropped narrower than a
+  square; on tall phones the extra space above and below is black. The saved photo is always the
+  full 4:3 frame.
 - **Saving checks:** every photo must be labelled before it can be saved; tapping Save with
   unlabelled photos opens the sorter, and saving carries on once they're labelled. If any photo
   the form needs hasn't been taken, Save lists them first: **Take them now** or **Save anyway**.

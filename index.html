@@ -102,6 +102,7 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .zeroline span{position:absolute;left:calc(39vmin + 6px);top:-8px;font:600 11px var(--sans);color:rgba(255,255,255,.92);white-space:nowrap}
 .hud.lvl .zeroline i{background:var(--signal)}
 .hud.lvl .zeroline span{color:var(--signal)}
+.zclip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;width:100%;height:100%}
 .reticle{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%}
 .hud.lvl .reticle{border-color:var(--signal)}
 .live{position:absolute;left:10px;bottom:10px;right:64px;font-size:11.5px;line-height:1.45;color:rgba(234,242,238,.92)}
@@ -142,6 +143,10 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .lhead span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lhead b{color:var(--accent)}
 .lhead .btn{flex:none;white-space:nowrap}
+.lhead .outbtn{flex:0 1 auto;min-width:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;display:block;line-height:36px;padding:0 12px;color:var(--fg)}
+.lhead .outbtn.need{background:var(--warn);color:var(--ink)}
+.lhead .outbtn .oc{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px;background:var(--oc)}
+html[data-text="large"] .lhead .outbtn{line-height:44px}
 .btn.warn{background:rgba(242,184,75,.16);color:var(--warn);box-shadow:inset 0 0 0 1px rgba(242,184,75,.45)}
 .lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
 .lt{position:relative;min-height:36px;padding:3px 8px;border-radius:9px;background:var(--ink-3);color:var(--fg);font-size:12px;font-weight:600;line-height:1.2;text-align:left;display:flex;align-items:center;overflow:hidden;box-shadow:inset 3px 0 0 var(--warn)}
@@ -181,6 +186,10 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .zoombar{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:3px;border-radius:999px;background:rgba(10,18,17,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:2}
 .zoombar button{min-width:36px;height:30px;padding:0 8px;border-radius:15px;font:600 12.5px var(--mono);color:rgba(234,242,238,.85)}
 .zoombar button[aria-pressed="true"]{background:rgba(234,242,238,.18);color:var(--accent)}
+#newMsg p{margin:0}
+.newbtn{gap:5px;padding:0 11px}
+.newbtn svg{width:15px;height:15px;flex:none}
+html[data-text="large"] .newbtn svg{width:18px;height:18px}
 .notebtn{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ink-3);color:var(--muted)}
 .notebtn svg{width:17px;height:17px}
 .notebtn.on{background:var(--accent);color:var(--ink)}
@@ -202,6 +211,15 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 /* sheets */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
+html.overstart .scrim{z-index:41} html.overstart #outSheet{z-index:42}
+.btn.startout{width:100%;justify-content:space-between;text-align:left;padding:0 14px;background:var(--ink-3);color:var(--muted);font-weight:600}
+.startout::after{content:"▾";font-size:12px;color:var(--muted)}
+.startout.set{color:var(--fg)}
+.startout .oc{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;background:var(--oc)}
+.startout:disabled{opacity:.5}
+.start .startout{min-height:40px;border-radius:10px}
+html[data-text="large"] .start .startout{min-height:48px;font-size:17px}
+.orow.later{--oc:transparent;color:var(--muted)}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-height:90%;display:flex;flex-direction:column;background:var(--ink-2);border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
 .sheet.open{transform:none}
 .sheet header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px max(18px,env(safe-area-inset-right,0px)) 10px max(18px,env(safe-area-inset-left,0px))}
@@ -224,6 +242,18 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 
 /* job picker */
 .picker{display:grid;gap:14px}
+.olist{display:grid;gap:8px}
+.ogrp{display:grid;gap:6px;padding:8px;border-radius:14px;background:var(--ink-3)}
+.ogrp h4{margin:2px 4px 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.orow{display:grid;grid-template-columns:minmax(0,1fr) auto 22px;align-items:center;gap:10px;width:100%;min-height:52px;padding:10px 12px 10px 14px;border-radius:11px;background:var(--ink-2);color:var(--fg);text-align:left;border:2px solid transparent;box-shadow:inset 4px 0 0 var(--oc)}
+.olist > .orow{background:var(--ink-3)}
+.orow b{font-size:15.5px;line-height:1.2}
+.orow span{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.orow i{font-style:normal;font-weight:800;text-align:center}
+.orow[aria-pressed="true"]{border-color:var(--oc);background:color-mix(in srgb,var(--oc) 18%,var(--ink-2))}
+.o-OK{--oc:var(--accent)} .o-CC{--oc:var(--warn)} .o-NR{--oc:var(--muted)}
+html[data-text="large"] .orow{min-height:60px} html[data-text="large"] .orow b{font-size:18px} html[data-text="large"] .orow span{font-size:14px}
+.jobpill .needout{cursor:pointer}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--ink-3);padding:4px;border-radius:12px}
 .seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .seg button{padding:9px 4px;border-radius:9px;text-align:center;color:var(--fg);min-height:44px}
@@ -407,8 +437,8 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video></div>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
-      <div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
-      <div class="reticle"></div>
+      <div class="zclip" id="zclip"><div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
+      <div class="reticle"></div></div>
       <div class="tiltbox"><div class="tiltval"><span id="hTilt">—</span><em id="hLevel">TILT</em></div><div class="sub" id="hHead">—</div></div>
       <div class="zoomread" id="zoomRead">1×</div>
       <div class="focusring" id="focusRing"></div>
@@ -421,13 +451,12 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     </div>
     <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
     <div class="notebar" id="otherBar" hidden><input id="inOther" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="What is this photo of?"><button class="btn" id="otherCancel">Cancel</button><button class="btn primary" id="otherDone">Use</button></div>
-    <div class="notebar" id="noteBar" hidden><input id="inNote" maxlength="80" autocomplete="off" placeholder="Note for the next photo"><button class="btn" id="noteClear">Clear</button><button class="btn primary" id="noteDone">Done</button></div>
     <div class="snack" id="snack" aria-live="polite"><img id="snImg" alt=""><div><b id="snTitle"></b><span id="snText"></span></div><button class="btn" id="snRetake">Retake</button><button class="btn" id="snAct">Change</button></div>
     <div class="flash" id="flash"></div>
   </div>
 
   <div class="deck">
-    <div class="lhead"><span id="lSel"></span><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="notebtn" id="noteBtn" aria-label="Add a note to the next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button></div>
+    <div class="lhead"><span id="lSel"></span><button class="btn sm outbtn" id="outBtn" hidden></button><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="btn sm newbtn" id="newBtn" aria-label="New job or start over"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New job</button></div>
     <div class="lgrid" id="lGrid" role="group" aria-label="Photo label"></div>
     <div class="row">
       <button class="thumbbtn" id="galBtn" aria-label="Open this job's photos"><span class="badge" id="galCount"></span></button>
@@ -474,9 +503,26 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <section class="sheet" id="outSheet" aria-label="Job outcome">
   <header><h2>What was the outcome?</h2><button class="btn" data-close>Cancel</button></header>
   <div class="body">
-    <p class="hint">Needed before the photos are saved. It goes on every photo’s info band and sets which photos the job needs.</p>
+    <p class="hint">Tap one. It goes on every photo’s info band and sets which photos the job needs.</p>
     <div class="picker" id="outPicker"></div>
-    <button class="btn primary big" id="outGo" disabled>Continue</button>
+  </div>
+</section>
+
+<!-- New job / start over: one tap from the camera screen -->
+<section class="sheet" id="newSheet" aria-label="New job">
+  <header><h2>New job</h2><button class="btn" data-close>Cancel</button></header>
+  <div class="body">
+    <div id="newMsg" style="display:grid;gap:8px"></div>
+    <div class="btnrow" style="flex-direction:column">
+      <button class="btn warn big" id="newLabel" hidden>Label photos first</button>
+      <button class="btn primary big" id="newSave" hidden>Save photos, then start new job</button>
+      <button class="btn primary big" id="newGo">Start new job</button>
+      <button class="btn danger" id="newOver">Start over (delete this job’s photos)</button>
+    </div>
+    <div class="warnbox" id="newOverConfirm" hidden>
+      <p id="newOverMsg"></p>
+      <div class="btnrow"><button class="btn danger" id="newOverYes">Delete and start over</button><button class="btn" id="newOverNo">Keep them</button></div>
+    </div>
   </div>
 </section>
 
@@ -498,7 +544,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.9.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.12.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -558,6 +604,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <h2 id="newJobH">New job</h2>
     <div><label for="inRef">SA-# or Account ID <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SA-01234567"></div>
     <div class="picker" id="startPicker"></div>
+    <div><label>Outcome <span style="text-transform:none;letter-spacing:0">(optional, can be set later)</span></label><button type="button" class="btn startout" id="startOutBtn" disabled>Select later</button></div>
     <div class="install" id="installTip" hidden></div>
     <div class="startbar"><p class="err" id="startErr" hidden></p><button class="btn primary big" id="startBtn">Start job</button></div>
   </div>
@@ -568,7 +615,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.9.0";
+const VERSION = "3.12.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -593,97 +640,97 @@ const uiPt = e => toUI(e.clientX, e.clientY);
 
 /*CONFIG:BEGIN — generated by build.py from the Field Cam Outcomes and Photo Lists tools; regenerate, don't hand-edit */
 const SETUP = {"INS":{"Fibre (Existing Drop)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at NID","No Light at MPT","Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fibre (Drop Required)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at MPT","Flagging Required","Drop Installation Issue","Buried Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fibre (Drop Only)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Flagging Required","Drop Installation Issue","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fixed Wireless":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["No Serviceable Signal","Installation Objection"]}},"Satellite":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["NLOS","Installation Objection"]}},"VAS · XTV":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Unsafe Work Conditions","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWH":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Unsafe Work Conditions","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWR":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Unsafe Work Conditions","Customer No Show"]},"NR":{"on":true,"reasons":[]}}},"CON":{"Fibre (Existing Drop)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at NID","No Light at MPT","Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fibre (Drop Required)":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["No Light at MPT","Flagging Required","Drop Installation Issue","Buried Drop Required","Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Fixed Wireless":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["No Serviceable Signal","Installation Objection"]}},"Satellite":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer Action Required","Weather / Unsafe Work Conditions","Extra Resource Required","Customer No Show"]},"NR":{"on":true,"reasons":["NLOS","Installation Objection"]}}},"REP":{"Fibre":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["CCO Ticket"]},"NR":{"on":true,"reasons":[]}},"Fixed Wireless":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"Satellite":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XTV":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWH":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}},"VAS · XWR":{"OK":{"on":true,"reasons":[]},"CC":{"on":true,"reasons":["Customer No Show"]},"NR":{"on":true,"reasons":[]}}}};
-const PHOTOS = {"INS|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["Install Overview",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
-"INS|Fibre (Existing Drop)|CC|No Light at NID":[],
-"INS|Fibre (Existing Drop)|CC|No Light at MPT":[],
-"INS|Fibre (Existing Drop)|CC|Drop Required":[],
-"INS|Fibre (Existing Drop)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+const PHOTOS = {"INS|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
+"INS|Fibre (Existing Drop)|CC|No Light at NID":[["NID Light Level Reading",1,0],["MPT Light Level Reading",1,0]],
+"INS|Fibre (Existing Drop)|CC|No Light at MPT":[["MPT Light Level Reading",1,0]],
+"INS|Fibre (Existing Drop)|CC|Drop Required":[["Reason Drop Cannot be Completed",1,0],["Planned Drop Route",1,0]],
+"INS|Fibre (Existing Drop)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|Fibre (Existing Drop)|NR|":[],
-"INS|Fibre (Drop Required)|OK|":[["MPT",1,0],["Drop route",1,0],["Drop attachment point (aerial)",1,0],["Total install overview",1,0],["NID with door open",1,0],["Fibre patch cable run",1,0],["Cable entrypoint",1,0],["Indoor cable run",1,0],["ONT placement",1,0],["Router placement",1,0],["Light level measurement",1,0]],
-"INS|Fibre (Drop Required)|CC|No Light at MPT":[],
-"INS|Fibre (Drop Required)|CC|Flagging Required":[],
-"INS|Fibre (Drop Required)|CC|Drop Installation Issue":[],
-"INS|Fibre (Drop Required)|CC|Buried Drop Required":[],
-"INS|Fibre (Drop Required)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Fibre (Drop Required)|OK|":[["MPT",1,0],["Drop Route",1,0],["NID Light Level",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
+"INS|Fibre (Drop Required)|CC|No Light at MPT":[["MPT Light Level Reading",1,0]],
+"INS|Fibre (Drop Required)|CC|Flagging Required":[["Road Crossing",1,0]],
+"INS|Fibre (Drop Required)|CC|Drop Installation Issue":[["Drop Challenges / Obstructions",1,0],["Planned Drop Route",1,0]],
+"INS|Fibre (Drop Required)|CC|Buried Drop Required":[["Buried Drop Route",1,0]],
+"INS|Fibre (Drop Required)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|Fibre (Drop Required)|NR|":[],
-"INS|Fibre (Drop Only)|OK|":[["MPT",1,0],["Drop route",1,0],["Drop attachment point (aerial)",1,0],["NID with door open",1,0],["Cable entrypoint",1,0],["Light level measurement",1,0]],
-"INS|Fibre (Drop Only)|CC|Flagging Required":[],
-"INS|Fibre (Drop Only)|CC|Drop Installation Issue":[],
-"INS|Fibre (Drop Only)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Fibre (Drop Only)|OK|":[["MPT",1,0],["Drop Route",1,0],["NID Light Level",1,0]],
+"INS|Fibre (Drop Only)|CC|Flagging Required":[["Road Crossing",1,0]],
+"INS|Fibre (Drop Only)|CC|Drop Installation Issue":[["Drop Challenges / Obstructions",1,0],["Planned Drop Route",1,0]],
+"INS|Fibre (Drop Only)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|Fibre (Drop Only)|NR|":[],
-"INS|Fixed Wireless|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,1],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"INS|Fixed Wireless|CC|Customer Action Required":[],
-"INS|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[],
+"INS|Fixed Wireless|OK|":[["Line of Sight",1,1],["CPE & Mount",1,0],["Cable Run",1,0],["Surge",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["PoE Placement",1,0],["Router Placement",1,0]],
+"INS|Fixed Wireless|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"INS|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "INS|Fixed Wireless|CC|Extra Resource Required":[],
-"INS|Fixed Wireless|CC|Customer No Show":[["House (customer no-show)",1,0]],
-"INS|Fixed Wireless|NR|No Serviceable Signal":[["Line of sight POVs to all viable towers",1,1],["Testing locations",1,0],["Overall structure",1,0]],
-"INS|Fixed Wireless|NR|Installation Objection":[],
-"INS|Satellite|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,0],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"INS|Satellite|CC|Customer Action Required":[],
-"INS|Satellite|CC|Weather / Unsafe Work Conditions":[],
+"INS|Fixed Wireless|CC|Customer No Show":[["Proof of Being on Site",1,0]],
+"INS|Fixed Wireless|NR|No Serviceable Signal":[["Line of Sight",1,1],["Testing Locations",1,0],["Overall Structure",1,0]],
+"INS|Fixed Wireless|NR|Installation Objection":[["Reason for Objection",1,0]],
+"INS|Satellite|OK|":[["Line of Sight",1,0],["Dish & Mount",1,0],["Cable Run",1,0],["Ground Block",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["Modem Placement",1,0],["Router Placement",1,0]],
+"INS|Satellite|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"INS|Satellite|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "INS|Satellite|CC|Extra Resource Required":[],
-"INS|Satellite|CC|Customer No Show":[["House (customer no-show)",1,0]],
-"INS|Satellite|NR|NLOS":[["Line of sight POVs",1,0],["Testing locations",1,0],["Overall structure",1,0]],
-"INS|Satellite|NR|Installation Objection":[],
-"INS|VAS · XTV|OK|":[["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"INS|VAS · XTV|CC|Customer Action Required":[],
-"INS|VAS · XTV|CC|Unsafe Work Conditions":[],
-"INS|VAS · XTV|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|Satellite|CC|Customer No Show":[["Proof of Being on Site",1,0]],
+"INS|Satellite|NR|NLOS":[["Line of Sight",1,0],["Testing Locations",1,0],["Overall Structure",1,0]],
+"INS|Satellite|NR|Installation Objection":[["Reason for Objection",1,0]],
+"INS|VAS · XTV|OK|":[["XTV Box Placement",1,0]],
+"INS|VAS · XTV|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"INS|VAS · XTV|CC|Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
+"INS|VAS · XTV|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|VAS · XTV|NR|":[],
-"INS|VAS · XWH|OK|":[["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"INS|VAS · XWH|CC|Customer Action Required":[],
-"INS|VAS · XWH|CC|Unsafe Work Conditions":[],
-"INS|VAS · XWH|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|VAS · XWH|OK|":[["XWH Placement",1,0]],
+"INS|VAS · XWH|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"INS|VAS · XWH|CC|Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
+"INS|VAS · XWH|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|VAS · XWH|NR|":[],
-"INS|VAS · XWR|OK|":[["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"INS|VAS · XWR|CC|Customer Action Required":[],
-"INS|VAS · XWR|CC|Unsafe Work Conditions":[],
-"INS|VAS · XWR|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"INS|VAS · XWR|OK|":[["XWR Placement",1,0]],
+"INS|VAS · XWR|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"INS|VAS · XWR|CC|Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
+"INS|VAS · XWR|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|VAS · XWR|NR|":[],
-"CON|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["Install Overview",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
-"CON|Fibre (Existing Drop)|CC|No Light at NID":[],
-"CON|Fibre (Existing Drop)|CC|No Light at MPT":[],
-"CON|Fibre (Existing Drop)|CC|Drop Required":[],
-"CON|Fibre (Existing Drop)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"CON|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
+"CON|Fibre (Existing Drop)|CC|No Light at NID":[["NID Light Level Reading",1,0],["MPT Light Level Reading",1,0]],
+"CON|Fibre (Existing Drop)|CC|No Light at MPT":[["MPT Light Level Reading",1,0]],
+"CON|Fibre (Existing Drop)|CC|Drop Required":[["Reason Drop Cannot be Completed",1,0],["Planned Drop Route",1,0]],
+"CON|Fibre (Existing Drop)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "CON|Fibre (Existing Drop)|NR|":[],
-"CON|Fibre (Drop Required)|OK|":[["MPT",1,0],["Drop route",1,0],["Drop attachment point (aerial)",1,0],["Total install overview",1,0],["NID with door open",1,0],["Fibre patch cable run",1,0],["Cable entrypoint",1,0],["Indoor cable run",1,0],["ONT placement",1,0],["Router placement",1,0],["Light level measurement",1,0]],
-"CON|Fibre (Drop Required)|CC|No Light at MPT":[],
-"CON|Fibre (Drop Required)|CC|Flagging Required":[],
-"CON|Fibre (Drop Required)|CC|Drop Installation Issue":[],
-"CON|Fibre (Drop Required)|CC|Buried Drop Required":[],
-"CON|Fibre (Drop Required)|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"CON|Fibre (Drop Required)|OK|":[["MPT",1,0],["Drop Route",1,0],["NID Light Level",1,0],["NID w/ Door Open",1,0],["Fibre Patch Run",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["ONT Placement",1,0],["Router Placement",1,0]],
+"CON|Fibre (Drop Required)|CC|No Light at MPT":[["MPT Light Level Reading",1,0]],
+"CON|Fibre (Drop Required)|CC|Flagging Required":[["Road Crossing",1,0]],
+"CON|Fibre (Drop Required)|CC|Drop Installation Issue":[["Drop Challenges / Obstructions",1,0],["Planned Drop Route",1,0]],
+"CON|Fibre (Drop Required)|CC|Buried Drop Required":[["Buried Drop Route",1,0]],
+"CON|Fibre (Drop Required)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "CON|Fibre (Drop Required)|NR|":[],
-"CON|Fixed Wireless|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,1],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"CON|Fixed Wireless|CC|Customer Action Required":[],
-"CON|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[],
+"CON|Fixed Wireless|OK|":[["Line of Sight",1,1],["CPE & Mount",1,0],["Cable Run",1,0],["Surge",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["PoE Placement",1,0],["Router Placement",1,0]],
+"CON|Fixed Wireless|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"CON|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "CON|Fixed Wireless|CC|Extra Resource Required":[],
-"CON|Fixed Wireless|CC|Customer No Show":[["House (customer no-show)",1,0]],
-"CON|Fixed Wireless|NR|No Serviceable Signal":[["Line of sight POVs to all viable towers",1,1],["Testing locations",1,0],["Overall structure",1,0]],
-"CON|Fixed Wireless|NR|Installation Objection":[],
-"CON|Satellite|OK|":[["Total Install Overview",1,0],["CPE Line of Sight",1,0],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Cable Run",1,0],["Indoor Equipment",1,0]],
-"CON|Satellite|CC|Customer Action Required":[],
-"CON|Satellite|CC|Weather / Unsafe Work Conditions":[],
+"CON|Fixed Wireless|CC|Customer No Show":[["Proof of Being on Site",1,0]],
+"CON|Fixed Wireless|NR|No Serviceable Signal":[["Line of Sight",1,1],["Testing Locations",1,0],["Overall Structure",1,0]],
+"CON|Fixed Wireless|NR|Installation Objection":[["Reason for Objection",1,0]],
+"CON|Satellite|OK|":[["Line of Sight",1,0],["Dish & Mount",1,0],["Cable Run",1,0],["Ground Block",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["Modem Placement",1,0],["Router Placement",1,0]],
+"CON|Satellite|CC|Customer Action Required":[["Customer Action Item",1,0]],
+"CON|Satellite|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "CON|Satellite|CC|Extra Resource Required":[],
-"CON|Satellite|CC|Customer No Show":[["House (customer no-show)",1,0]],
-"CON|Satellite|NR|NLOS":[["Line of sight POVs",1,0],["Testing locations",1,0],["Overall structure",1,0]],
-"CON|Satellite|NR|Installation Objection":[],
-"REP|Fibre|OK|":[["Issue(s) Found",1,0],["Issue Resolved After Repair",1,0],["Total Install Overview",1,0],["Fibre patch cable run",1,0],["Cable entry point",1,0],["Light level at ONT",1,0]],
-"REP|Fibre|CC|CCO Ticket":[],
+"CON|Satellite|CC|Customer No Show":[["Proof of Being on Site",1,0]],
+"CON|Satellite|NR|NLOS":[["Line of Sight",1,0],["Testing Locations",1,0],["Overall Structure",1,0]],
+"CON|Satellite|NR|Installation Objection":[["Reason for Objection",1,0]],
+"REP|Fibre|OK|":[["NID Light Level",1,0],["Issue(s) Found",1,0],["Issue(s) Repaired",1,0],["Install Overview",1,0]],
+"REP|Fibre|CC|CCO Ticket":[["Cause of CCO",1,0]],
 "REP|Fibre|NR|":[],
-"REP|Fixed Wireless|OK|":[["Issue(s) Found",1,0],["Issue Resolved After Repair",1,0],["Total Install Overview",1,0],["CPE Line of Sight",1,1],["CPE & Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Equipment",1,0]],
-"REP|Fixed Wireless|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|Fixed Wireless|OK|":[["Line of Sight",1,0],["Issue(s) Found",1,0],["Issue(s) Repaired",1,0],["Install Overview",1,0]],
+"REP|Fixed Wireless|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "REP|Fixed Wireless|NR|":[],
-"REP|Satellite|OK|":[["Issue(s) Found",1,0],["Issue Resolved After Repair",1,0],["Total Install Overview",1,0],["Line of Sight",1,0],["System and Mount Overview",1,0],["Cable Run",1,0],["Grounding Overview",1,0],["Cable Entrypoint",1,0],["Indoor Equipment",1,0]],
-"REP|Satellite|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|Satellite|OK|":[["Line of Sight",1,0],["Issue(s) Found",1,0],["Issue(s) Repaired",1,0],["Install Overview",1,0]],
+"REP|Satellite|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "REP|Satellite|NR|":[],
-"REP|VAS · XTV|OK|":[["Issue found",1,0],["Issue after repair",1,0],["Indoor cable run",1,0],["Indoor equipment",1,0]],
-"REP|VAS · XTV|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|VAS · XTV|OK|":[],
+"REP|VAS · XTV|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "REP|VAS · XTV|NR|":[],
-"REP|VAS · XWH|OK|":[["Issue found",1,0],["Issue after repair",1,0],["Indoor cable run",1,0],["Indoor equipment",1,0]],
-"REP|VAS · XWH|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|VAS · XWH|OK|":[],
+"REP|VAS · XWH|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "REP|VAS · XWH|NR|":[],
-"REP|VAS · XWR|OK|":[["Issue found",1,0],["Issue after repair",1,0],["Indoor cable run",1,0],["Indoor equipment",1,0]],
-"REP|VAS · XWR|CC|Customer No Show":[["House (customer no-show)",1,0]],
+"REP|VAS · XWR|OK|":[],
+"REP|VAS · XWR|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "REP|VAS · XWR|NR|":[]};
 /*CONFIG:END*/
 /* ================= JOBS =================
@@ -1190,8 +1237,11 @@ function capArea(vw, vh) { const r = capRatio(), w0 = vw / vh > r ? vh * r : vw;
 const measureVf = () => {
   vfH = vfEl.clientHeight;
   frameTurn = extraTurn() % 180;
-  const W = Math.round(vfEl.clientWidth), H = Math.round(vfH), side = Math.min(W, H);
+  const W0 = Math.round(vfEl.clientWidth), H0 = Math.round(vfH);
+  // Fill the width, but never crop the sides past a square: a tall viewfinder gets black bars above and below
+  const W = W0, H = Math.min(H0, W0), side = Math.min(W, H);
   const f = $("frame"); f.style.width = W + "px"; f.style.height = H + "px";
+  const zc = $("zclip"); zc.style.width = W + "px"; zc.style.height = H + "px";
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, { w0, h0 } = capArea(vw, vh);
   const k = Math.max(W / w0, H / h0);   // fill the whole viewfinder edge to edge (like object-fit: cover on the 4:3 area)
   v.style.width = (vw * k).toFixed(1) + "px"; v.style.height = (vh * k).toFixed(1) + "px";
@@ -1221,7 +1271,7 @@ function uiAngle() { return (rawAngle() - ROT + 360) % 360; }
 // How far the phone is turned beyond what the screen shows (0 normally; 90/270 when held sideways with rotation lock on)
 function extraTurn() { return ((S.rollQ - uiAngle()) % 360 + 360) % 360; }
 function horizonOffset(p) {
-  const v = $("video"), vw = v.videoWidth || 4, vh = v.videoHeight || 3, W = vfEl.clientWidth, H = vfH;
+  const v = $("video"), vw = v.videoWidth || 4, vh = v.videoHeight || 3, W = vfEl.clientWidth, H = Math.min(vfH, W);
   const scale = (FRAME.k || Math.max(W / vw, H / vh)) * (S.digitalZoom || 1);   // screen px per feed px
   // Always the true horizon: when the phone points well up or down the line slides off the edge of the
   // viewfinder (clipped) instead of sticking to it. Capped far off screen only to keep the numbers sane.
@@ -1586,7 +1636,7 @@ async function capture(force = false) {
     const out = await processFrame(grab, { sx:Math.round((vw - cw) / 2), sy:Math.round((vh - ch) / 2), cw, ch }, outputRotation(), meta);
     grab.width = grab.height = 0;
     const rec = await storePhoto(out, meta);
-    if (S.note) { S.note = ""; $("inNote").value = ""; $("noteBtn").classList.remove("on"); }
+    S.note = "";
     S.fresh = true; renderLabels();
     showSnack(rec);
   } catch (e) { console.error(e); toast("Couldn’t save that photo. Try again."); }
@@ -1625,7 +1675,6 @@ function showSnack(rec) {
   $("snRetake").hidden = !warn;
   $("snAct").textContent = isUnl(rec) ? "Label" : "Change";
   const el = $("snack"); el.classList.toggle("warn", warn); el.classList.add("show");
-  $("noteBar").hidden = true;
   clearTimeout(snT); snT = setTimeout(hideSnack, warn ? 5000 : 3000);
   if (warn) try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch {}
 }
@@ -1634,17 +1683,11 @@ $("snAct").addEventListener("click", () => { const r = snRec; hideSnack(); if (r
 $("snRetake").addEventListener("click", async () => {
   const rec = snRec; hideSnack(); if (!rec) return;
   S.sel = [...labelsOf(rec)]; S.fresh = false; if (current) { current.sel = S.sel; save(); }
-  if (rec.note) { S.note = rec.note; $("inNote").value = rec.note; $("noteBtn").classList.add("on"); }
   await removePhotos([rec.id]);
   toast("Deleted. Take it again.");
 });
 
 /* note for the next photo */
-$("noteBtn").addEventListener("click", () => { hideSnack(); $("otherBar").hidden = true; $("noteBar").hidden = false; $("inNote").value = S.note || ""; $("inNote").focus(); });
-$("inNote").addEventListener("input", () => { S.note = $("inNote").value.trim(); $("noteBtn").classList.toggle("on", !!S.note); });
-$("inNote").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("noteBar").hidden = true; $("inNote").blur(); } });
-$("noteDone").addEventListener("click", () => { $("noteBar").hidden = true; $("inNote").blur(); });
-$("noteClear").addEventListener("click", () => { S.note = ""; $("inNote").value = ""; $("noteBtn").classList.remove("on"); $("noteBar").hidden = true; });
 document.addEventListener("keydown", e => { if ((e.key === " " || e.key === "AudioVolumeUp") && $("start").hidden && !document.querySelector(".sheet.open")) { e.preventDefault(); capture(); } });
 
 /* ================= import from library ================= */
@@ -1847,18 +1890,28 @@ $("dlBtn").addEventListener("click", () => {
    and missing required photos are flagged before anything is saved. */
 let saveIds = null;
 let outSel = null;
-function openOutcomeSheet() {
+function openOutcomeSheet(fromStart) {
+  if (fromStart) {
+    outSel = { ...startSel, outcome:startOut.outcome, reason:startOut.reason };
+    renderOutcomePicker($("outPicker"), outSel, () => {
+      if (!outcomeSet(outSel)) return;
+      startOut = { outcome:outSel.outcome, reason:outSel.reason }; drawStartOut();
+      setTimeout(closeSheets, 220);
+    }, true);
+    document.documentElement.classList.add("overstart");
+    openSheet("outSheet"); return;
+  }
   const j = curJob(); if (!j) return;
   outSel = { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null };
-  const draw = () => renderOutcomePicker($("outPicker"), outSel, () => { $("outGo").disabled = !outcomeSet(outSel); });
-  draw(); $("outGo").disabled = !outcomeSet(outSel);
+  renderOutcomePicker($("outPicker"), outSel, () => {
+    const jj = curJob(); if (!jj || !outcomeSet(outSel)) return;
+    jj.outcome = outSel.outcome; jj.reason = outSel.reason; jobChanged();
+    setTimeout(() => {                                  // a beat so the tick shows, then carry on
+      if (saveIds) openSaveSheet(); else { closeSheets(); toast(`Outcome: ${jobTitle(jj).split(" · ").slice(2).join(" · ") || "set"}`, 1800); }
+    }, 220);
+  });
   openSheet("outSheet");
 }
-$("outGo").addEventListener("click", () => {
-  const j = curJob(); if (!j || !outSel) return;
-  j.outcome = outSel.outcome; j.reason = outSel.reason; jobChanged();
-  if (saveIds) openSaveSheet(); else closeSheets();   // one more tap saves (the save sheet shows any missing photos for this outcome)
-});
 function requestSave(items) {
   const unl = items.filter(isUnl);
   if (unl.length) {
@@ -2064,15 +2117,27 @@ function renderJobPicker(el, sel, onChange) {
 }
 // During the job: outcome, then its reason when that outcome has reasons for this platform.
 // Outcomes keep fixed spots (greyed where not offered); reasons show only for the picked outcome.
-function renderOutcomePicker(el, sel, onChange) {
+function renderOutcomePicker(el, sel, onChange, later) {
   if (sel.outcome && !outcomeOn(sel, sel.outcome)) sel.outcome = null;
-  const reasons = sel.outcome ? reasonsFor(sel, sel.outcome) : [];
-  if (sel.reason && !reasons.includes(sel.reason)) sel.reason = null;
-  if (!reasons.length) sel.reason = null;
-  if (reasons.length === 1 && !sel.reason) sel.reason = reasons[0];
-  el.innerHTML = `<div><label>Outcome</label>${segHTML("outcome", OUTCOMES.map(o => ({ ...o, off:!outcomeOn(sel, o.id) })), sel.outcome)}</div>
-    ${reasons.length ? `<div><label>${esc(byId(OUTCOMES, sel.outcome).name)} reason</label>${segHTML("reason", reasons.map(r => ({ id:r, name:r })), sel.reason, " two")}</div>` : ""}`;
-  el.onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; sel[b.dataset.k] = b.dataset.v; if (b.dataset.k === "outcome") sel.reason = null; renderOutcomePicker(el, sel, onChange); onChange && onChange(); };
+  const rs0 = sel.outcome ? reasonsFor(sel, sel.outcome) : [];
+  if (sel.reason && !rs0.includes(sel.reason)) sel.reason = null;
+  if (rs0.length === 1 && !sel.reason) sel.reason = rs0[0];
+  if (!rs0.length) sel.reason = null;
+  // Count of listed photos only; an outcome with no listed photos shows nothing (techs can still take any photos under Other)
+  const need = (o, r) => { const ps = PHOTOS[`${sel.work}|${platName(sel)}|${o}|${r || ""}`] || [], n = ps.filter(p => p[1]).length, opt = ps.length - n;
+    return n ? plural(n, "photo") : opt ? `${opt} optional` : ""; };
+  const row = (o, r, name) => { const on = sel.outcome === o && (sel.reason || "") === (r || "");
+    return `<button type="button" class="orow o-${o}" data-o="${o}" data-r="${esc(r || "")}" aria-pressed="${on}"><b>${esc(name)}</b><span>${need(o, r)}</span><i aria-hidden="true">${on ? "✓" : ""}</i></button>`; };
+  el.innerHTML = `<label>Outcome</label><div class="olist">${OUTCOMES.filter(o => outcomeOn(sel, o.id)).map(o => {
+    const rs = reasonsFor(sel, o.id);
+    if (!rs.length) return row(o.id, "", o.name);
+    return `<div class="ogrp o-${o.id}"><h4>${esc(o.name)}</h4>${rs.map(r => row(o.id, r, r)).join("")}</div>`;
+  }).join("")}${later ? `<button type="button" class="orow later" data-later="1"><b>Select later</b><span>Pick it during the job</span><i aria-hidden="true">${sel.outcome ? "" : "✓"}</i></button>` : ""}</div>`;
+  el.onclick = e => {
+    if (e.target.closest("[data-later]")) { startOut = { outcome:null, reason:null }; drawStartOut(); setTimeout(closeSheets, 120); return; }
+    const b = e.target.closest("[data-o]"); if (!b) return;
+    sel.outcome = b.dataset.o; sel.reason = b.dataset.r || null;
+    renderOutcomePicker(el, sel, onChange, later); onChange && onChange(true); };
 }
 // Job details changed mid-job: redraw the info band on photos not saved yet (labels and file names follow anyway)
 function jobChanged() {
@@ -2096,7 +2161,7 @@ function renderTop() {
   }
   $("jobRef").textContent = j && j.ref ? j.ref : ""; $("jobRef").hidden = !(j && j.ref);
   $("jobTxt").innerHTML = j ? sh : "No job";
-  $("jobNeed").hidden = !j || outcomeSet(j);
+  $("jobNeed").hidden = true;   // the outcome button lives by the shutter now
   $("jobProg").textContent = j && req.length ? `${req.filter(l => counts[l]).length}/${req.length}` : "";
 }
 // Tiles: every checklist item for the job, a ✓ + count once photographed; items still needed have an amber edge.
@@ -2124,7 +2189,15 @@ function renderLabels() {
   $("hqBtn").setAttribute("aria-pressed", full);
   const unl = curPhotos().filter(isUnl).length;
   $("toLabelBtn").hidden = !unl; $("toLabelBtn").textContent = `To label (${unl})`;
+  const ob = $("outBtn"); ob.hidden = !j;
+  if (j) {
+    const set = outcomeSet(j);
+    ob.classList.toggle("need", !set);
+    ob.innerHTML = set ? `<i class="oc o-${j.outcome}"></i>${esc(j.reason || byId(OUTCOMES, j.outcome).name)}` : "Set outcome";
+    ob.setAttribute("aria-label", set ? `Outcome: ${byId(OUTCOMES, j.outcome).name}${j.reason ? ", " + j.reason : ""}. Tap to change.` : "Set the job outcome");
+  }
 }
+$("outBtn").addEventListener("click", () => { saveIds = null; openOutcomeSheet(); });
 $("lGrid").addEventListener("click", e => {
   const b = e.target.closest(".lt"); if (!b || !current) return;
   if (b.dataset.l === OTHER) return askOther(l => { tapLabel(l, true); toast(`Next photo: <b>${esc(labelText(S.sel))}</b>`); });
@@ -2150,7 +2223,7 @@ $("toLabelBtn").addEventListener("click", () => openSorter(curPhotos().filter(is
 /* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
 let otherCb = null;
 function askOther(cb) {
-  hideSnack(); $("noteBar").hidden = true; otherCb = cb;
+  hideSnack(); otherCb = cb;
   $("inOther").value = ""; $("otherBar").hidden = false; $("inOther").focus();
 }
 function useOther() {
@@ -2243,7 +2316,7 @@ function renderAll() { renderTop(); renderLabels(); refreshDeck(); if ($("galShe
 
 /* ================= sheets ================= */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
-function closeSheets() { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $("scrim").classList.remove("open"); $("delConfirm").hidden = true; }
+function closeSheets() { document.documentElement.classList.remove("overstart"); document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $("scrim").classList.remove("open"); $("delConfirm").hidden = true; }
 $("scrim").addEventListener("click", closeSheets);
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeSheets));
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
@@ -2252,8 +2325,9 @@ $("inName").addEventListener("input", () => { settings.name = $("inName").value;
 $("textSeg").addEventListener("click", e => { const b = e.target.closest("[data-x]"); if (!b) return; settings.text = b.dataset.x; save(); applyTheme(); });
 $("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; settings.theme = b.dataset.t; save(); applyTheme(); });
 
-$("jobBtn").addEventListener("click", () => {
+$("jobBtn").addEventListener("click", e => {
   const j = curJob(); if (!j) return;
+  if (e.target.closest("#jobNeed")) { saveIds = null; openOutcomeSheet(); return; }
   const sel = { work:j.work, plat:j.plat, vas:j.vas || null };
   const out = { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null };
   const drawOut = () => renderOutcomePicker($("sheetOutcome"), out, () => {
@@ -2306,6 +2380,33 @@ function finishJob() {
   if (current) for (const p of curPhotos()) if (p.raw && !isUnl(p)) { delete p.raw; DB.put(p).catch(() => {}); }
   current = null; S.sel = []; S.selected.clear(); save(); closeSheets(); showStart();
 }
+// New job button (by the shutter): finish this job and start the next, or start over
+function openNewSheet() {
+  const ps = curPhotos(), und = ps.filter(p => !p.downloaded).length, unl = ps.filter(isUnl).length, miss = ps.length ? missingShots() : [], msgs = [];
+  if (!ps.length) msgs.push(`<p class="hint">No photos taken in this job yet.</p>`);
+  else if (!und) msgs.push(`<p class="hint">All ${plural(ps.length, "photo")} in this job are saved ✓</p>`);
+  if (unl) msgs.push(`<p><b>${plural(unl, "photo")} still to label.</b></p>`);
+  if (und) msgs.push(`<p><b>${plural(und, "photo")} not saved yet.</b> Starting a new job without saving keeps ${und === 1 ? "it" : "them"} on this phone under Previous jobs.</p>`);
+  if (und && miss.length) msgs.push(`<p class="hint">No photo yet for: ${miss.map(esc).join(", ")}.</p>`);
+  $("newMsg").innerHTML = msgs.join("");
+  $("newLabel").hidden = !unl;
+  $("newSave").hidden = !und || !!unl;
+  $("newGo").textContent = und ? "Start new job without saving" : "Start new job";
+  $("newGo").className = und ? "btn big" : "btn primary big";
+  $("newOver").hidden = !ps.length;
+  $("newOverConfirm").hidden = true;
+  openSheet("newSheet");
+}
+$("newBtn").addEventListener("click", () => { hideSnack(); openNewSheet(); });
+$("newLabel").addEventListener("click", () => { closeSheets(); openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)); });
+$("newSave").addEventListener("click", () => { closeSheets(); requestSave(curPhotos().filter(p => !p.downloaded)); });   // same checks as Save; ends on "Start next job"
+$("newGo").addEventListener("click", finishJob);
+$("newOver").addEventListener("click", () => {
+  $("newOverMsg").textContent = `This deletes the ${plural(curPhotos().length, "photo")} taken in this job from the phone and goes back to the start screen.`;
+  $("newOverConfirm").hidden = false; $("newOverConfirm").scrollIntoView({ block:"nearest", behavior:"smooth" });
+});
+$("newOverNo").addEventListener("click", () => { $("newOverConfirm").hidden = true; });
+$("newOverYes").addEventListener("click", cancelJob);
 // Cancel this job: back out (e.g. wrong form picked). With photos, ask first; they're deleted.
 $("cancelJobBtn").addEventListener("click", () => {
   $("finishConfirm").hidden = true;
@@ -2343,7 +2444,17 @@ function installText() {
 }
 
 /* ================= start / new job ================= */
-let startSel = { work:null, plat:null };
+let startSel = { work:null, plat:null }, startOut = { outcome:null, reason:null };
+const startReady = () => !!(startSel.work && startSel.plat && (startSel.plat !== "VAS" || startSel.vas));
+function drawStartOut() {
+  const b = $("startOutBtn"), ok = startReady();
+  if (!ok || (startOut.outcome && !outcomeOn(startSel, startOut.outcome)) || (startOut.reason && !reasonsFor(startSel, startOut.outcome).includes(startOut.reason))) startOut = { outcome:null, reason:null };
+  b.disabled = !ok;
+  const set = !!startOut.outcome;
+  b.classList.toggle("set", set);
+  b.innerHTML = !ok ? "Pick the platform first" : set ? `<span><i class="oc o-${startOut.outcome}"></i>${esc(startOut.reason ? byId(OUTCOMES, startOut.outcome).name + " · " + startOut.reason : byId(OUTCOMES, startOut.outcome).name)}</span>` : "Select later";
+}
+$("startOutBtn").addEventListener("click", () => { if (startReady()) openOutcomeSheet(true); });
 function showStart() {
   const named = !!settings.name.trim();
   $("nameBlock").hidden = named;
@@ -2356,9 +2467,10 @@ function showStart() {
     $("resumeMeta").textContent = `Current job · ${plural(ps.length, "photo")} · started ${fmtDay(new Date(j.started))}`;
   }
   $("newJobH").textContent = j ? "Or start a new job" : "New job";
-  startSel = { work:null, plat:null, vas:null };
+  startSel = { work:null, plat:null, vas:null }; startOut = { outcome:null, reason:null };
   $("inRef").value = "";
-  renderJobPicker($("startPicker"), startSel, () => { $("startErr").hidden = true; });
+  renderJobPicker($("startPicker"), startSel, () => { $("startErr").hidden = true; drawStartOut(); });
+  drawStartOut();
   $("startBtn").textContent = j ? "Start new job" : "Start job";
   $("startBtn").className = j ? "btn big" : "btn primary big";
   $("startErr").hidden = true;
@@ -2400,7 +2512,7 @@ $("startBtn").addEventListener("click", () => {
   settings.name = name;
   const hadPrev = curPhotos().length;
   const id = Date.now().toString(36);
-  jobs[id] = { work:startSel.work, plat:startSel.plat, vas:startSel.vas || null, outcome:null, reason:null, ref, started:Date.now() };
+  jobs[id] = { work:startSel.work, plat:startSel.plat, vas:startSel.vas || null, outcome:startOut.outcome, reason:startOut.reason, ref, started:Date.now() };
   current = { id, sel:[] };
   S.sel = []; S.selected.clear();
   beginSession();
@@ -2418,7 +2530,6 @@ function armBack() { if (backGuard) return; try { history.pushState({ fieldcam:1
 document.addEventListener("pointerdown", armBack, true);
 function closeTopLayer() {
   if (!$("otherBar").hidden) { $("otherBar").hidden = true; $("inOther").blur(); otherCb = null; return true; }
-  if (!$("noteBar").hidden) { $("noteBar").hidden = true; $("inNote").blur(); return true; }
   if ($("sorter").classList.contains("open")) { $("sClose").click(); return true; }
   if ($("viewer").classList.contains("open")) { $("viewer").classList.remove("open"); return true; }
   if (document.querySelector(".sheet.open")) { closeSheets(); return true; }
