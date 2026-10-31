@@ -113,13 +113,13 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .focusring{position:absolute;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid var(--warn);border-radius:12px;opacity:0}
 .focusring.show{animation:ring .9s ease-out}
 @keyframes ring{0%{opacity:1;transform:scale(1.3)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
-.vfctl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:8px;pointer-events:auto;z-index:2}
-.vfctl button{width:36px;height:36px;border-radius:50%;background:rgba(10,18,17,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:center}
+.vfctl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:auto;z-index:2}
+.vfctl button{width:44px;height:44px;border-radius:50%;background:rgba(10,18,17,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:center}
 .vfctl button.on{background:var(--accent);color:var(--ink)}
-.vfctl .hq{width:auto;min-width:46px;padding:0 10px;border-radius:18px;font:700 12.5px var(--mono);letter-spacing:.04em;color:rgba(234,242,238,.85)}
+.vfctl .hq{padding:0;font:700 13px var(--mono);letter-spacing:.02em;color:rgba(234,242,238,.9)}
 .vfctl .hq[aria-pressed="true"]{background:var(--accent);color:#0A1211}
 .lhead .hqtag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:var(--accent);color:var(--ink);font:700 11px var(--mono);vertical-align:1px}
-.vfctl svg{width:18px;height:18px}
+.vfctl svg{width:20px;height:20px}
 .vfmsg{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 
 /* level lock, retake prompt, note */
@@ -143,7 +143,9 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .lhead span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lhead b{color:var(--accent)}
 .lhead .btn{flex:none;white-space:nowrap}
-.lhead .outbtn{flex:0 1 auto;min-width:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;display:block;line-height:36px;padding:0 12px;color:var(--fg)}
+.lhead{justify-content:space-between;padding-top:2px;padding-bottom:2px}
+.lhead .newbtn{margin-left:auto}
+.lhead .outbtn{flex:0 1 auto;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis;display:block;line-height:36px;padding:0 12px;color:var(--fg)}
 .lhead .outbtn.need{background:var(--warn);color:var(--ink)}
 .lhead .outbtn .oc{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px;background:var(--oc)}
 html[data-text="large"] .lhead .outbtn{line-height:44px}
@@ -283,8 +285,9 @@ html[data-text="large"] .orow{min-height:60px} html[data-text="large"] .orow b{f
 .viewer{position:fixed;inset:0;z-index:30;background:#000;display:none;flex-direction:column}
 .viewer.open{display:flex}
 .vstage{flex:1;position:relative;overflow:hidden;touch-action:none}
-.vnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(10,18,17,.6);color:#fff;z-index:2}
-.vnav svg{width:22px;height:22px}.vnav.prev{left:10px}.vnav.next{right:10px}.vnav[hidden]{display:none}
+.vnav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:64px;display:grid;place-items:center;background:none;color:#fff;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)) drop-shadow(0 0 6px rgba(0,0,0,.6))}
+.vnav svg{width:28px;height:28px}.vnav.vprev{left:4px}.vnav.vnext{right:4px}.vnav[hidden]{display:none}
+.vstage img.zanim{transition:transform .22s ease-out}
 .vcount{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);padding:3px 10px;border-radius:999px;background:rgba(10,18,17,.6);font:600 12px var(--mono);color:#fff;pointer-events:none}
 .vstage img.slide{transition:transform .18s ease-out}
 .vstage img{position:absolute;left:50%;top:50%;max-width:100%;max-height:100%;transform-origin:center;will-change:transform;user-select:none;-webkit-user-drag:none}
@@ -369,8 +372,8 @@ html[data-text="large"] .lt{font-size:16px;min-height:48px;padding:5px 10px}
 html[data-text="large"] .lt i{font-size:13px}
 html[data-text="large"] .lt span{padding-right:24px}
 html[data-text="large"] .zoombar button{min-width:46px;height:38px;font-size:16px}
-html[data-text="large"] .vfctl .hq{font-size:15px;height:42px;min-width:56px}
-html[data-text="large"] .vfctl button{width:42px;height:42px}
+html[data-text="large"] .vfctl .hq{font-size:15px}
+html[data-text="large"] .vfctl button{width:52px;height:52px}
 html[data-text="large"] .snack div{font-size:16.5px}
 html[data-text="large"] .snack div span{font-size:14.5px}
 html[data-text="large"] .snack .btn{font-size:16px;min-height:44px}
@@ -456,7 +459,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   </div>
 
   <div class="deck">
-    <div class="lhead"><span id="lSel"></span><button class="btn sm outbtn" id="outBtn" hidden></button><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="btn sm newbtn" id="newBtn" aria-label="New job or start over"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New job</button></div>
+    <div class="lhead"><button class="btn sm outbtn" id="outBtn" hidden></button><button class="btn sm warn" id="toLabelBtn" hidden></button><button class="btn sm newbtn" id="newBtn" aria-label="New job or start over">New job</button></div>
     <div class="lgrid" id="lGrid" role="group" aria-label="Photo label"></div>
     <div class="row">
       <button class="thumbbtn" id="galBtn" aria-label="Open this job's photos"><span class="badge" id="galCount"></span></button>
@@ -544,7 +547,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.12.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.13.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -573,8 +576,8 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <div class="viewer" id="viewer">
   <div class="vtop"><div class="meta" id="vMeta"></div><button class="btn" id="vClose">Close</button></div>
   <div class="vstage" id="vStage"><img id="vImg" alt="Photo preview">
-    <button class="vnav prev" id="vPrev" aria-label="Previous photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <button class="vnav next" id="vNext" aria-label="Next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="vnav vprev" id="vPrev" aria-label="Previous photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="vnav vnext" id="vNext" aria-label="Next photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="vcount" id="vCount"></div></div>
   <div class="vbar"><button class="btn primary" id="vDl" style="flex:1">Save</button><button class="btn" id="vLab">Label</button><button class="btn danger" id="vDel">Delete</button></div>
 </div>
@@ -615,7 +618,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.12.0";
+const VERSION = "3.13.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -845,7 +848,7 @@ const LEVEL_TOL = 3;   // degrees either side of the horizon that count as "leve
 // Labels that get the full tilt check (big readout, 0° dot): radio/dish POV and LOS shots.
 // Every other label just shows a small tilt number.
 const isPOV = l => isLevelShot(l);
-// S.sel = labels for the next photo (sticky, so a run of the same shot is shutter-only). Empty = label later.
+// S.sel = labels for the next photo; cleared after every shot (Retake restores them). Empty = label later.
 // S.fresh = a photo was just taken with this selection, so the next tap starts a new selection; further taps add/remove.
 const selLabels = () => S.sel;
 const isUnl = p => !!p.unlabelled;
@@ -1242,6 +1245,8 @@ const measureVf = () => {
   const W = W0, H = Math.min(H0, W0), side = Math.min(W, H);
   const f = $("frame"); f.style.width = W + "px"; f.style.height = H + "px";
   const zc = $("zclip"); zc.style.width = W + "px"; zc.style.height = H + "px";
+  const bar = Math.round((H0 - H) / 2), ctl = document.querySelector(".vfctl");
+  if (ctl) ctl.style.top = (bar + 12) + "px";   // HQ + flashlight stay in the picture's top-right corner
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, { w0, h0 } = capArea(vw, vh);
   const k = Math.max(W / w0, H / h0);   // fill the whole viewfinder edge to edge (like object-fit: cover on the 4:3 area)
   v.style.width = (vw * k).toFixed(1) + "px"; v.style.height = (vh * k).toFixed(1) + "px";
@@ -1446,32 +1451,29 @@ function drawZeroLine(c, m) {
   x.fillStyle = "#FFFFFF"; x.fillText("0°", 0, -lw * 2);
   x.restore();
 }
-// Info band added BELOW the photo (nothing covers the picture). Layout, all measured so it always fits:
-//   green rule · label(s) as a full-width title · two equal columns split by a thin centre line
-//   left = when / where (time, GPS, address)   right = what / who (job, tilt · facing · elev, tech, note)
-// Rows line up across the columns, padding is the same on both sides, and the whole block is centred
-// vertically in the band. The font shrinks (and long lines lose a wrap) until everything fits.
+// Info band added BELOW the photo (nothing covers the picture). Layout "label chips":
+//   top row: each label as its own green chip (wrapping to more rows when there are many), SA-# at the right
+//   below: short "Key value" facts in an even grid (When, Job, Tech / GPS, Facing, …) and the address on its own row
+// Everything is measured so it always fits: fewer columns, then smaller text, then wrapping; "…" only as a last resort.
 function bandContent(m) {
-  // left = when / where, right = what / who; short items so each fits on one line in most cases
-  const A = [], B = [];
-  A.push(fmtTime(m.when) + (m.imported ? " (photo time)" : ""));
-  A.push(m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}` : "No GPS fix");
+  const items = [];
+  if (m.job) items.push(["Job", jobTitle(m.job), "top"]);   // long (outcome + reason): its own row first
+  items.push(["When", fmtTime(m.when) + (m.imported ? " (photo time)" : "")]);
+  items.push(["GPS", m.pos ? `${m.pos.latitude.toFixed(6)}, ${m.pos.longitude.toFixed(6)}` : "No fix"]);
   const dir = [];
-  if (m.heading != null) dir.push(`Facing ${Math.round(m.heading)}° ${cardinal(m.heading)}${m.headingRef === "M" ? " (mag)" : ""}`);
-  if (m.pos && m.pos.altitude != null) dir.push(`Elev ${Math.round(m.pos.altitude)} m`);
-  if (dir.length) A.push(dir.join(" · "));
-  if (m.addr) A.push(m.addr);
-  if (m.job) B.push(jobTitle(m.job));
-  const tilt = [];
-  if (m.pitch != null) tilt.push(`Tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
-  if (m.zoomLabel && m.zoomLabel !== "1×" && !m.imported) tilt.push(`Zoom ${m.zoomLabel}`);
-  if (tilt.length) B.push(tilt.join(" · "));
-  if (m.tech) B.push("Tech: " + m.tech);
-  if (m.note) B.push("Note: " + m.note);
-  if (m.imported) B.push("Imported from photo library");
-  while (B.length - A.length >= 2) A.push(B.splice(B.length - 1, 1)[0]);   // keep the columns even
-  while (A.length - B.length >= 2) B.push(A.splice(A.length - 1, 1)[0]);
-  return { title:m.unlabelled ? "Not labelled yet" : (m.labels || [m.label || "Photo"]).join(" + "), ref:m.job ? refLabel(m.job.ref) : "", A, B };
+  if (m.heading != null) dir.push(`${Math.round(m.heading)}° ${cardinal(m.heading)}${m.headingRef === "M" ? " (mag)" : ""}`);
+  if (m.pitch != null) dir.push(`tilt ${fmtTilt(m.pitch)}${!m.level ? "" : Math.abs(m.pitch) <= LEVEL_TOL ? " (level)" : " (not level)"}`);
+  if (dir.length) items.push([m.heading != null ? "Facing" : "Tilt", m.heading != null ? dir.join(" · ") : dir[0].replace(/^tilt /, "")]);
+  const extra = [];
+  if (m.pos && m.pos.altitude != null) extra.push(`${Math.round(m.pos.altitude)} m`);
+  if (extra.length) items.push(["Elev", extra.join(" · ")]);
+  if (m.zoomLabel && m.zoomLabel !== "1×" && !m.imported) items.push(["Zoom", m.zoomLabel]);
+  if (m.tech) items.push(["Tech", m.tech]);
+  if (m.imported) items.push(["Source", "Photo library"]);
+  if (m.note) items.push(["Note", m.note, true]);
+  if (m.addr) items.push(["Address", m.addr, true]);   // full-width rows
+  const labels = m.unlabelled ? [] : (m.labels && m.labels.length ? m.labels : [m.label || "Photo"]);
+  return { labels, unl:!!m.unlabelled, ref:m.job ? refLabel(m.job.ref) : "", items };
 }
 function wrapText(ctx, text, maxW, maxLines) {
   const words = [];
@@ -1505,44 +1507,93 @@ function bandGeom(W0, H0) {
 function addInfoBand(c, m) {
   const k = bandContent(m), G = bandGeom(c.width, c.height), S = G.S;
   const F = (wt, sz) => `${wt} ${sz}px -apple-system, system-ui, "Segoe UI", Roboto, sans-serif`;
-  const rule = Math.max(3, Math.round(S * 0.0035)), room = S - G.PH - rule;
-  const padX = Math.round(S * 0.032), gutter = padX * 2, colW = (S - padX * 2 - gutter) / 2;
+  const room = S - G.PH, padX = Math.round(S * 0.03), avail = S - padX * 2;
   const mc = canvas(1, 1).getContext("2d");
-  const layout = (fs, maxL) => {
-    const tfs = Math.round(fs * 1.25), tlh = Math.round(tfs * 1.28), lh = Math.round(fs * 1.42), gapT = Math.round(fs * 0.7);
-    mc.font = F(700, tfs);
-    const refW = k.ref ? mc.measureText(k.ref).width + padX : 0;    // SA-# sits at the right end of the title row
-    const title = wrapText(mc, k.title, S - padX * 2 - refW, maxL);
+  const chipsSrc = k.unl ? ["Not labelled yet"] : k.labels;
+  const layout = (fs, cols, maxL, allowCut) => {
+    // chips
+    const cfs = Math.round(fs * 1.22), cpx = Math.round(cfs * 0.5), cpy = Math.round(cfs * 0.24), cgap = Math.round(cfs * 0.32);
+    const ch = Math.round(cfs * 1.18) + cpy * 2;
+    mc.font = F(700, cfs);
+    const refW = k.ref ? mc.measureText(k.ref).width + padX * 0.8 : 0;
+    const rows = [[]]; let x = 0, cut = false;
+    for (const t0 of chipsSrc) {
+      let t = t0, w = mc.measureText(t).width + cpx * 2;
+      const lim = rows.length === 1 ? avail - refW : avail;
+      if (w > avail - refW) {                       // a single label wider than the band: fit it with "…"
+        if (!allowCut) return null;
+        while (t.length > 1 && mc.measureText(t + "…").width + cpx * 2 > avail - refW) t = t.slice(0, -1);
+        t = t.trimEnd() + "…"; w = mc.measureText(t).width + cpx * 2; cut = true;
+      }
+      if (x && x + cgap + w > lim) { rows.push([]); x = 0; }
+      rows[rows.length - 1].push({ t, x:x ? x + cgap : 0, w }); x = (x ? x + cgap : 0) + w;
+    }
+    // facts grid: key (muted) + value; full-width items get their own row
     mc.font = F(500, fs);
-    const col = arr => arr.flatMap(t => wrapText(mc, t, colW, maxL));
-    const A = col(k.A), B = col(k.B), cut = [...title, ...A, ...B].some(t => t.endsWith("…"));
-    return { fs, tfs, tlh, lh, gapT, title, A, B, cut, h:title.length * tlh + gapT + Math.max(A.length, B.length, 1) * lh };
+    const keyW = t => { mc.font = F(600, fs); const w = mc.measureText(t).width; mc.font = F(500, fs); return w; };
+    const kg = Math.round(fs * 0.4), colGap = Math.round(fs * 1.4), lh = Math.round(fs * 1.38);
+    const grid = k.items.filter(i => !i[2]), wide = k.items.filter(i => i[2]);   // wide: "top" rows go above the grid, the rest below
+    const nRows = Math.ceil(grid.length / cols), colW = [];
+    for (let ci = 0; ci < cols; ci++) {
+      let w = 0;
+      for (let r = 0; r < nRows; r++) { const it = grid[r * cols + ci]; if (it) w = Math.max(w, keyW(it[0]) + kg + mc.measureText(it[1]).width); }
+      colW.push(w);
+    }
+    const gridW = colW.reduce((a, b) => a + b, 0) + colGap * (cols - 1);
+    if (gridW > avail) return null;
+    const wideLines = wide.map(it => { const kw = keyW(it[0]) + kg; return { k:it[0], kw, top:it[2] === "top", lines:wrapText(mc, it[1], avail - kw, maxL) }; });
+    if (!allowCut && wideLines.some(w => w.lines.some(l => l.endsWith("…")))) return null;
+    const gapMid = Math.round(fs * 0.85);
+    const h = rows.length * ch + (rows.length - 1) * cgap + gapMid + (nRows + wideLines.reduce((a, w) => a + w.lines.length, 0)) * lh;
+    return { fs, cfs, cpx, ch, cgap, rows, grid, cols, nRows, colW, colGap, kg, lh, wideLines, gapMid, h, cut };
   };
-  const fits = t => t.h + 2 * Math.round(room * 0.1) <= room;     // at least 10% of the band above and below
-  // 1) everything on one line, shrinking the text a little if needed; 2) let long items wrap;
-  // 3) last resort for very long notes: cut with "…". Nothing is cut while a smaller size or a wrap would fit.
+  const fits = t => t && t.h + 2 * Math.round(room * 0.1) <= room;
   let L = null;
-  for (const [maxL, minFs, allowCut] of [[1, Math.round(S * 0.019), false], [2, Math.round(S * 0.015), false], [3, 9, false], [2, 9, true]]) {
-    for (let fs = Math.round(S * 0.026); fs >= minFs && !L; fs--) { const t = layout(fs, maxL); if (fits(t) && (allowCut || !t.cut)) L = t; }
+  // 4 facts sit best as 2 × 2; otherwise 3 across. Text size is capped so every photo looks the same.
+  const nGrid = k.items.filter(i => !i[2]).length, first = nGrid === 4 ? 2 : 3;
+  // biggest text first, trying both column counts at each size; then wrapping; "…" last
+  for (const [colsList, maxL, minFs, allowCut] of [[[first, first === 3 ? 2 : 3], 1, Math.round(S * 0.016), false], [[2], 2, Math.round(S * 0.012), false], [[1], 2, 9, false], [[1], 2, 9, true]]) {
+    for (let fs = Math.round(S * 0.0235); fs >= minFs && !L; fs--) for (const cols of colsList) { const t = layout(fs, cols, maxL, allowCut); if (fits(t)) { L = t; break; } }
     if (L) break;
   }
-  if (!L) L = layout(9, 1);
+  if (!L) L = layout(9, 1, 1, true) || layout(9, 1, 2, true);
   const out = canvas(S, S), x = out.getContext("2d");
   x.fillStyle = "#0B1413"; x.fillRect(0, 0, S, S);
   x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high";
   x.drawImage(c, G.dx, G.dy, G.dw, G.dh);
-  x.fillStyle = "#58C774"; x.fillRect(0, G.PH, S, rule);
-  let y = G.PH + rule + Math.round((room - L.h) / 2);             // same space above and below the text
+  let y = G.PH + Math.round((room - L.h) / 2);           // same space above and below
   x.textBaseline = "middle";
-  x.font = F(700, L.tfs); x.fillStyle = "#58C774";
-  if (k.ref) { x.textAlign = "right"; x.fillText(k.ref, S - padX, y + L.tlh / 2); x.textAlign = "left"; }
-  for (const t of L.title) { x.fillText(t, padX, y + L.tlh / 2); y += L.tlh; }
-  y += L.gapT;
-  x.font = F(500, L.fs); x.fillStyle = "#E8EFEC";
-  L.A.forEach((t, i) => x.fillText(t, padX, y + i * L.lh + L.lh / 2));
-  L.B.forEach((t, i) => x.fillText(t, padX + colW + gutter, y + i * L.lh + L.lh / 2));
-  const colH = Math.max(L.A.length, L.B.length) * L.lh;
-  x.fillStyle = "rgba(232,239,236,0.16)"; x.fillRect(Math.round(S / 2 - 1), y + L.lh * 0.15, 2, colH - L.lh * 0.3);   // centre divider
+  // chips
+  const r = Math.round(L.ch * 0.22);
+  L.rows.forEach((row, ri) => {
+    for (const cp of row) {
+      x.fillStyle = k.unl ? "#F2B84B" : "#58C774";
+      x.beginPath(); x.roundRect ? x.roundRect(padX + cp.x, y, cp.w, L.ch, r) : x.rect(padX + cp.x, y, cp.w, L.ch); x.fill();
+      x.font = F(700, L.cfs); x.fillStyle = "#06120D"; x.textAlign = "left";
+      x.fillText(cp.t, padX + cp.x + L.cpx, y + L.ch / 2 + L.cfs * 0.03);
+    }
+    if (ri === 0 && k.ref) { x.font = F(700, L.cfs); x.fillStyle = "#58C774"; x.textAlign = "right"; x.fillText(k.ref, S - padX, y + L.ch / 2); x.textAlign = "left"; }
+    y += L.ch + (ri < L.rows.length - 1 ? L.cgap : 0);
+  });
+  y += L.gapMid;
+  const wideRow = w => w.lines.forEach((t, i) => { if (i === 0) kv(w.k, t, padX, y + L.lh / 2, w.kw); else { x.font = F(500, L.fs); x.fillStyle = "#E8EFEC"; x.fillText(t, padX + w.kw, y + L.lh / 2); } y += L.lh; });
+  // facts
+  const kv = (key, val, px, py, kw) => {
+    x.font = F(600, L.fs); x.fillStyle = "#8FA59D"; x.fillText(key, px, py);
+    const w = kw != null ? kw : x.measureText(key).width + L.kg;
+    x.font = F(500, L.fs); x.fillStyle = "#E8EFEC"; x.fillText(val, px + w, py);
+  };
+  L.wideLines.filter(w => w.top).forEach(wideRow);
+  for (let ri = 0; ri < L.nRows; ri++) {
+    let px = padX;
+    for (let ci = 0; ci < L.cols; ci++) {
+      const it = L.grid[ri * L.cols + ci];
+      if (it) { x.font = F(600, L.fs); kv(it[0], it[1], px, y + L.lh / 2, x.measureText(it[0]).width + L.kg); }
+      px += L.colW[ci] + L.colGap;
+    }
+    y += L.lh;
+  }
+  L.wideLines.filter(w => !w.top).forEach(wideRow);
   return out;
 }
 async function processFrame(src, crop, rotation, meta) {
@@ -1637,7 +1688,7 @@ async function capture(force = false) {
     grab.width = grab.height = 0;
     const rec = await storePhoto(out, meta);
     S.note = "";
-    S.fresh = true; renderLabels();
+    clearSel(); renderLabels();          // labels un-select after every shot; Retake brings them back
     showSnack(rec);
   } catch (e) { console.error(e); toast("Couldn’t save that photo. Try again."); }
   finally { S.busy = false; $("shutter").classList.remove("busy"); }
@@ -1715,7 +1766,7 @@ $("fileIn").addEventListener("change", async e => {
   }
   S.busy = false; $("shutter").classList.remove("busy");
   const as = selLabels().length ? `as <b>${esc(labelText(selLabels()))}</b>` : "to To label";
-  S.fresh = true; renderLabels();
+  clearSel(); renderLabels();
   toast(done ? `Imported ${done} ${as} · ${kb(total)}` : "Couldn’t read those photos. Try JPEG or “Most Compatible” format.");
 });
 
@@ -2051,31 +2102,61 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowLeft") stepViewer(-1); else if (e.key === "ArrowRight") stepViewer(1); else if (e.key === "Escape") $("vClose").click();
 });
 const st = $("vStage");
+/* Zoom maths: the photo's centre sits at stage centre + (Z.x, Z.y), scaled by Z.s. Pinch keeps the
+   point between the fingers fixed (and two-finger drag pans); double-tap zooms to the tapped spot;
+   panning is limited so the photo never slides off screen. */
+function stageBox() { const r = uiRect(st); return { cx:r.left + r.width / 2, cy:r.top + r.height / 2, w:r.width, h:r.height }; }
+function clampZ() {
+  const img = $("vImg"), b = stageBox();
+  if (Z.s <= 1.001) { Z.s = 1; Z.x = 0; Z.y = 0; return; }
+  const mx = Math.max(0, (img.clientWidth * Z.s - b.w) / 2), my = Math.max(0, (img.clientHeight * Z.s - b.h) / 2);
+  Z.x = clamp(Z.x, -mx, mx); Z.y = clamp(Z.y, -my, my);
+}
+// Scale to s keeping the screen point (px, py) over the same spot of the photo
+function zoomAt(s, px, py, from) {
+  const b = stageBox(), f = s / from.s;
+  Z.s = s; Z.x = (px - b.cx) - f * (px - b.cx - from.x); Z.y = (py - b.cy) - f * (py - b.cy - from.y);
+}
+const midOf = () => { const [a, c] = [...pts.values()]; return { x:(a.x + c.x) / 2, y:(a.y + c.y) / 2, d:Math.hypot(a.x - c.x, a.y - c.y) || 1 }; };
 st.addEventListener("pointerdown", e => {
   if (e.target.closest(".vnav")) return;
-  st.setPointerCapture(e.pointerId); pts.set(e.pointerId, uiPt(e));
-  $("vImg").classList.remove("slide");
-  swipe = pts.size === 1 && Z.s === 1 ? (q => ({ x0:q.x, y0:q.y }))(uiPt(e)) : null;
-  if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d:Math.hypot(a.x - b.x, a.y - b.y), s:Z.s }; }
-  if (pts.size === 1) { const now = Date.now(); if (now - lastTap < 280) { Z = Z.s > 1 ? { s:1, x:0, y:0 } : { s:3, x:0, y:0 }; applyZ(); } lastTap = now; }
+  try { st.setPointerCapture(e.pointerId); } catch {} const q = uiPt(e); pts.set(e.pointerId, q);
+  const img = $("vImg"); img.classList.remove("slide", "zanim");
+  swipe = pts.size === 1 && Z.s === 1 ? { x0:q.x, y0:q.y } : null;
+  if (pts.size === 2) { const m = midOf(); pinch = { m, z:{ ...Z } }; swipe = null; if (Z.s === 1) { Z.x = 0; Z.y = 0; } }
+  if (pts.size === 1) {
+    const now = Date.now();
+    if (now - lastTap < 300 && Math.hypot(q.x - (st._lt || q).x, q.y - (st._lt || q).y) < 40) {
+      if (Z.s > 1) Z = { s:1, x:0, y:0 }; else { zoomAt(3, q.x, q.y, { s:1, x:0, y:0 }); clampZ(); }
+      img.classList.add("zanim"); applyZ(); lastTap = 0; swipe = null; return;
+    }
+    lastTap = now; st._lt = q;
+  }
 });
 st.addEventListener("pointermove", e => {
   if (!pts.has(e.pointerId)) return;
   const prev = pts.get(e.pointerId), q = uiPt(e); pts.set(e.pointerId, q);
-  if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; Z.s = clamp(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, 1, 8); }
-  else if (pts.size === 1 && Z.s > 1) { Z.x += q.x - prev.x; Z.y += q.y - prev.y; }
+  if (pts.size >= 2 && pinch) {
+    const m = midOf(), s = clamp(pinch.z.s * m.d / pinch.m.d, 1, 8);
+    zoomAt(s, pinch.m.x, pinch.m.y, pinch.z);         // scale about where the pinch started
+    Z.x += m.x - pinch.m.x; Z.y += m.y - pinch.m.y;    // and follow the fingers as they move
+    clampZ(); applyZ(); return;
+  }
   if (pts.size === 1 && swipe && Z.s === 1) {             // not zoomed: drag sideways to flip photos
     const i = vList.indexOf(S.viewing && S.viewing.id), dx = q.x - swipe.x0;
     const edge = (dx > 0 && i <= 0) || (dx < 0 && i >= vList.length - 1);
     Z.x = edge ? dx * 0.3 : dx; Z.y = 0; applyZ(); return;
   }
-  if (pts.size > 1) swipe = null;
-  if (Z.s === 1) { Z.x = 0; Z.y = 0; }
-  applyZ();
+  if (pts.size === 1 && Z.s > 1) { Z.x += q.x - prev.x; Z.y += q.y - prev.y; clampZ(); applyZ(); }
 });
 const endPt = e => {
   if (!pts.has(e.pointerId)) return;
-  pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
+  pts.delete(e.pointerId);
+  if (pts.size < 2 && pinch) {
+    pinch = null;
+    if (Z.s < 1.05) { Z = { s:1, x:0, y:0 }; $("vImg").classList.add("zanim"); applyZ(); }
+    lastTap = 0; swipe = null; return;                  // lifting a pinch finger is never a tap or a swipe
+  }
   if (swipe && !pts.size) {
     const q = uiPt(e), dx = q.x - swipe.x0, dy = q.y - swipe.y0; swipe = null;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && stepViewer(dx < 0 ? 1 : -1)) return;
@@ -2083,7 +2164,7 @@ const endPt = e => {
   }
 };
 st.addEventListener("pointerup", endPt); st.addEventListener("pointercancel", endPt);
-$("vClose").addEventListener("click", () => $("viewer").classList.remove("open"));
+$("vClose").addEventListener("click", () => { $("viewer").classList.remove("open"); pts.clear(); pinch = null; swipe = null; });
 $("vDl").addEventListener("click", async () => { if (S.viewing) { if (isUnl(S.viewing) || !outcomeSet(curJob())) return requestSave([S.viewing]); await downloadPhotos([S.viewing]); if ($("viewer").classList.contains("open")) openViewer(S.viewing.id); } });
 $("vLab").addEventListener("click", () => { if (S.viewing) openSorter([S.viewing.id]); });
 $("vDel").addEventListener("click", async e => {
@@ -2185,7 +2266,6 @@ function renderLabels() {
   S.sel = S.sel.filter(l => tileList(j, S.sel, counts).includes(l));
   $("lGrid").innerHTML = tilesHTML(j, S.sel, counts);
   const full = !!(j && j.full);
-  $("lSel").innerHTML = (S.sel.length ? `Next photo: <b>${esc(labelText(S.sel))}</b>` : `No label · shoot now, label later`) + (full ? `<span class="hqtag">FULL QUALITY</span>` : "");
   $("hqBtn").setAttribute("aria-pressed", full);
   const unl = curPhotos().filter(isUnl).length;
   $("toLabelBtn").hidden = !unl; $("toLabelBtn").textContent = `To label (${unl})`;
@@ -2204,6 +2284,7 @@ $("lGrid").addEventListener("click", e => {
   tapLabel(b.dataset.l);
 });
 // Tap = pick. Right after a shot the first tap starts a new pick; more taps add or remove items (one photo, several items).
+function clearSel() { S.sel = []; S.fresh = false; if (current) { current.sel = []; save(); } }
 function tapLabel(l, add = false) {
   let sel = S.fresh ? [] : [...S.sel];
   if (S.fresh && S.sel.length === 1 && S.sel[0] === l && !add) sel = [];      // tap the lit tile again = no label

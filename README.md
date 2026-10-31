@@ -1,4 +1,4 @@
-# Field Cam (v3.12.0)
+# Field Cam (v3.13.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -44,11 +44,10 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
 3. **Labels: pick first, or shoot first.** Every checklist item for the form shows as a tile under
    the viewfinder (items still needed have an amber edge; done ones show ✓ and a count). There is
    no set order and the shutter always works.
-   - **Pick first:** tap a tile, then shoot. The pick stays for the next shots too, so a run of the
-     same item is shutter-only. Right after a shot the next tap starts a new pick; further taps
-     add or remove items (**one photo, several items**: tap each one, the stamp lists them all and
-     the file name joins them, e.g. `Cable Run + Grounding Overview`). Tap the lit tile right after
-     a shot to go back to no label. The line above the tiles says what the next photo will be.
+   - **Pick first:** tap a tile, then shoot. Tap more tiles for **one photo, several items** (the
+     stamp lists them all and the file name joins them, e.g. `Cable Run + Grounding Overview`); tap
+     a lit tile again to drop it. After every shot the tiles un-select, so each photo is labelled on
+     purpose (**Retake** puts the same labels back). Picked tiles are lit green.
    - **Shoot first:** with no tile picked, photos go to **To label**. Tap **To label (n)** (or the
      button in the gallery) to sort them: each photo shows full screen, tap what's in it (one or
      more), then **Next**. Photos can't be saved until they're labelled.
@@ -87,11 +86,17 @@ Names are built at save time, so they follow the SA-# and labels as last set.
 
 ## Info band
 Every saved image has the same layout: a 4:3 photo area (camera photos fill it; imports are scaled
-to fit, centred) and the band below it. Band: label(s) in green with the SA-# at the right end of
-the same row, then two equal columns split by a thin centre line. Left: time, GPS, facing and
-elevation, address. Right: job type, tilt, tech. The text is measured before drawing: it shrinks
-a little or wraps a long item rather than cutting it off, and the block is centred with equal space
-above and below. Only an extremely long address or label gets cut with "…".
+to fit, centred) and the band below it ("label chips" layout):
+- **Top row:** each label as its own green chip (more labels wrap onto a second row), SA-# at the
+  right. Unlabelled photos show an amber "Not labelled yet" chip.
+- **Job** on its own row (work order · platform · outcome · reason).
+- **Facts grid:** When, GPS, Facing (direction · tilt), Tech, plus Elev / Zoom / Source when they
+  apply, each as a grey key and white value, 2 or 3 across, whichever lets the text be biggest.
+- **Address** on its own row at the bottom.
+
+The text is measured before drawing and capped so every photo looks the same: it shrinks a little
+or wraps a long item rather than cutting it off, and the block is centred with equal space above
+and below. Only an extremely long address or label gets cut with "…".
 
 ## Outcomes, reasons and photo lists
 These live in the `SETUP` and `PHOTOS` block at the top of the script in `index.html` (between
@@ -133,7 +138,7 @@ How it behaves in the app:
 The **HQ** button (top-right of the camera) switches the current job to full quality: photos keep
 the camera's full resolution (as much as the phone gives a web app, up to 4032 px wide) with light
 compression and no size limit, typically 2–5 MB each instead of under 350 KB. The info band is still
-added. While it's on, **FULL QUALITY** shows next to "Next photo". It stays on for that job and is
+added. While it's on, the **HQ** button in the picture's top-right corner is green. It stays on for that job and is
 off again for the next job, so nobody leaves it on by accident. Turning it on or off affects photos
 taken afterwards, not ones already taken.
 
