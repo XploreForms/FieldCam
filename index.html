@@ -244,6 +244,10 @@ html[data-text="large"] .start .startout{min-height:48px;font-size:17px}
 
 /* job picker */
 .picker{display:grid;gap:14px}
+.refrow{display:flex;gap:8px}
+.refrow input{flex:1;min-width:0}
+.pastebtn{flex:none;min-height:0;padding:0 16px}
+.start .pastebtn{border-radius:10px}
 .olist{display:grid;gap:8px}
 .ogrp{display:grid;gap:6px;padding:8px;border-radius:14px;background:var(--ink-3)}
 .ogrp h4{margin:2px 4px 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -477,7 +481,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <section class="sheet" id="jobSheet" aria-label="Job">
   <header><h2>This job</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
-    <div><label for="inRefEdit">Account ID or SA-# <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+    <div><label for="inRefEdit">Account ID or SA-# <span style="text-transform:none;letter-spacing:0">(optional)</span></label><div class="refrow"><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
     <div class="picker" id="sheetPicker"></div>
     <div class="picker" id="sheetOutcome"></div>
     <p class="hint" id="jobEditHint"></p>
@@ -547,7 +551,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.13.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.15.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -605,7 +609,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <button class="btn primary" id="resumeBtn">Continue</button>
     </div>
     <h2 id="newJobH">New job</h2>
-    <div><label for="inRef">SA-# or Account ID <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="inRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SA-01234567"></div>
+    <div><label for="inRef">SA-# or Account ID <span style="text-transform:none;letter-spacing:0">(optional)</span></label><div class="refrow"><input id="inRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SA-123456"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div></div>
     <div class="picker" id="startPicker"></div>
     <div><label>Outcome <span style="text-transform:none;letter-spacing:0">(optional, can be set later)</span></label><button type="button" class="btn startout" id="startOutBtn" disabled>Select later</button></div>
     <div class="install" id="installTip" hidden></div>
@@ -618,7 +622,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.13.0";
+const VERSION = "3.15.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -784,7 +788,29 @@ function jobTitle(j) {
   if (!outcomeSet(j)) return base;
   return `${base} · ${byId(OUTCOMES, j.outcome).name}${j.reason ? " · " + j.reason : ""}`;
 }
-// "sa 0123" -> "SA-0123"; anything else upper-cased with only letters, digits and dashes
+// Pull an SA-# or an account number out of whatever was copied (an FSL page, a text, an email…)
+function refFromText(t) {
+  t = String(t || "");
+  const sa = t.match(/\bSA[\s#:-]*(\d{6})(?!\d)/i);     // SA numbers are 6 digits
+  if (sa) return "SA-" + sa[1];
+  t = t.replace(/\bSA[\s#:-]*\d+/gi, " ");                 // a malformed SA-# is never taken as an account number
+  const acct = t.match(/\b(?:account|acct|acc)\b[^0-9]{0,15}(\d{5,})/i);
+  if (acct) return acct[1];
+  const nums = t.match(/\b\d{5,}\b/g);
+  return nums && nums.length === 1 ? nums[0] : "";       // a lone long number is taken as the account number
+}
+async function pasteRef(inputId) {
+  const inp = $(inputId);
+  let txt = "";
+  try { txt = await navigator.clipboard.readText(); }
+  catch { toast("Couldn’t read the clipboard. Long-press the box and choose Paste.", 3200); inp.focus(); return; }
+  const r = refFromText(txt);
+  if (!r) { toast("No SA-# or account number on the clipboard.", 2800); return; }
+  inp.value = r; inp.dispatchEvent(new Event("input")); inp.dispatchEvent(new Event("change"));
+  toast(`Pasted <b>${esc(r)}</b>`, 1800);
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-paste]"); if (b) pasteRef(b.dataset.paste); });
+// "sa 123456" -> "SA-123456"; anything else upper-cased with only letters, digits and dashes
 function normRef(v) {
   v = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
   const m = v.match(/^SA-?(\d+)$/);
@@ -1287,6 +1313,12 @@ function fastTick() {
   const E = hudEls, p = S.pitch, strict = selStrict();
   const lvl = strict && p != null && Math.abs(p) <= LEVEL_TOL, near = strict && p != null && !lvl;
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
+  if (lvl !== S.wasLvl) {                                  // short buzz when a line-of-sight shot becomes level (Android)
+    const t = Date.now();
+    if (lvl && !S.sideways && t - (S.lvlOffAt || 0) > 600 && navigator.vibrate) { try { navigator.vibrate(35); } catch {} }
+    if (!lvl) S.lvlOffAt = t;
+    S.wasLvl = lvl;
+  }
   const xt = extraTurn(); E.hud.classList.toggle("r90", xt === 90); E.hud.classList.toggle("r270", xt === 270);
   // sideways for more than ~0.4 s (ignores a quick wobble) -> ask the tech to turn the phone upright
   const sw = xt % 180 === 90, now = Date.now();
@@ -1378,10 +1410,10 @@ function stampLines(m, live = false) {
 }
 
 /* ================= image pipeline ================= */
-const OUTPUT = { edge:2048, target:350 * 1024 };
+const OUTPUT = { edge:2048, target:496 * 1024 };   // JPEG budget; with the EXIF block the whole file stays under 500 KB
 // Full quality (per job, HQ button): the camera's full resolution (capped at 4032 px so the square image
 // stays inside iPhone's canvas limit) and light JPEG compression, no size target. Typically 2–5 MB.
-const FULL = { edge:4032, q:0.92 };   // every photo: 2048 px long edge, best quality under 350 KB
+const FULL = { edge:4032, q:0.92 };   // normal photos: 2048 px long edge, best quality under 500 KB
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
 function downscale(src, sw, sh, tw, th) {
   let cur = src, cw = sw, ch = sh;
@@ -1675,7 +1707,6 @@ async function capture(force = false) {
   if (S.sideways) { try { navigator.vibrate && navigator.vibrate([30, 60, 30]); } catch {} return; }   // the card on screen explains
   S.busy = true; $("shutter").classList.add("busy");
   const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
-  try { navigator.vibrate && navigator.vibrate(15); } catch {}
   const meta = snapshot();
   const vw = v.videoWidth, vh = v.videoHeight, z = S.caps.zoom ? 1 : S.digitalZoom;
   // Always landscape 4:3 in the world: crop the centre of the camera feed to the frame's shape
@@ -1863,7 +1894,7 @@ function parseTiff(v, t, out) {
 /* ================= file names and downloads ================= */
 const slug = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
 // Plain, readable file names:
-//   2026-10-27 1541 SA-01234567 - CPE Line of Sight (43.3601 -80.3123).jpg
+//   2026-10-27 1541 SA-123456 - CPE Line of Sight (43.3601 -80.3123).jpg
 //   2026-10-27 1543 - LOS POVs 2 (43.3601 -80.3123).jpg
 // Date and time taken, SA-# (if entered), photo name (numbered only when there is more than one), GPS.
 const FILE_LABEL = {   // shorter names for long checklist items (file name only; the stamp keeps the full wording)
@@ -1908,7 +1939,7 @@ async function downloadPhotos(items) {
       dlBusy = true;
       try {
         await navigator.share({ files });
-        for (const p of list) { p.downloaded = true; try { await DB.put(p); } catch {} }
+        for (const p of list) { p.downloaded = true; p.savedAt = Date.now(); try { await DB.put(p); } catch {} }
         toast(`Saved ${plural(list.length, "photo")}`, 2600);
         return true;
       } catch (e) {
@@ -1922,7 +1953,7 @@ async function downloadPhotos(items) {
   for (const p of list) {
     toast(`Saving ${n + 1} of ${list.length}…`, 1600);
     try { await saveFile(fileNameFor(p), p.blob); } catch (e) { if (e && e.stop) break; continue; }
-    p.downloaded = true; n++;
+    p.downloaded = true; p.savedAt = Date.now(); n++;
     try { await DB.put(p); } catch {}
     if (n < list.length) await sleep(700);
   }
@@ -2060,6 +2091,21 @@ $("dlAllBtn").addEventListener("click", () => requestSave(S.selected.size ? curP
 $("delBtn").addEventListener("click", () => { $("delN").textContent = plural(S.selected.size, "photo"); $("delConfirm").hidden = false; });
 $("delNo").addEventListener("click", () => $("delConfirm").hidden = true);
 $("delYes").addEventListener("click", async () => { await removePhotos([...S.selected]); S.selected.clear(); $("delConfirm").hidden = true; renderGallery(); });
+/* Auto-cleanup: Field Cam's own copies of photos that were SAVED more than CLEAN_DAYS ago are removed from
+   the app (the saved copies in Photos / Files are never touched). Unsaved photos and the current job's
+   photos are always kept. Runs when the app opens and when a job is finished. */
+const CLEAN_DAYS = 14;
+async function autoCleanup() {
+  const cutoff = Date.now() - CLEAN_DAYS * 864e5, cur = current && current.id;
+  const old = S.photos.filter(p => p.downloaded && (p.savedAt || p.created) < cutoff && p.sessionId !== cur);
+  if (!old.length) return 0;
+  const bytes = old.reduce((a, p) => a + (p.blob ? p.blob.size : 0) + (p.thumb ? p.thumb.size : 0) + (p.raw ? p.raw.size : 0), 0);
+  await removePhotos(old.map(p => p.id));
+  for (const id of Object.keys(jobs)) if (id !== cur && !S.photos.some(p => p.sessionId === id)) delete jobs[id];   // jobs with nothing left
+  save();
+  toast(`Cleared ${plural(old.length, "saved photo")} older than ${CLEAN_DAYS} days (${kb(bytes)}). They’re still in your Photos / Files.`, 4200);
+  return old.length;
+}
 async function removePhotos(ids) {
   for (const id of ids) { try { await DB.del(id); } catch {} if (urls.has(id)) { URL.revokeObjectURL(urls.get(id)); urls.delete(id); } }
   S.photos = S.photos.filter(p => !ids.includes(p.id));
@@ -2460,6 +2506,7 @@ function finishJob() {
   // drop the clean copies kept for relabelling (unlabelled photos keep theirs)
   if (current) for (const p of curPhotos()) if (p.raw && !isUnl(p)) { delete p.raw; DB.put(p).catch(() => {}); }
   current = null; S.sel = []; S.selected.clear(); save(); closeSheets(); showStart();
+  autoCleanup().catch(() => {});
 }
 // New job button (by the shutter): finish this job and start the next, or start over
 function openNewSheet() {
@@ -2513,7 +2560,7 @@ async function renderStorage() {
   const total = S.photos.reduce((a, p) => a + p.blob.size + p.thumb.size, 0);
   let txt = `${plural(S.photos.length, "photo")} stored on this phone · ${kb(total)}`;
   try { const e = await navigator.storage.estimate(); if (e.quota) txt += ` · ${kb(e.quota)} available`; } catch {}
-  $("storageStats").textContent = txt;
+  $("storageStats").textContent = txt + ` · saved photos are cleared from Field Cam after ${CLEAN_DAYS} days (they stay in Photos / Files)`;
 }
 const SAVE_HINT = isIOS
   ? "Save opens the iPhone share sheet: tap “Save N Images” to put them in Photos, or “Save to Files” to keep the file names. Then attach them in FSL."
@@ -2652,6 +2699,7 @@ $("updGo").addEventListener("click", async () => {
   catch { toast("Photo storage is unavailable in this browser mode.", 4000); }
   if (current && !jobs[current.id]) current = null;
   if (current) S.sel = [...(current.sel || [])];
+  autoCleanup().catch(() => {});
   if ("serviceWorker" in navigator && location.protocol === "https:") setupUpdates();
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) showVfMsg("This browser can’t use the camera. Open Field Cam in Safari.");
   showStart();

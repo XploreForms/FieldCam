@@ -1,4 +1,4 @@
-# Field Cam (v3.13.0)
+# Field Cam (v3.15.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -8,7 +8,7 @@ viewfinder fills the full width of the screen (and all the space above the label
 the centre of the photo, with whatever doesn't fit trimmed **on screen only**. The saved photo is
 always the full 4:3 frame, so it shows a little more at the edges than the viewfinder did. An **info band** below the photo makes the final image a
 **2048 × 2048 square** (see *Info band* below). Nothing is drawn over the photo itself. Compressed to
-350 KB max for low-signal uploads.
+500 KB max for low-signal uploads.
 
 ## Files
 | File | Purpose |
@@ -75,7 +75,7 @@ Previous jobs stay on the phone (gallery › Previous jobs) until deleted.
 
 ## File names
 Plain and readable:
-- `2026-10-27 1541 SA-01234567 - CPE Line of Sight (43.3601 -80.3123).jpg`
+- `2026-10-27 1541 SA-123456 - CPE Line of Sight (43.3601 -80.3123).jpg`
 - `2026-10-27 1543 - LOS POVs 2 (43.3601 -80.3123).jpg`
 
 = date and time taken, SA-# (if entered), photo name (numbered only when there's more than one),
@@ -83,6 +83,25 @@ GPS (or `no GPS`). The job type is on the photo's info band, not in the file nam
 A few long checklist items get a short name in the file (`FILE_LABEL` in `index.html`), e.g.
 "Line of sight POVs to all viable towers" → "LOS POVs"; the stamp keeps the full wording.
 Names are built at save time, so they follow the SA-# and labels as last set.
+
+## SA-# / account number
+The start screen and the job sheet have a **Paste** button next to the SA-# box. Copy the SA-# or
+the account number anywhere (FSL, a text, an email), tap Paste, and Field Cam picks the number out
+of whatever was copied: `SA-` + 6 digits first (also written `SA 123456`, `SA#123456`), then a number next to "Account"/"Acct", then a single long
+number on its own. iPhones show a small "Paste" bubble to confirm the first time; if the clipboard
+can't be read, long-press the box and paste as usual.
+
+## Auto-cleanup
+Field Cam keeps its own copy of every photo (for re-labelling and saving again). Once a photo has
+been **saved** and the save was more than **14 days** ago, Field Cam deletes its own copy when the
+app opens or a job is finished, and shows a short note ("Cleared 12 saved photos older than 14
+days…"). The copies the tech saved to Photos or Files are never touched. Unsaved photos and the
+current job's photos are never cleared. The number of days is `CLEAN_DAYS` in `index.html`.
+
+## Vibration (Android)
+A short buzz when a line-of-sight shot becomes level, so the tech doesn't have to watch the screen.
+A small wobble at the edge doesn't re-buzz. Warnings (blurry or dark photo, shot blocked) still give
+a double buzz; normal shots don't vibrate. iPhones don't let web apps vibrate.
 
 ## Info band
 Every saved image has the same layout: a 4:3 photo area (camera photos fill it; imports are scaled
@@ -137,7 +156,7 @@ How it behaves in the app:
 ## Full quality (HQ)
 The **HQ** button (top-right of the camera) switches the current job to full quality: photos keep
 the camera's full resolution (as much as the phone gives a web app, up to 4032 px wide) with light
-compression and no size limit, typically 2–5 MB each instead of under 350 KB. The info band is still
+compression and no size limit, typically 2–5 MB each instead of under 500 KB. The info band is still
 added. While it's on, the **HQ** button in the picture's top-right corner is green. It stays on for that job and is
 off again for the next job, so nobody leaves it on by accident. Turning it on or off affects photos
 taken afterwards, not ones already taken.
