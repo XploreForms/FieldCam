@@ -1,4 +1,4 @@
-# Field Cam (v3.15.0)
+# Field Cam (v3.16.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -90,6 +90,22 @@ the account number anywhere (FSL, a text, an email), tap Paste, and Field Cam pi
 of whatever was copied: `SA-` + 6 digits first (also written `SA 123456`, `SA#123456`), then a number next to "Account"/"Acct", then a single long
 number on its own. iPhones show a small "Paste" bubble to confirm the first time; if the clipboard
 can't be read, long-press the box and paste as usual.
+
+## Serial numbers (Complete jobs)
+On Complete jobs (or before the outcome is picked) a barcode button sits under HQ in the picture's
+top-right corner. Tap it, put the red line across the equipment's **S/N** barcode, and tap **Scan**
+(or the shutter). Field Cam reads it, names the item when it recognises the serial pattern (same
+list as Stock Tracker: Adtran router/extender, Nokia/Adtran ONTs, 5G and LTE CPEs, Hughes and
+SurfBeam modems and radios, Zyxel, set-top boxes), and **Add** puts it on the job. Scan as many as
+needed, then **Done**. MAC address barcodes and repeats are caught.
+
+Scanned serials are stamped on every photo in the job as an **S/N** row, only while the outcome is
+Complete. They're listed in the job sheet (tap the job name) with **Remove**. If the outcome changes
+to Cannot Complete or Not Required the scanner hides and the serials come off the stamp (they're
+kept in case it changes back).
+
+Scanning uses the phone's own barcode reader on Android and the ZXing library on iPhone (loaded from
+the jsDelivr CDN and kept for offline use by the service worker, the same as Stock Tracker).
 
 ## Auto-cleanup
 Field Cam keeps its own copy of every photo (for re-labelling and saving again). Once a photo has

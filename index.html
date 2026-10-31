@@ -103,6 +103,25 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .hud.lvl .zeroline i{background:var(--signal)}
 .hud.lvl .zeroline span{color:var(--signal)}
 .zclip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;width:100%;height:100%}
+.aim{position:absolute;left:8%;right:8%;top:50%;height:22%;transform:translateY(-50%);border:2px solid rgba(255,255,255,.85);border-radius:10px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
+.aim i{position:absolute;left:4%;right:4%;top:50%;height:2px;margin-top:-1px;background:#FF4B3E;box-shadow:0 0 6px #FF4B3E}
+.aim.hit{border-color:var(--signal)} .aim.hit i{background:var(--signal);box-shadow:0 0 6px var(--signal)}
+.aim.miss{border-color:var(--warn)}
+.hud.scan .tiltbox,.hud.scan .zeroline,.hud.scan .reticle{display:none}
+.scanbar{position:absolute;left:10px;right:10px;bottom:10px;z-index:6;display:grid;gap:8px;padding:10px;border-radius:14px;background:rgba(10,18,17,.92);border:1px solid var(--line)}
+.scanmsg{font-size:14px;line-height:1.35}
+.scanmsg b{font:700 16px var(--mono);color:var(--signal);word-break:break-all}
+.scanmsg small{display:block;color:var(--muted);font-size:12.5px}
+.scanmsg .bad{color:var(--warn)}
+.scanbtns{display:flex;gap:8px}.scanbtns .btn{flex:1;min-height:46px}
+.vf.scanning .zoombar{bottom:auto;top:10px}
+.snlist{display:grid;gap:6px}
+.snlist .sn{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:10px;background:var(--ink-3)}
+.snlist .sn div{flex:1;min-width:0}
+.snlist .sn b{display:block;font:600 14px var(--mono);word-break:break-all}
+.snlist .sn span{font-size:12.5px;color:var(--muted)}
+html[data-text="large"] .scanmsg{font-size:17px} html[data-text="large"] .scanmsg b{font-size:19px} html[data-text="large"] .scanmsg small{font-size:15px}
+html[data-text="large"] .snlist .sn b{font-size:17px} html[data-text="large"] .snlist .sn span{font-size:15px}
 .reticle{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%}
 .hud.lvl .reticle{border-color:var(--signal)}
 .live{position:absolute;left:10px;bottom:10px;right:64px;font-size:11.5px;line-height:1.45;color:rgba(234,242,238,.92)}
@@ -445,7 +464,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
       <div class="zclip" id="zclip"><div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
-      <div class="reticle"></div></div>
+      <div class="reticle"></div><div class="aim" id="aim" hidden><i></i></div></div>
       <div class="tiltbox"><div class="tiltval"><span id="hTilt">—</span><em id="hLevel">TILT</em></div><div class="sub" id="hHead">—</div></div>
       <div class="zoomread" id="zoomRead">1×</div>
       <div class="focusring" id="focusRing"></div>
@@ -454,9 +473,11 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     </div>
     <div class="vfctl">
       <button class="hq" id="hqBtn" aria-pressed="false" aria-label="Full quality">HQ</button>
+      <button id="snBtn" aria-label="Scan a serial number barcode" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M8 8v8M11 8v8M14 8v8M17 8v8"/></svg></button>
       <button id="torchBtn" aria-label="Flashlight" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></button>
     </div>
     <div class="zoombar" id="zoomBar" role="group" aria-label="Zoom"></div>
+    <div class="scanbar" id="scanBar" hidden><div class="scanmsg" id="scanMsg"></div><div class="scanbtns"><button class="btn" id="scanCancel">Done</button><button class="btn" id="scanRetry" hidden>Rescan</button><button class="btn primary" id="scanGo">Scan</button><button class="btn primary" id="scanAdd" hidden>Add</button></div></div>
     <div class="notebar" id="otherBar" hidden><input id="inOther" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="What is this photo of?"><button class="btn" id="otherCancel">Cancel</button><button class="btn primary" id="otherDone">Use</button></div>
     <div class="snack" id="snack" aria-live="polite"><img id="snImg" alt=""><div><b id="snTitle"></b><span id="snText"></span></div><button class="btn" id="snRetake">Retake</button><button class="btn" id="snAct">Change</button></div>
     <div class="flash" id="flash"></div>
@@ -484,6 +505,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inRefEdit">Account ID or SA-# <span style="text-transform:none;letter-spacing:0">(optional)</span></label><div class="refrow"><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
     <div class="picker" id="sheetPicker"></div>
     <div class="picker" id="sheetOutcome"></div>
+    <div id="snBlock" hidden><label>Serial numbers (stamped on this job’s photos)</label><div id="snList" class="snlist"></div></div>
     <p class="hint" id="jobEditHint"></p>
     <div class="btnrow"><button class="btn primary" id="finishBtn">Start a new job</button><button class="btn danger" id="cancelJobBtn">Cancel this job</button></div>
     <div class="warnbox" id="cancelConfirm" hidden>
@@ -551,7 +573,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
-    <p class="stats">Field Cam v3.15.0 · compass corrected to true north when there’s a GPS fix</p>
+    <p class="stats">Field Cam v3.16.0 · compass corrected to true north when there’s a GPS fix</p>
   </div>
 </section>
 
@@ -622,7 +644,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.15.0";
+const VERSION = "3.16.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -776,7 +798,8 @@ function photosOf(j) {
   if (rs.length && !j.reason) return [];
   return PHOTOS[`${j.work}|${platName(j)}|${o}|${rs.length ? j.reason : ""}`] || [];
 }
-const jobMeta = j => j ? { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null, ref:j.ref || "" } : null;
+const jobMeta = j => j ? { work:j.work, plat:j.plat, vas:j.vas || null, outcome:j.outcome || null, reason:j.reason || null, ref:j.ref || "",
+  serials:j.outcome === "OK" && j.serials && j.serials.length ? j.serials.map(x => ({ ...x })) : [] } : null;
 const outcomeSet = j => !!(j && j.outcome && (!reasonsFor(j, j.outcome).length || j.reason));
 function baseShots(j) { return photosOf(j).filter(p => p[1]).map(p => p[0]); }      // required: progress + missing-shot check
 function shotList(j) { const ps = photosOf(j); return [...ps.filter(p => p[1]).map(p => p[0]), ...ps.filter(p => !p[1]).map(p => p[0]), ...((j && j.custom) || []), OTHER]; }
@@ -1503,6 +1526,8 @@ function bandContent(m) {
   if (m.tech) items.push(["Tech", m.tech]);
   if (m.imported) items.push(["Source", "Photo library"]);
   if (m.note) items.push(["Note", m.note, true]);
+  const sns = m.job && m.job.outcome === "OK" && m.job.serials ? m.job.serials : [];
+  if (sns.length) items.push(["S/N", sns.map(x => x.item ? `${x.code} (${x.item})` : x.code).join(" · "), true]);
   if (m.addr) items.push(["Address", m.addr, true]);   // full-width rows
   const labels = m.unlabelled ? [] : (m.labels && m.labels.length ? m.labels : [m.label || "Photo"]);
   return { labels, unl:!!m.unlabelled, ref:m.job ? refLabel(m.job.ref) : "", items };
@@ -1739,10 +1764,11 @@ let pressT = null, pressFired = false;
 $("shutter").addEventListener("pointerdown", () => {
   pressFired = false;
   if (povBlocked()) $("shutter").classList.add("hold");
+  if (SC.on) return;
   pressT = setTimeout(() => { pressFired = true; $("shutter").classList.remove("hold"); capture(true); }, 800);
 });
 ["pointerup", "pointerleave", "pointercancel"].forEach(ev => $("shutter").addEventListener(ev, () => { clearTimeout(pressT); $("shutter").classList.remove("hold"); }));
-$("shutter").addEventListener("click", () => { if (pressFired) { pressFired = false; return; } capture(false); });
+$("shutter").addEventListener("click", () => { if (pressFired) { pressFired = false; return; } if (SC.on) { if (!$("scanGo").hidden) $("scanGo").click(); return; } capture(false); });
 $("shutter").addEventListener("contextmenu", e => e.preventDefault());
 
 /* After each shot: a small note that fades by itself. Never blocks the next shot.
@@ -2091,6 +2117,122 @@ $("dlAllBtn").addEventListener("click", () => requestSave(S.selected.size ? curP
 $("delBtn").addEventListener("click", () => { $("delN").textContent = plural(S.selected.size, "photo"); $("delConfirm").hidden = false; });
 $("delNo").addEventListener("click", () => $("delConfirm").hidden = true);
 $("delYes").addEventListener("click", async () => { await removePhotos([...S.selected]); S.selected.clear(); $("delConfirm").hidden = true; renderGallery(); });
+/* ================= serial number scanning (Complete jobs) =================
+   Same approach as Stock Tracker: the phone's own barcode reader where there is one (Android Chrome),
+   otherwise ZXing, loaded from the CDN on first use and kept by the service worker for offline use.
+   Put the red line on the S/N barcode, tap Scan (it tries for up to 2 s), then Add. MAC address
+   barcodes are caught. Scanned serials belong to the job and are stamped on its photos (Complete only). */
+const ZXING_URL = "https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
+// Xplore equipment serial patterns (from Stock Tracker) -> short item name for the stamp
+const SN_RULES = [
+  [/^854V6[A-Z0-9]{11}$/, "Adtran Wi-Fi 6 router"], [/^834V6[A-Z0-9]{11}$/, "Adtran Wi-Fi 6 extender"],
+  [/^O5SGS\d{9}$/, "5G outdoor CPE"], [/^O5MGS\d{9}$/, "5G outdoor CPE (O5M)"], [/^O5PGS\d{9}$/, "O5 Pro Max CPE"],
+  [/^B5SGS\d{9}$/, "5G high gain CPE"], [/^OAK[A-Z]{2}\d{9}$/, "CAT12 LTE CPE"], [/^GMK\d{12}$/, "CAT12 LTE CPE (mMIMO)"],
+  [/^GMB\d{9}$/, "Dual mode CPE 7000"], [/^BY\d{10}[A-Z0-9]{2}$/, "HT2000 modem"], [/^E\d{11}[A-Z0-9]{2}$/, "HT3000 modem"],
+  [/^902\d{9}$/, "HC210 radio"], [/^501\d{9}$/, "HTJ radio"], [/^601\d{9}$/, "Hughes 1 W radio"],
+  [/^2837\d{8}$/, "SurfBeam 2 modem"], [/^10\d{8}$/, "SurfBeam 2 eTRIA"],
+  [/^ALCLFF[0-9A-F]{6}$/, "Nokia ONT XS-010X-R"], [/^ALCLFE[0-9A-F]{6}$/, "Nokia ONT XS-010X-D"], [/^ALCL[0-9A-F]{8}$/, "Nokia ONT"],
+  [/^ADTN21[0-9A-F]{6}$/, "Adtran 424 ONT"], [/^ADTN25[0-9A-F]{6}$/, "Adtran 601qv ONT"], [/^ADTN[0-9A-F]{8}$/, "Adtran ONT"],
+  [/^S2\d{2}Z\d{8}$/, "Zyxel mesh / router"], [/^E66AV\d{10}$/, "Android TV player"], [/^101-\d{8}$/, "Kamai 7XM set-top box"]
+];
+const MAC_OUIS = new Set(["001FFB", "002445", "00A0BC", "2479EF", "2CD8AE", "38F8F6", "5422E0", "5C0FFB", "64A0AC", "80029C", "844D4C", "A0EEEE", "B41D62", "BC2106", "D41AD1", "D8ECE5", "F835DD"]);
+const snKey = v => String(v || "").replace(/\s+/g, "").toUpperCase();
+const snItem = v => { const k = snKey(v); const r = SN_RULES.find(([rx]) => rx.test(k)); return r ? r[1] : ""; };
+const snIsMac = v => { const k = snKey(v).replace(/[:.\-]/g, ""); return /^[0-9A-F]{12}$/.test(k) && MAC_OUIS.has(k.slice(0, 6)) && !snItem(k); };
+const SC = { on:false, bd:undefined, reader:null, pending:null, busy:false };
+const scanAllowed = () => { const j = curJob(); return !!(j && (j.outcome === "OK" || !j.outcome)); };
+function loadZXing() {
+  if (window.ZXing) return Promise.resolve(true);
+  if (SC.zp) return SC.zp;
+  SC.zp = new Promise(res => { const sc = document.createElement("script"); sc.src = ZXING_URL; sc.async = true;
+    sc.onload = () => res(!!window.ZXing); sc.onerror = () => { SC.zp = null; res(false); }; document.head.appendChild(sc); });
+  return SC.zp;
+}
+async function makeDetector() {
+  if (!("BarcodeDetector" in window)) return null;
+  try {
+    const want = ["code_128", "code_39", "code_93", "ean_13", "upc_a", "itf", "data_matrix", "qr_code"];
+    const have = await window.BarcodeDetector.getSupportedFormats();
+    const f = want.filter(x => have.includes(x)); return f.length ? new window.BarcodeDetector({ formats:f }) : null;
+  } catch { return null; }
+}
+async function startScan() {
+  if (!scanAllowed()) return toast("Serial numbers are only recorded on Complete jobs.");
+  hideSnack();
+  if (SC.bd === undefined) SC.bd = await makeDetector();
+  if (!SC.bd && !SC.reader) {
+    if (!(await loadZXing())) return toast("The scanner didn’t load. Connect to the internet once, then try again.", 3600);
+    const Z = window.ZXing, BF = Z.BarcodeFormat, hints = new Map();
+    hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [BF.CODE_128, BF.CODE_39, BF.CODE_93, BF.EAN_13, BF.UPC_A, BF.ITF, BF.DATA_MATRIX, BF.QR_CODE].filter(x => x !== undefined));
+    SC.reader = new Z.MultiFormatReader(); SC.reader.setHints(hints);
+  }
+  SC.on = true; $("aim").hidden = false; $("scanBar").hidden = false; vfEl.classList.add("scanning"); $("hud").classList.add("scan");
+  scanRow(`Put the red line across the <b style="font:inherit;color:inherit">S/N</b> barcode, then tap Scan.<small>Pinch to zoom in on small labels. The flashlight helps in dark spots.</small>`);
+}
+function stopScan() {
+  SC.on = false; SC.pending = null; $("aim").hidden = true; $("scanBar").hidden = true; vfEl.classList.remove("scanning"); $("hud").classList.remove("scan");
+}
+function scanRow(html) {
+  SC.pending = null; $("scanMsg").innerHTML = html;
+  $("scanGo").hidden = false; $("scanGo").disabled = false; $("scanGo").textContent = "Scan"; $("scanAdd").hidden = true; $("scanRetry").hidden = true;
+}
+const SCV = document.createElement("canvas"), SCG = SCV.getContext("2d", { willReadFrequently:true });
+async function readAim() {
+  const v = $("video"); if (!v.videoWidth) return null;
+  const vr = v.getBoundingClientRect(), ar = $("aim").getBoundingClientRect();   // video rect includes any zoom
+  const kx = v.videoWidth / vr.width, ky = v.videoHeight / vr.height;
+  const sx = Math.max(0, (ar.left - vr.left) * kx), sy = Math.max(0, (ar.top - vr.top) * ky);
+  const sw = Math.min(v.videoWidth - sx, ar.width * kx), sh = Math.min(v.videoHeight - sy, ar.height * ky);
+  if (sw < 10 || sh < 10) return null;
+  const k = Math.min(1, 1000 / sw); SCV.width = Math.round(sw * k); SCV.height = Math.round(sh * k);
+  SCG.drawImage(v, sx, sy, sw, sh, 0, 0, SCV.width, SCV.height);
+  try {
+    if (SC.bd) { const r = await SC.bd.detect(SCV); return r && r.length ? String(r[0].rawValue || "").trim() || null : null; }
+    const Z = window.ZXing;
+    const r = SC.reader.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(SCV))));
+    return String(r.getText() || "").trim() || null;
+  } catch { return null; }
+}
+function aimFlash(cls) { const a = $("aim"); a.classList.remove("hit", "miss"); void a.offsetWidth; a.classList.add(cls); setTimeout(() => a.classList.remove(cls), 600); }
+$("scanGo").addEventListener("click", async () => {
+  if (SC.busy || !SC.on) return; SC.busy = true;
+  $("scanGo").disabled = true; $("scanGo").textContent = "Reading…"; $("scanMsg").innerHTML = "Hold steady…";
+  let text = null; const end = Date.now() + 2000;
+  while (!text && Date.now() < end && SC.on) { text = await readAim(); if (!text) await sleep(90); }
+  SC.busy = false; if (!SC.on) return;
+  if (!text) { aimFlash("miss"); return scanRow(`<span class="bad">No barcode under the red line.</span><small>Move closer or zoom in, keep it steady, then tap Scan again.</small>`); }
+  const code = snKey(text), j = curJob();
+  if (snIsMac(code)) { aimFlash("miss"); return scanRow(`<span class="bad">That’s the MAC address barcode.</span><small>Scan the serial number (S/N) instead.</small>`); }
+  if ((j.serials || []).some(x => x.code === code)) { aimFlash("miss"); return scanRow(`<b>${esc(code)}</b><small>Already added to this job.</small>`); }
+  aimFlash("hit");
+  const item = snItem(code);
+  SC.pending = { code, item };
+  $("scanMsg").innerHTML = `<b>${esc(code)}</b><small>${item ? esc(item) : "Item not recognised (it’ll still be stamped)"}</small>`;
+  $("scanGo").hidden = true; $("scanAdd").hidden = false; $("scanRetry").hidden = false;
+});
+$("scanRetry").addEventListener("click", () => scanRow("Put the red line across the S/N barcode, then tap Scan."));
+$("scanAdd").addEventListener("click", () => {
+  const j = curJob(); if (!j || !SC.pending) return;
+  j.serials = [...(j.serials || []), SC.pending];
+  const p = SC.pending; jobChanged();
+  scanRow(`Added <b>${esc(p.code)}</b>${p.item ? " · " + esc(p.item) : ""}<small>Scan another, or tap Done. It’s stamped on this job’s photos.</small>`);
+});
+$("scanCancel").addEventListener("click", stopScan);
+$("snBtn").addEventListener("click", () => SC.on ? stopScan() : startScan());
+function renderSerials() {
+  const j = curJob(), list = (j && j.serials) || [], show = !!j && (scanAllowed() || list.length);
+  $("snBtn").hidden = !scanAllowed();
+  if (SC.on && !scanAllowed()) stopScan();
+  $("snBlock").hidden = !show || !list.length;
+  $("snList").innerHTML = list.map((x, i) => `<div class="sn"><div><b>${esc(x.code)}</b><span>${esc(x.item || "Item not recognised")}${j.outcome && j.outcome !== "OK" ? " · not stamped (job isn’t Complete)" : ""}</span></div><button class="btn sm danger" data-sndel="${i}">Remove</button></div>`).join("");
+}
+$("snList").addEventListener("click", e => {
+  const b = e.target.closest("[data-sndel]"); if (!b) return;
+  const j = curJob(); if (!j || !j.serials) return;
+  if (!arm(b, "Tap again")) return;
+  j.serials.splice(+b.dataset.sndel, 1); jobChanged(); renderSerials();
+});
+
 /* Auto-cleanup: Field Cam's own copies of photos that were SAVED more than CLEAN_DAYS ago are removed from
    the app (the saved copies in Photos / Files are never touched). Unsaved photos and the current job's
    photos are always kept. Runs when the app opens and when a job is finished. */
@@ -2439,7 +2581,7 @@ function refreshDeck() {
   $("dlCount").textContent = und || "";
   $("dlBtn").classList.toggle("has", und > 0);
 }
-function renderAll() { renderTop(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); if ($("saveSheet").classList.contains("open")) renderSaveSheet(); }
+function renderAll() { renderTop(); renderSerials(); renderLabels(); refreshDeck(); if ($("galSheet").classList.contains("open")) renderGallery(); if ($("saveSheet").classList.contains("open")) renderSaveSheet(); }
 
 /* ================= sheets ================= */
 function openSheet(id) { document.querySelectorAll(".sheet.open").forEach(s => s.classList.remove("open")); $(id).classList.add("open"); $("scrim").classList.add("open"); }
@@ -2657,6 +2799,7 @@ let backGuard = false, lastBack = 0;
 function armBack() { if (backGuard) return; try { history.pushState({ fieldcam:1 }, ""); backGuard = true; } catch {} }
 document.addEventListener("pointerdown", armBack, true);
 function closeTopLayer() {
+  if (SC.on) { stopScan(); return true; }
   if (!$("otherBar").hidden) { $("otherBar").hidden = true; $("inOther").blur(); otherCb = null; return true; }
   if ($("sorter").classList.contains("open")) { $("sClose").click(); return true; }
   if ($("viewer").classList.contains("open")) { $("viewer").classList.remove("open"); return true; }
