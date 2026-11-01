@@ -1,4 +1,4 @@
-# Field Cam (v3.19.2)
+# Field Cam (v3.19.3)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -141,6 +141,10 @@ current job's photos are never cleared. The number of days is `CLEAN_DAYS` in `i
 A short buzz when a line-of-sight shot becomes level, so the tech doesn't have to watch the screen.
 A small wobble at the edge doesn't re-buzz. Warnings (blurry or dark photo, shot blocked) still give
 a double buzz; normal shots don't vibrate. iPhones don't let web apps vibrate.
+
+## Time format
+The stamp, metadata and screens use a 12-hour clock (e.g. `2026-10-31 3:18:42 PM EDT`). File names
+keep 24-hour `HHMM` (e.g. `1518`) so they sort in time order.
 
 ## Photo metadata
 Everything on the info band is also written into the photo file, so it's searchable and survives if

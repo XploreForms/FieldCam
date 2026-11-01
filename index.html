@@ -652,7 +652,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.19.2";
+const VERSION = "3.19.3";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -921,7 +921,8 @@ const BLUR_MIN = 60, DARK_MAX = 40;   // photo check thresholds (see quality())
 function fmtTilt(p) { const v = Math.round(p * 10) / 10; return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "°"; }
 function tzAbbr(d) { try { return new Intl.DateTimeFormat("en-CA", { timeZoneName:"short" }).formatToParts(d).find(p => p.type === "timeZoneName").value; } catch { return ""; } }
 function tzOffset(d) { const m = -d.getTimezoneOffset(), s = m >= 0 ? "+" : "-", a = Math.abs(m); return s + pad(Math.floor(a / 60)) + ":" + pad(a % 60); }
-function fmtTime(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${tzAbbr(d)}`.trim(); }
+// 12-hour clock on the stamp, metadata and screens (file names keep 24-hour HHMM so they sort in order)
+function fmtTime(d) { const h = d.getHours(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${h % 12 || 12}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${h < 12 ? "AM" : "PM"} ${tzAbbr(d)}`.trim(); }
 function fmtDay(d) { try { return d.toLocaleString("en-CA", { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" }); } catch { return fmtTime(d); } }
 function distM(a, b) { const R = 6371000, dLa = rad(b.latitude - a.latitude), dLo = rad(b.longitude - a.longitude); const x = Math.sin(dLa/2)**2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLo/2)**2; return 2 * R * Math.asin(Math.sqrt(x)); }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
