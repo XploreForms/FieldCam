@@ -1,4 +1,4 @@
-# Field Cam (v3.18.4)
+# Field Cam (v3.19.2)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -8,7 +8,7 @@ viewfinder fills the full width of the screen (and all the space above the label
 the centre of the photo, with whatever doesn't fit trimmed **on screen only**. The saved photo is
 always the full 4:3 frame, so it shows a little more at the edges than the viewfinder did. An **info band** below the photo makes the final image a
 **2048 × 2048 square** (see *Info band* below). Nothing is drawn over the photo itself. Compressed to
-500 KB max for low-signal uploads.
+500 KB max by default for low-signal uploads (Settings › Photo size: 500 KB, 1 MB or full quality).
 
 ## Files
 | File | Purpose |
@@ -205,13 +205,25 @@ How it behaves in the app:
 - **Import:** gallery › **Import from photo library** (e.g. an eCoverage screenshot). Imports get the
   label picked at the time, or go to To label.
 
-## Full quality (HQ)
-The **HQ** button (top-right of the camera) switches the current job to full quality: photos keep
-the camera's full resolution (as much as the phone gives a web app, up to 4032 px wide) with light
-compression and no size limit, typically 2–5 MB each instead of under 500 KB. The info band is still
-added. While it's on, the **HQ** button in the picture's top-right corner is green. It stays on for that job and is
-off again for the next job, so nobody leaves it on by accident. Turning it on or off affects photos
-taken afterwards, not ones already taken.
+## Photo size (Settings) and HQ
+**Settings › Photo size** sets the size for every photo from then on:
+- **500 KB** (default): 2048 px square, never over 500 KB. Best for low signal.
+- **1 MB**: 3024 px square, never over 1 MB. More detail for close-ups and labels.
+
+Each size is a range: **250–500 KB** on the 500 KB setting, **500 KB–1 MB** on the 1 MB setting. Every
+photo starts at good JPEG quality (0.8, visually the same as higher settings). Busy scenes (gravel,
+wiring, foliage) get compressed a little more to stay under the ceiling; quiet scenes that would come
+out under the floor get extra quality up to it (max quality 0.95, so a very plain shot can still be
+a little under the floor).
+- **Full quality**: the camera's full resolution (up to 4032 px), light compression, no size limit,
+  typically 3–6 MB each.
+
+The **HQ** button (top-right of the picture) switches just the current job to full quality. It turns
+green while on and goes back off for the next job, so nobody leaves it on by accident. It's hidden when
+the default is already Full quality. Changes apply to photos taken afterwards, not ones already taken.
+The info band and metadata are always added.
+
+**Settings › Job start & end cards** turns the divider cards on (default) or off.
 
 ## Battery
 - The camera preview, GPS and tilt updates pause whenever the camera isn't in view: app in the

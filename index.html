@@ -575,6 +575,8 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   <header><h2>Settings</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
     <div><label>Appearance</label><div class="seg two" id="themeSeg" role="group"><button type="button" data-t="dark"><b>Dark</b><span>Black, saves battery</span></button><button type="button" data-t="light"><b>Light</b><span>Easier in bright sun</span></button></div></div>
+    <div><label>Photo size</label><div class="seg" id="sizeSeg" role="group"><button type="button" data-z="500"><b>500 KB</b><span>Best for low signal</span></button><button type="button" data-z="1000"><b>1 MB</b><span>More detail</span></button><button type="button" data-z="full"><b>Full quality</b><span>3–6 MB each</span></button></div><p class="hint" style="margin-top:6px">Applies to photos taken from now on. The HQ button still switches one job to full quality.</p></div>
+    <div><label>Job start &amp; end cards</label><div class="seg two" id="divSeg" role="group"><button type="button" data-d="on"><b>On</b><span>Saved around each job’s photos</span></button><button type="button" data-d="off"><b>Off</b><span>Photos only</span></button></div></div>
     <div><label>Text size</label><div class="seg two" id="textSeg" role="group"><button type="button" data-x="normal"><b>Normal</b></button><button type="button" data-x="large"><b>Large</b><span>Bigger text and buttons</span></button></div></div>
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
@@ -650,7 +652,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.18.4";
+const VERSION = "3.19.2";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -851,7 +853,7 @@ const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${jobTitle(j)}` : "";
 /* ================= stored state ================= */
 function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch { return d; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-let settings = Object.assign({ name:"", theme:"dark", text:"normal" }, load("fieldcam.settings", {}));
+let settings = Object.assign({ name:"", theme:"dark", text:"normal", size:"500", dividers:true }, load("fieldcam.settings", {}));
 // Dark (AMOLED black, default) or Light. Set before anything draws so there's no flash.
 function applyTheme() {
   const t = settings.theme === "light" ? "light" : "dark";
@@ -861,6 +863,8 @@ function applyTheme() {
   const x = settings.text === "large" ? "large" : "normal";
   document.documentElement.dataset.text = x;
   document.querySelectorAll("#textSeg [data-x]").forEach(b => b.setAttribute("aria-pressed", b.dataset.x === x));
+  document.querySelectorAll("#sizeSeg [data-z]").forEach(b => b.setAttribute("aria-pressed", b.dataset.z === settings.size));
+  document.querySelectorAll("#divSeg [data-d]").forEach(b => b.setAttribute("aria-pressed", (b.dataset.d === "on") === !!settings.dividers));
   setTimeout(() => { try { if (S.started) { measureVf(); lastHz = ""; } } catch {} }, 50);   // label grid height changes
 }
 applyTheme();
@@ -1412,7 +1416,7 @@ function snapshot(extra = {}) {
     when, pos, headingRef:th.ref,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
     heading:th.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
-    job:jobMeta(j), level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false, full:!!(j && j.full)
+    job:jobMeta(j), level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false, size:effSize(j), full:effSize(j) === "full"
   }, extra);
 }
 function stampLines(m, live = false) {
@@ -1443,7 +1447,11 @@ function stampLines(m, live = false) {
 const OUTPUT = { edge:2048, target:488 * 1024 };   // JPEG budget; with the EXIF block the whole file stays under 500 KB
 // Full quality (per job, HQ button): the camera's full resolution (capped at 4032 px so the square image
 // stays inside iPhone's canvas limit) and light JPEG compression, no size target. Typically 2–5 MB.
-const FULL = { edge:4032, q:0.92 };   // normal photos: 2048 px long edge, best quality under 500 KB
+const FULL = { edge:4032, q:0.92 };
+// Photo size choices (Settings › Photo size). 1 MB also keeps more pixels (3024 px square) for the extra detail.
+const SIZES = { "500":{ edge:2048, target:488 * 1024, floor:250 * 1000 }, "1000":{ edge:3024, target:1000 * 1000 - 12 * 1024, floor:500 * 1000 }, full:null };
+const effSize = j => j && j.full ? "full" : (SIZES[settings.size] !== undefined ? settings.size : "500");   // HQ button = this job at full quality
+const sizeOf = m => m.size || (m.full ? "full" : "500");   // normal photos: 2048 px long edge, best quality under 500 KB
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
 function downscale(src, sw, sh, tw, th) {
   let cur = src, cw = sw, ch = sh;
@@ -1465,10 +1473,25 @@ function rotate(c, angle) {
   return r;
 }
 const toBlob = (c, q) => new Promise(r => c.toBlob(r, "image/jpeg", q));
-async function encodeToTarget(c, target) {
-  let b = await toBlob(c, 0.9);
-  if (b.size <= target) return { blob:b, q:0.9, canvas:c };
-  let lo = 0.32, hi = 0.9, best = null;
+// Size is a range, not a goal: every photo starts at good quality (0.8, visually the same as higher
+// settings). Busy scenes that wouldn't fit get squeezed down to the ceiling; quiet scenes that come out
+// under the floor get extra quality up to the floor (so nothing is skimped), never past 0.95.
+const Q_GOOD = 0.8, Q_MAX = 0.95;
+async function encodeToTarget(c, target, floor = 0) {
+  let b = await toBlob(c, Q_GOOD);
+  if (b.size <= target && b.size >= floor) return { blob:b, q:Q_GOOD, canvas:c };
+  if (b.size < floor) {                                   // quiet scene: raise quality toward the floor
+    let best = { blob:b, q:Q_GOOD, canvas:c }, lo = Q_GOOD, hi = Q_MAX;
+    const top = await toBlob(c, Q_MAX);
+    if (top.size <= floor) return top.size <= target ? { blob:top, q:Q_MAX, canvas:c } : best;
+    for (let i = 0; i < 5; i++) {
+      const mid = (lo + hi) / 2, t = await toBlob(c, mid);
+      if (t.size <= target) best = { blob:t, q:mid, canvas:c };
+      if (t.size < floor) lo = mid; else { hi = mid; if (t.size <= target) return best; }
+    }
+    return best;
+  }
+  let lo = 0.32, hi = Q_GOOD, best = null;
   for (let i = 0; i < 6; i++) {
     const mid = (lo + hi) / 2; b = await toBlob(c, mid);
     if (b.size <= target) { best = { blob:b, q:mid, canvas:c }; lo = mid; } else hi = mid;
@@ -1663,7 +1686,7 @@ function addInfoBand(c, m) {
 async function processFrame(src, crop, rotation, meta) {
   const { sx, sy, cw, ch } = crop;
   const full = canvas(cw, ch); full.getContext("2d").drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
-  const [tw, th] = fitBox(cw, ch, meta.full ? FULL.edge : OUTPUT.edge);
+  const sz = sizeOf(meta), [tw, th] = fitBox(cw, ch, sz === "full" ? FULL.edge : SIZES[sz].edge);
   let c = downscale(full, cw, ch, tw, th);
   if (meta.fsrc) meta.fpx = meta.fsrc * (tw / cw);   // focal length in output pixels
   full.width = full.height = 0;
@@ -1679,7 +1702,7 @@ async function composeFinal(c, meta) {
   let p = c;
   if (meta.level && meta.pitch != null && !meta.imported) { p = canvas(c.width, c.height); p.getContext("2d").drawImage(c, 0, 0); drawZeroLine(p, meta); }
   const band = addInfoBand(p, meta);
-  const enc = meta.full ? { blob:await toBlob(band, FULL.q), q:FULL.q, canvas:band } : await encodeToTarget(band, OUTPUT.target);
+  const sz = sizeOf(meta), enc = sz === "full" ? { blob:await toBlob(band, FULL.q), q:FULL.q, canvas:band } : await encodeToTarget(band, SIZES[sz].target, SIZES[sz].floor);
   let blob = enc.blob;
   try { blob = await addExif(blob, meta, enc.canvas.width, enc.canvas.height); } catch (e) { console.warn("exif", e); }
   return { blob, w:enc.canvas.width, h:enc.canvas.height, q:enc.q };
@@ -1994,6 +2017,7 @@ const divKey = (sid, kind) => { const f = edgeOfJob(sid, kind), j = jobs[sid] ||
 var divT = null;
 function prepDividers() {
   clearTimeout(divT);
+  if (!settings.dividers) return;
   divT = setTimeout(async () => {
     const sids = new Set(S.photos.filter(p => !p.downloaded).map(p => p.sessionId));
     if (current) sids.add(current.id);
@@ -2036,6 +2060,7 @@ async function makeDivider(sid, kind) {
 // Cards to save with this batch: { starts, ends }
 async function dividersFor(list) {
   const starts = [], ends = [];
+  if (!settings.dividers) return { starts, ends };
   for (const sid of [...new Set(list.map(p => p.sessionId))]) {
     const j = jobs[sid] || {};
     for (const kind of ["start", "end"]) {
@@ -2576,7 +2601,8 @@ function renderLabels() {
   const j = curJob(), counts = countLabels();
   S.sel = S.sel.filter(l => tileList(j, S.sel, counts).includes(l));
   $("lGrid").innerHTML = tilesHTML(j, S.sel, counts);
-  const full = !!(j && j.full);
+  const full = effSize(j) === "full";
+  $("hqBtn").hidden = settings.size === "full";
   $("hqBtn").setAttribute("aria-pressed", full);
   const unl = curPhotos().filter(isUnl).length;
   $("toLabelBtn").hidden = !unl; $("toLabelBtn").textContent = `To label (${unl})`;
@@ -2609,7 +2635,7 @@ function tapLabel(l, add = false) {
 $("hqBtn").addEventListener("click", () => {
   const j = curJob(); if (!j) return;
   j.full = !j.full; save(); renderLabels();
-  toast(j.full ? "<b>Full quality on</b><br>Photos aren’t compressed (about 2–5 MB each). Turns off for the next job." : "Full quality off · photos compressed for low signal", 2800);
+  toast(j.full ? "<b>Full quality on</b><br>Photos aren’t compressed (about 3–6 MB each). Turns off for the next job." : "Full quality off · photos compressed for low signal", 2800);
 });
 $("toLabelBtn").addEventListener("click", () => openSorter(curPhotos().filter(isUnl).sort((a, b) => a.created - b.created).map(p => p.id)));
 /* "Other": ask what the photo is of; the text becomes the label (stamp + file name) */
@@ -2714,6 +2740,8 @@ document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
 $("setBtn").addEventListener("click", () => { $("inName").value = settings.name; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
+$("sizeSeg").addEventListener("click", e => { const b = e.target.closest("[data-z]"); if (!b) return; settings.size = b.dataset.z; save(); applyTheme(); renderLabels(); });
+$("divSeg").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b) return; settings.dividers = b.dataset.d === "on"; save(); applyTheme(); });
 $("textSeg").addEventListener("click", e => { const b = e.target.closest("[data-x]"); if (!b) return; settings.text = b.dataset.x; save(); applyTheme(); });
 $("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; settings.theme = b.dataset.t; save(); applyTheme(); });
 
