@@ -1,4 +1,4 @@
-# Field Cam (v3.19.3)
+# Field Cam (v3.21.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -26,7 +26,7 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
 
 ## Tech workflow
 1. First launch only: enter name.
-2. Each work order: optionally enter the **Account ID or SA-#**, then pick the **Work order**
+2. Each work order: enter the **SA-#** (required, 6 digits; **Paste** grabs it from FSL), then pick the **Work order**
    (Install / Conversion / Repair) and the **Platform** (Fibre existing drop / drop required /
    drop only (Install only), Fixed Wireless, Satellite, VAS (Install and Repair)). VAS then asks **XTV, XWH or XWR**. That's all that's
    needed to start shooting.
@@ -84,12 +84,15 @@ A few long checklist items get a short name in the file (`FILE_LABEL` in `index.
 "Line of sight POVs to all viable towers" → "LOS POVs"; the stamp keeps the full wording.
 Names are built at save time, so they follow the SA-# and labels as last set.
 
-## SA-# / account number
-The start screen and the job sheet have a **Paste** button next to the SA-# box. Copy the SA-# or
-the account number anywhere (FSL, a text, an email), tap Paste, and Field Cam picks the number out
-of whatever was copied: `SA-` + 6 digits first (also written `SA 123456`, `SA#123456`), then a number next to "Account"/"Acct", then a single long
-number on its own. iPhones show a small "Paste" bubble to confirm the first time; if the clipboard
-can't be read, long-press the box and paste as usual.
+## SA-# (required)
+Every job needs its SA-# (6 digits, e.g. `SA-123456`) before it can start; account numbers aren't
+used. Typing `123456`, `sa 123456` or `SA123456` is tidied to `SA-123456`; anything that isn't 6 digits
+is refused with a message. It can be corrected later in the job sheet (tap the job name), but not cleared.
+
+The **Paste** button next to the box picks the SA-# out of whatever was copied (FSL, a text, an
+email): `SA-` + 6 digits (also written `SA 123456`, `SA#123456`), or just the 6 digits copied on their
+own. It won't guess from other numbers (work orders, phone numbers, account numbers). iPhones show a
+small "Paste" bubble to confirm the first time.
 
 ## Job start and end cards (dividers)
 When a job's photos are saved, Field Cam also saves two divider cards around them:
@@ -228,6 +231,9 @@ the default is already Full quality. Changes apply to photos taken afterwards, n
 The info band and metadata are always added.
 
 **Settings › Job start & end cards** turns the divider cards on (default) or off.
+
+**Settings › Grid lines** shows rule-of-thirds lines over the picture (off by default) to help frame
+straight, even shots. They're on screen only, never in the photo, and hide while scanning a barcode.
 
 ## Battery
 - The camera preview, GPS and tilt updates pause whenever the camera isn't in view: app in the

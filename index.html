@@ -102,6 +102,14 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .zeroline span{position:absolute;left:calc(39vmin + 6px);top:-8px;font:600 11px var(--sans);color:rgba(255,255,255,.92);white-space:nowrap}
 .hud.lvl .zeroline i{background:var(--signal)}
 .hud.lvl .zeroline span{color:var(--signal)}
+.grid3{position:absolute;inset:0;pointer-events:none;display:none}
+html[data-grid="on"] .grid3{display:block}
+.hud.scan .grid3,.hud.side .grid3{display:none}
+.grid3 i{position:absolute;background:rgba(255,255,255,.42);box-shadow:0 0 1px rgba(0,0,0,.6)}
+.grid3 i:nth-child(1),.grid3 i:nth-child(2){top:0;bottom:0;width:1px}
+.grid3 i:nth-child(1){left:33.333%}.grid3 i:nth-child(2){left:66.667%}
+.grid3 i:nth-child(3),.grid3 i:nth-child(4){left:0;right:0;height:1px}
+.grid3 i:nth-child(3){top:33.333%}.grid3 i:nth-child(4){top:66.667%}
 .zclip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;width:100%;height:100%}
 .aim{position:absolute;left:8%;right:8%;top:50%;height:22%;transform:translateY(-50%);border:2px solid rgba(255,255,255,.85);border-radius:10px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
 .aim i{position:absolute;left:4%;right:4%;top:50%;height:2px;margin-top:-1px;background:#FF4B3E;box-shadow:0 0 6px #FF4B3E}
@@ -469,7 +477,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video></div>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
-      <div class="zclip" id="zclip"><div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
+      <div class="zclip" id="zclip"><div class="grid3" id="grid3" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
       <div class="reticle"></div><div class="aim" id="aim" hidden><i></i></div></div>
       <div class="tiltbox"><div class="tiltval"><span id="hTilt">—</span><em id="hLevel">TILT</em></div><div class="sub" id="hHead">—</div></div>
       <div class="zoomread" id="zoomRead">1×</div>
@@ -508,7 +516,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <section class="sheet" id="jobSheet" aria-label="Job">
   <header><h2>This job</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
-    <div><label for="inRefEdit">Account ID or SA-# <span style="text-transform:none;letter-spacing:0">(optional)</span></label><div class="refrow"><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
+    <div><label for="inRefEdit">SA-#</label><div class="refrow"><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="SA-123456"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
     <div class="picker" id="sheetPicker"></div>
     <div class="picker" id="sheetOutcome"></div>
     <div id="snBlock" hidden><label>Serial numbers (stamped on this job’s photos)</label><div id="snList" class="snlist"></div></div>
@@ -576,6 +584,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
   <div class="body">
     <div><label>Appearance</label><div class="seg two" id="themeSeg" role="group"><button type="button" data-t="dark"><b>Dark</b><span>Black, saves battery</span></button><button type="button" data-t="light"><b>Light</b><span>Easier in bright sun</span></button></div></div>
     <div><label>Photo size</label><div class="seg" id="sizeSeg" role="group"><button type="button" data-z="500"><b>500 KB</b><span>Best for low signal</span></button><button type="button" data-z="1000"><b>1 MB</b><span>More detail</span></button><button type="button" data-z="full"><b>Full quality</b><span>3–6 MB each</span></button></div><p class="hint" style="margin-top:6px">Applies to photos taken from now on. The HQ button still switches one job to full quality.</p></div>
+    <div><label>Grid lines</label><div class="seg two" id="gridSeg" role="group"><button type="button" data-g="on"><b>On</b><span>Thirds, for straight, even framing</span></button><button type="button" data-g="off"><b>Off</b><span>Clear picture</span></button></div></div>
     <div><label>Job start &amp; end cards</label><div class="seg two" id="divSeg" role="group"><button type="button" data-d="on"><b>On</b><span>Saved around each job’s photos</span></button><button type="button" data-d="off"><b>Off</b><span>Photos only</span></button></div></div>
     <div><label>Text size</label><div class="seg two" id="textSeg" role="group"><button type="button" data-x="normal"><b>Normal</b></button><button type="button" data-x="large"><b>Large</b><span>Bigger text and buttons</span></button></div></div>
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
@@ -639,7 +648,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <button class="btn primary" id="resumeBtn">Continue</button>
     </div>
     <h2 id="newJobH">New job</h2>
-    <div><label for="inRef">SA-# or Account ID <span style="text-transform:none;letter-spacing:0">(optional)</span></label><div class="refrow"><input id="inRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SA-123456"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div></div>
+    <div><label for="inRef">SA-#</label><div class="refrow"><input id="inRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SA-123456"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div></div>
     <div class="picker" id="startPicker"></div>
     <div><label>Outcome <span style="text-transform:none;letter-spacing:0">(optional, can be set later)</span></label><button type="button" class="btn startout" id="startOutBtn" disabled>Select later</button></div>
     <div class="install" id="installTip" hidden></div>
@@ -652,7 +661,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.19.3";
+const VERSION = "3.21.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -819,16 +828,15 @@ function jobTitle(j) {
   if (!outcomeSet(j)) return base;
   return `${base} · ${byId(OUTCOMES, j.outcome).name}${j.reason ? " · " + j.reason : ""}`;
 }
-// Pull an SA-# or an account number out of whatever was copied (an FSL page, a text, an email…)
+// Pull the SA-# out of whatever was copied (an FSL page, a text, an email…). SA numbers are 6 digits;
+// 6 digits copied on their own are taken as the SA-# too. Account numbers aren't used.
 function refFromText(t) {
   t = String(t || "");
-  const sa = t.match(/\bSA[\s#:-]*(\d{6})(?!\d)/i);     // SA numbers are 6 digits
+  const sa = t.match(/\bSA[\s#:-]*(\d{6})(?!\d)/i);
   if (sa) return "SA-" + sa[1];
-  t = t.replace(/\bSA[\s#:-]*\d+/gi, " ");                 // a malformed SA-# is never taken as an account number
-  const acct = t.match(/\b(?:account|acct|acc)\b[^0-9]{0,15}(\d{5,})/i);
-  if (acct) return acct[1];
-  const nums = t.match(/\b\d{5,}\b/g);
-  return nums && nums.length === 1 ? nums[0] : "";       // a lone long number is taken as the account number
+  if (/\bSA[\s#:-]*\d/i.test(t)) return "";                // an SA-# with the wrong number of digits: don't guess
+  const only = t.trim().match(/^#?(\d{6})$/);              // just the 6 digits copied on their own
+  return only ? "SA-" + only[1] : "";
 }
 async function pasteRef(inputId) {
   const inp = $(inputId);
@@ -836,24 +844,25 @@ async function pasteRef(inputId) {
   try { txt = await navigator.clipboard.readText(); }
   catch { toast("Couldn’t read the clipboard. Long-press the box and choose Paste.", 3200); inp.focus(); return; }
   const r = refFromText(txt);
-  if (!r) { toast("No SA-# or account number on the clipboard.", 2800); return; }
+  if (!r) { toast("No SA-# on the clipboard (it needs 6 digits, e.g. SA-123456).", 3000); return; }
   inp.value = r; inp.dispatchEvent(new Event("input")); inp.dispatchEvent(new Event("change"));
   toast(`Pasted <b>${esc(r)}</b>`, 1800);
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-paste]"); if (b) pasteRef(b.dataset.paste); });
-// "sa 123456" -> "SA-123456"; anything else upper-cased with only letters, digits and dashes
+// "sa 123456", "SA123456", "123456" -> "SA-123456"; anything else is left as typed (and fails validRef)
 function normRef(v) {
   v = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
-  const m = v.match(/^SA-?(\d+)$/);
+  const m = v.match(/^(?:SA[-#:]?)?(\d+)$/);
   return m ? "SA-" + m[1] : v.replace(/[^A-Z0-9-]/g, "");
 }
-const refLabel = r => !r ? "" : /^SA-/.test(r) ? r : "Account " + r;
+const validRef = r => /^SA-\d{6}$/.test(r || "");
+const refLabel = r => r || "";
 const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${jobTitle(j)}` : "";
 
 /* ================= stored state ================= */
 function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch { return d; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-let settings = Object.assign({ name:"", theme:"dark", text:"normal", size:"500", dividers:true }, load("fieldcam.settings", {}));
+let settings = Object.assign({ name:"", theme:"dark", text:"normal", size:"500", dividers:true, grid:false }, load("fieldcam.settings", {}));
 // Dark (AMOLED black, default) or Light. Set before anything draws so there's no flash.
 function applyTheme() {
   const t = settings.theme === "light" ? "light" : "dark";
@@ -865,6 +874,8 @@ function applyTheme() {
   document.querySelectorAll("#textSeg [data-x]").forEach(b => b.setAttribute("aria-pressed", b.dataset.x === x));
   document.querySelectorAll("#sizeSeg [data-z]").forEach(b => b.setAttribute("aria-pressed", b.dataset.z === settings.size));
   document.querySelectorAll("#divSeg [data-d]").forEach(b => b.setAttribute("aria-pressed", (b.dataset.d === "on") === !!settings.dividers));
+  document.documentElement.dataset.grid = settings.grid ? "on" : "off";
+  document.querySelectorAll("#gridSeg [data-g]").forEach(b => b.setAttribute("aria-pressed", (b.dataset.g === "on") === !!settings.grid));
   setTimeout(() => { try { if (S.started) { measureVf(); lastHz = ""; } } catch {} }, 50);   // label grid height changes
 }
 applyTheme();
@@ -2742,6 +2753,7 @@ $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galShe
 $("setBtn").addEventListener("click", () => { $("inName").value = settings.name; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
 $("sizeSeg").addEventListener("click", e => { const b = e.target.closest("[data-z]"); if (!b) return; settings.size = b.dataset.z; save(); applyTheme(); renderLabels(); });
+$("gridSeg").addEventListener("click", e => { const b = e.target.closest("[data-g]"); if (!b) return; settings.grid = b.dataset.g === "on"; save(); applyTheme(); });
 $("divSeg").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b) return; settings.dividers = b.dataset.d === "on"; save(); applyTheme(); });
 $("textSeg").addEventListener("click", e => { const b = e.target.closest("[data-x]"); if (!b) return; settings.text = b.dataset.x; save(); applyTheme(); });
 $("themeSeg").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; settings.theme = b.dataset.t; save(); applyTheme(); });
@@ -2773,8 +2785,9 @@ $("jobBtn").addEventListener("click", e => {
   openSheet("jobSheet");
 });
 $("inRefEdit").addEventListener("change", () => {
-  const r = normRef($("inRefEdit").value);
-  $("inRefEdit").value = r; curJob().ref = r; jobChanged();
+  const r = normRef($("inRefEdit").value), j = curJob();
+  if (!validRef(r)) { toast(r ? `“${esc(r)}” isn’t an SA-#. It needs 6 digits, e.g. SA-123456.` : "The SA-# is required.", 3000); $("inRefEdit").value = j.ref || ""; return; }
+  $("inRefEdit").value = r; j.ref = r; jobChanged();
 });
 function missingShots() { const c = countLabels(); return baseShots(curJob()).filter(l => !c[l]); }
 $("finishBtn").addEventListener("click", () => {
@@ -2927,6 +2940,8 @@ $("startBtn").addEventListener("click", () => {
   const missing = [];
   const ref = normRef($("inRef").value);
   if (!name) missing.push("your name");
+  if (!ref) missing.push("SA-#");
+  else if (!validRef(ref)) { $("startErr").textContent = `“${ref}” isn’t an SA-#. It needs 6 digits, e.g. SA-123456.`; $("startErr").hidden = false; $("inRef").focus(); return; }
   if (!startSel.work) missing.push("work order");
   else if (!startSel.plat) missing.push("platform");
   else if (startSel.plat === "VAS" && !startSel.vas) missing.push("VAS service (XTV, XWH or XWR)");
