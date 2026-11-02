@@ -516,7 +516,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <section class="sheet" id="jobSheet" aria-label="Job">
   <header><h2>This job</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
-    <div><label for="inRefEdit">SA-#</label><div class="refrow"><input id="inRefEdit" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="SA-123456"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
+    <div><label for="inRefEdit">SA-#</label><div class="refrow"><input id="inRefEdit" class="refin" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="numeric" placeholder="SA-1234567"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
     <div class="picker" id="sheetPicker"></div>
     <div class="picker" id="sheetOutcome"></div>
     <div id="snBlock" hidden><label>Serial numbers (stamped on this job’s photos)</label><div id="snList" class="snlist"></div></div>
@@ -587,7 +587,8 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label>Grid lines</label><div class="seg two" id="gridSeg" role="group"><button type="button" data-g="on"><b>On</b><span>Thirds, for straight, even framing</span></button><button type="button" data-g="off"><b>Off</b><span>Clear picture</span></button></div></div>
     <div><label>Job start &amp; end cards</label><div class="seg two" id="divSeg" role="group"><button type="button" data-d="on"><b>On</b><span>Saved around each job’s photos</span></button><button type="button" data-d="off"><b>Off</b><span>Photos only</span></button></div></div>
     <div><label>Text size</label><div class="seg two" id="textSeg" role="group"><button type="button" data-x="normal"><b>Normal</b></button><button type="button" data-x="large"><b>Large</b><span>Bigger text and buttons</span></button></div></div>
-    <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Stamped on every photo.</p></div>
+    <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"></div>
+    <div><label for="inDealer">Dealer name</label><input id="inDealer" autocomplete="organization" placeholder="Company you install for"><p class="hint" style="margin-top:6px">Both are stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
     <div class="btnrow" style="align-items:center"><p class="stats" style="flex:1;margin:0">Field Cam v<span id="verTxt"></span> · compass corrected to true north when there’s a GPS fix</p><button class="btn sm" id="updCheck" style="flex:none">Check for updates</button></div>
@@ -642,13 +643,13 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#002B2B"/><circle cx="32" cy="32" r="17" fill="none" stroke="#58C774" stroke-width="5"/><circle cx="32" cy="32" r="5" fill="#00FF57"/><path d="M32 6v9M32 49v9M6 32h9M49 32h9" stroke="#58C774" stroke-width="4" stroke-linecap="round"/></svg>
       <h1>Field Cam</h1><p class="hello" id="hello"></p>
     </div>
-    <div id="nameBlock"><label for="inName0">Your name</label><input id="inName0" autocomplete="name" placeholder="First Last"><p class="hint" style="margin-top:6px">Asked once. It’s stamped on every photo.</p></div>
+    <div id="nameBlock"><div id="nameRow"><label for="inName0">Your name</label><input id="inName0" autocomplete="name" placeholder="First Last"></div><div id="dealerRow" style="margin-top:10px"><label for="inDealer0">Dealer name</label><input id="inDealer0" autocomplete="organization" placeholder="Company you install for"></div><p class="hint" style="margin-top:6px">Asked once and stamped on every photo. Change them any time in Settings.</p></div>
     <div class="resume" id="resumeBlock" hidden>
       <div style="min-width:0"><div class="rjob" id="resumeJob"></div><div class="rmeta" id="resumeMeta"></div></div>
       <button class="btn primary" id="resumeBtn">Continue</button>
     </div>
     <h2 id="newJobH">New job</h2>
-    <div><label for="inRef">SA-#</label><div class="refrow"><input id="inRef" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. SA-123456"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div></div>
+    <div><label for="inRef">SA-#</label><div class="refrow"><input id="inRef" class="refin" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="numeric" placeholder="SA-1234567"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div><p class="hint" style="margin-top:6px">Type the 7 digits, SA- is added for you. Typing or pasting the full SA-1234567 works too.</p></div>
     <div class="picker" id="startPicker"></div>
     <div><label>Outcome <span style="text-transform:none;letter-spacing:0">(optional, can be set later)</span></label><button type="button" class="btn startout" id="startOutBtn" disabled>Select later</button></div>
     <div class="install" id="installTip" hidden></div>
@@ -661,7 +662,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.21.0";
+const VERSION = "3.22.0";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -704,14 +705,14 @@ const PHOTOS = {"INS|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["NID w
 "INS|Fibre (Drop Only)|CC|Drop Installation Issue":[["Drop Challenges / Obstructions",1,0],["Planned Drop Route",1,0]],
 "INS|Fibre (Drop Only)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|Fibre (Drop Only)|NR|":[],
-"INS|Fixed Wireless|OK|":[["Line of Sight",1,1],["CPE & Mount",1,0],["Cable Run",1,0],["Surge",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["PoE Placement",1,0],["Router Placement",1,0]],
+"INS|Fixed Wireless|OK|":[["Line of Sight",1,1],["CPE & Mount",1,0],["Outdoor Cable Run",1,0],["Surge",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["PoE Placement",1,0],["Router Placement",1,0]],
 "INS|Fixed Wireless|CC|Customer Action Required":[["Customer Action Item",1,0]],
 "INS|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "INS|Fixed Wireless|CC|Extra Resource Required":[],
 "INS|Fixed Wireless|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "INS|Fixed Wireless|NR|No Serviceable Signal":[["Line of Sight",1,1],["Testing Locations",1,0],["Overall Structure",1,0]],
 "INS|Fixed Wireless|NR|Installation Objection":[["Reason for Objection",1,0]],
-"INS|Satellite|OK|":[["Line of Sight",1,0],["Dish & Mount",1,0],["Cable Run",1,0],["Ground Block",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["Modem Placement",1,0],["Router Placement",1,0]],
+"INS|Satellite|OK|":[["Line of Sight",1,0],["Dish & Mount",1,0],["Outdoor Cable Run",1,0],["Ground Block",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["Modem Placement",1,0],["Router Placement",1,0]],
 "INS|Satellite|CC|Customer Action Required":[["Customer Action Item",1,0]],
 "INS|Satellite|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "INS|Satellite|CC|Extra Resource Required":[],
@@ -746,14 +747,14 @@ const PHOTOS = {"INS|Fibre (Existing Drop)|OK|":[["NID Light Level",1,0],["NID w
 "CON|Fibre (Drop Required)|CC|Buried Drop Required":[["Buried Drop Route",1,0]],
 "CON|Fibre (Drop Required)|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "CON|Fibre (Drop Required)|NR|":[],
-"CON|Fixed Wireless|OK|":[["Line of Sight",1,1],["CPE & Mount",1,0],["Cable Run",1,0],["Surge",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["PoE Placement",1,0],["Router Placement",1,0]],
+"CON|Fixed Wireless|OK|":[["Line of Sight",1,1],["CPE & Mount",1,0],["Outdoor Cable Run",1,0],["Surge",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["PoE Placement",1,0],["Router Placement",1,0]],
 "CON|Fixed Wireless|CC|Customer Action Required":[["Customer Action Item",1,0]],
 "CON|Fixed Wireless|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "CON|Fixed Wireless|CC|Extra Resource Required":[],
 "CON|Fixed Wireless|CC|Customer No Show":[["Proof of Being on Site",1,0]],
 "CON|Fixed Wireless|NR|No Serviceable Signal":[["Line of Sight",1,1],["Testing Locations",1,0],["Overall Structure",1,0]],
 "CON|Fixed Wireless|NR|Installation Objection":[["Reason for Objection",1,0]],
-"CON|Satellite|OK|":[["Line of Sight",1,0],["Dish & Mount",1,0],["Cable Run",1,0],["Ground Block",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["Modem Placement",1,0],["Router Placement",1,0]],
+"CON|Satellite|OK|":[["Line of Sight",1,0],["Dish & Mount",1,0],["Outdoor Cable Run",1,0],["Ground Block",1,0],["Ground Connection",1,0],["Cable Entry Point",1,0],["Install Overview",1,0],["Indoor Cable Run",1,0],["Modem Placement",1,0],["Router Placement",1,0]],
 "CON|Satellite|CC|Customer Action Required":[["Customer Action Item",1,0]],
 "CON|Satellite|CC|Weather / Unsafe Work Conditions":[["Unsafe Conditions",1,0]],
 "CON|Satellite|CC|Extra Resource Required":[],
@@ -828,14 +829,14 @@ function jobTitle(j) {
   if (!outcomeSet(j)) return base;
   return `${base} · ${byId(OUTCOMES, j.outcome).name}${j.reason ? " · " + j.reason : ""}`;
 }
-// Pull the SA-# out of whatever was copied (an FSL page, a text, an email…). SA numbers are 6 digits;
-// 6 digits copied on their own are taken as the SA-# too. Account numbers aren't used.
+// Pull the SA-# out of whatever was copied (an FSL page, a text, an email…). SA numbers are 7 digits;
+// 7 digits copied on their own are taken as the SA-# too. Account numbers aren't used.
 function refFromText(t) {
   t = String(t || "");
-  const sa = t.match(/\bSA[\s#:-]*(\d{6})(?!\d)/i);
+  const sa = t.match(/\bSA[\s#:-]*(\d{7})(?!\d)/i);
   if (sa) return "SA-" + sa[1];
   if (/\bSA[\s#:-]*\d/i.test(t)) return "";                // an SA-# with the wrong number of digits: don't guess
-  const only = t.trim().match(/^#?(\d{6})$/);              // just the 6 digits copied on their own
+  const only = t.trim().match(/^#?(\d{7})$/);              // just the 7 digits copied on their own
   return only ? "SA-" + only[1] : "";
 }
 async function pasteRef(inputId) {
@@ -844,25 +845,33 @@ async function pasteRef(inputId) {
   try { txt = await navigator.clipboard.readText(); }
   catch { toast("Couldn’t read the clipboard. Long-press the box and choose Paste.", 3200); inp.focus(); return; }
   const r = refFromText(txt);
-  if (!r) { toast("No SA-# on the clipboard (it needs 6 digits, e.g. SA-123456).", 3000); return; }
+  if (!r) { toast("No SA-# on the clipboard (it needs 7 digits, e.g. SA-1234567).", 3000); return; }
   inp.value = r; inp.dispatchEvent(new Event("input")); inp.dispatchEvent(new Event("change"));
   toast(`Pasted <b>${esc(r)}</b>`, 1800);
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-paste]"); if (b) pasteRef(b.dataset.paste); });
-// "sa 123456", "SA123456", "123456" -> "SA-123456"; anything else is left as typed (and fails validRef)
+// "sa 1234567", "SA1234567", "1234567" -> "SA-1234567"; anything else is left as typed (and fails validRef)
 function normRef(v) {
   v = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
   const m = v.match(/^(?:SA[-#:]?)?(\d+)$/);
   return m ? "SA-" + m[1] : v.replace(/[^A-Z0-9-]/g, "");
 }
-const validRef = r => /^SA-\d{6}$/.test(r || "");
+const validRef = r => /^SA-\d{7}$/.test(r || "");
+// Live formatting while typing: keep only the digits (max 7) and show them as SA-#######, so techs can
+// type just the numbers, or the whole "SA-1234567", and always end up with the same thing.
+function liveRef(inp) {
+  const d = inp.value.replace(/\D/g, "").slice(0, 7);
+  const v = d ? "SA-" + d : "";
+  if (inp.value !== v) { inp.value = v; try { inp.setSelectionRange(v.length, v.length); } catch {} }
+}
+document.addEventListener("input", e => { if (e.target.classList && e.target.classList.contains("refin")) liveRef(e.target); }, true);
 const refLabel = r => r || "";
 const jobShort = j => j ? `${j.ref ? j.ref + " · " : ""}${jobTitle(j)}` : "";
 
 /* ================= stored state ================= */
 function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch { return d; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-let settings = Object.assign({ name:"", theme:"dark", text:"normal", size:"500", dividers:true, grid:false }, load("fieldcam.settings", {}));
+let settings = Object.assign({ name:"", dealer:"", theme:"dark", text:"normal", size:"500", dividers:true, grid:false }, load("fieldcam.settings", {}));
 // Dark (AMOLED black, default) or Light. Set before anything draws so there's no flash.
 function applyTheme() {
   const t = settings.theme === "light" ? "light" : "dark";
@@ -1427,7 +1436,7 @@ function snapshot(extra = {}) {
   return Object.assign({
     when, pos, headingRef:th.ref,
     addr:S.addr && S.addrPos && S.pos && distM(S.addrPos, S.pos) < 150 ? S.addr : null,
-    heading:th.heading, pitch:S.pitch, tech:settings.name.trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
+    heading:th.heading, pitch:S.pitch, tech:settings.name.trim(), dealer:(settings.dealer || "").trim(), labels:[...selLabels()], label:labelText(selLabels()), unlabelled:!selLabels().length, note:S.note || "",
     job:jobMeta(j), level:selLabels().some(l => isLevelShot(l, j)), zf:zoomFactor(), fsrc:focalSrc(), zoomLabel:zoomLabel(), skew:S.levelDev || 0, imported:false, size:effSize(j), full:effSize(j) === "full"
   }, extra);
 }
@@ -1450,6 +1459,7 @@ function stampLines(m, live = false) {
     if (m.pos && m.pos.altitude != null) parts.push(`Elev ${Math.round(m.pos.altitude)} m`);
     if (parts.length) L.push({ t:parts.join(" · ") });
     if (m.tech) L.push({ t:"Tech: " + m.tech });
+    if (m.dealer) L.push({ t:"Dealer: " + m.dealer });
     if (m.imported) L.push({ t:"Imported from photo library" });
   }
   return L;
@@ -1566,6 +1576,7 @@ function bandContent(m) {
   if (extra.length) items.push(["Elev", extra.join(" · ")]);
   if (m.zoomLabel && m.zoomLabel !== "1×" && !m.imported) items.push(["Zoom", m.zoomLabel]);
   if (m.tech) items.push(["Tech", m.tech]);
+  if (m.dealer) items.push(["Dealer", m.dealer]);
   if (m.imported) items.push(["Source", "Photo library"]);
   if (m.note) items.push(["Note", m.note, true]);
   const sns = m.job && m.job.outcome === "OK" && m.job.serials ? m.job.serials : [];
@@ -1919,7 +1930,7 @@ async function addExif(blob, m, w, h) {
   let mt; try { mt = metaText(m); } catch { const d0 = stampLines(m).map(l => l.t).join(" | "); mt = { title:d0, subject:"", text:d0, keywords:[] }; }
   const desc = mt.text, X = (tag, s) => { const b = ucs2(s); return { tag, type:1, count:b.length, bytes:b }; };
   const ifd0 = [A(0x010E, desc), A(0x010F, "Field Cam"), A(0x0131, "Field Cam " + VERSION), A(0x0132, dt), { tag:0x8769, type:4, count:1, ptr:"exif" }];
-  if (m.tech) ifd0.push(A(0x013B, m.tech));
+  if (m.tech) ifd0.push(A(0x013B, m.dealer ? `${m.tech} (${m.dealer})` : m.tech));
   ifd0.push(X(0x9C9B, mt.title), X(0x9C9C, mt.text), X(0x9C9E, mt.keywords.join("; ")));   // Windows Title, Comments, Tags
   if (mt.subject) ifd0.push(X(0x9C9F, mt.subject));                                          // Windows Subject
   ifd0.sort((a, b) => a.tag - b.tag);
@@ -1988,7 +1999,7 @@ function parseTiff(v, t, out) {
 /* ================= file names and downloads ================= */
 const slug = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
 // Plain, readable file names:
-//   2026-10-27 1541 SA-123456 - CPE Line of Sight (43.3601 -80.3123).jpg
+//   2026-10-27 1541 SA-1234567 - CPE Line of Sight (43.3601 -80.3123).jpg
 //   2026-10-27 1543 - LOS POVs 2 (43.3601 -80.3123).jpg
 // Date and time taken, SA-# (if entered), photo name (numbered only when there is more than one), GPS.
 const FILE_LABEL = {   // shorter names for long checklist items (file name only; the stamp keeps the full wording)
@@ -2025,7 +2036,7 @@ const jobPhotosSorted = sid => S.photos.filter(p => p.sessionId === sid).sort((a
 const edgeOfJob = (sid, kind) => { const ps = jobPhotosSorted(sid); return kind === "start" ? ps[0] : ps[ps.length - 1]; };
 var divCache = new Map();   // "sid|kind" -> { key, file }: drawn ahead of time so iPhone's share sheet opens straight from the tap
 const divKey = (sid, kind) => { const f = edgeOfJob(sid, kind), j = jobs[sid] || (f && f.job) || {};
-  return f ? [kind, f.created, j.ref, j.work, j.plat, j.vas, j.outcome, j.reason, settings.name].join("|") : ""; };
+  return f ? [kind, f.created, j.ref, j.work, j.plat, j.vas, j.outcome, j.reason, settings.name, settings.dealer].join("|") : ""; };
 var divT = null;
 function prepDividers() {
   clearTimeout(divT);
@@ -2064,7 +2075,7 @@ async function makeDivider(sid, kind) {
   x.fillStyle = "#E8EFEC"; fit(short, 700, 64, W); x.fillText(short, Z / 2, 953);
   x.fillStyle = "#8FA59D"; fit("Divider · don’t upload", 600, 44, W); x.fillText("Divider · don’t upload", Z / 2, 1035);
   let blob = await toBlob(c, 0.45);   // flat colours + big text stay crisp even at low quality (~11 KB)
-  try { blob = await addExif(blob, { when, tech:settings.name.trim(), labels:[start ? "Job start divider" : "Job end divider"], unlabelled:false, job:jobMeta(j.work ? j : null) }, Z, Z); } catch {}
+  try { blob = await addExif(blob, { when, tech:settings.name.trim(), dealer:(settings.dealer || "").trim(), labels:[start ? "Job start divider" : "Job end divider"], unlabelled:false, job:jobMeta(j.work ? j : null) }, Z, Z); } catch {}
   const d = when, head = [`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}${pad(d.getMinutes())}`, j.ref].filter(Boolean).join(" ");
   // "00" sorts before the photos in Files, "zz" after
   return new File([blob], `${head} - ${start ? "00 JOB START" : "zz JOB END"} (divider).jpg`, { type:"image/jpeg", lastModified:when.getTime() });
@@ -2750,8 +2761,9 @@ function closeSheets() { document.documentElement.classList.remove("overstart");
 $("scrim").addEventListener("click", closeSheets);
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeSheets));
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
-$("setBtn").addEventListener("click", () => { $("inName").value = settings.name; renderStorage(); openSheet("setSheet"); });
+$("setBtn").addEventListener("click", () => { $("inName").value = settings.name; $("inDealer").value = settings.dealer || ""; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
+$("inDealer").addEventListener("input", () => { settings.dealer = $("inDealer").value; save(); });
 $("sizeSeg").addEventListener("click", e => { const b = e.target.closest("[data-z]"); if (!b) return; settings.size = b.dataset.z; save(); applyTheme(); renderLabels(); });
 $("gridSeg").addEventListener("click", e => { const b = e.target.closest("[data-g]"); if (!b) return; settings.grid = b.dataset.g === "on"; save(); applyTheme(); });
 $("divSeg").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b) return; settings.dividers = b.dataset.d === "on"; save(); applyTheme(); });
@@ -2786,7 +2798,7 @@ $("jobBtn").addEventListener("click", e => {
 });
 $("inRefEdit").addEventListener("change", () => {
   const r = normRef($("inRefEdit").value), j = curJob();
-  if (!validRef(r)) { toast(r ? `“${esc(r)}” isn’t an SA-#. It needs 6 digits, e.g. SA-123456.` : "The SA-# is required.", 3000); $("inRefEdit").value = j.ref || ""; return; }
+  if (!validRef(r)) { toast(r ? `“${esc(r)}” isn’t an SA-#. It needs 7 digits, e.g. SA-1234567.` : "The SA-# is required.", 3000); $("inRefEdit").value = j.ref || ""; return; }
   $("inRefEdit").value = r; j.ref = r; jobChanged();
 });
 function missingShots() { const c = countLabels(); return baseShots(curJob()).filter(l => !c[l]); }
@@ -2891,9 +2903,11 @@ function drawStartOut() {
 }
 $("startOutBtn").addEventListener("click", () => { if (startReady()) openOutcomeSheet(true); });
 function showStart() {
-  const named = !!settings.name.trim();
-  $("nameBlock").hidden = named;
-  $("hello").textContent = named ? settings.name.trim() : "";
+  const named = !!settings.name.trim(), dealt = !!(settings.dealer || "").trim();
+  $("nameBlock").hidden = named && dealt;
+  $("nameRow").hidden = named; $("dealerRow").hidden = dealt;
+  $("dealerRow").style.marginTop = named ? "0" : "10px";
+  $("hello").textContent = [named ? settings.name.trim() : "", dealt ? settings.dealer.trim() : ""].filter(Boolean).join(" · ");
   const j = curJob();
   $("resumeBlock").hidden = !j;
   if (j) {
@@ -2937,16 +2951,18 @@ $("inRef").addEventListener("blur", () => { $("inRef").value = normRef($("inRef"
 $("resumeBtn").addEventListener("click", () => { S.sel = [...(current.sel || [])]; beginSession(); });
 $("startBtn").addEventListener("click", () => {
   const name = settings.name.trim() || $("inName0").value.trim();
+  const dealer = (settings.dealer || "").trim() || $("inDealer0").value.trim();
   const missing = [];
   const ref = normRef($("inRef").value);
   if (!name) missing.push("your name");
+  if (!dealer) missing.push("dealer name");
   if (!ref) missing.push("SA-#");
-  else if (!validRef(ref)) { $("startErr").textContent = `“${ref}” isn’t an SA-#. It needs 6 digits, e.g. SA-123456.`; $("startErr").hidden = false; $("inRef").focus(); return; }
+  else if (!validRef(ref)) { $("startErr").textContent = `“${ref}” isn’t an SA-#. It needs 7 digits, e.g. SA-1234567.`; $("startErr").hidden = false; $("inRef").focus(); return; }
   if (!startSel.work) missing.push("work order");
   else if (!startSel.plat) missing.push("platform");
   else if (startSel.plat === "VAS" && !startSel.vas) missing.push("VAS service (XTV, XWH or XWR)");
   if (missing.length) { $("startErr").textContent = "Still needed: " + missing.join(", ") + "."; $("startErr").hidden = false; return; }
-  settings.name = name;
+  settings.name = name; settings.dealer = dealer;
   const hadPrev = curPhotos().length;
   const id = Date.now().toString(36);
   jobs[id] = { work:startSel.work, plat:startSel.plat, vas:startSel.vas || null, outcome:startOut.outcome, reason:startOut.reason, ref, started:Date.now() };

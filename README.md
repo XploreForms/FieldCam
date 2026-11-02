@@ -1,4 +1,4 @@
-# Field Cam (v3.21.0)
+# Field Cam (v3.22.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -25,8 +25,9 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
 4. Live at `https://xploreforms.github.io/FieldCam/` after a minute. Must be https.
 
 ## Tech workflow
-1. First launch only: enter name.
-2. Each work order: enter the **SA-#** (required, 6 digits; **Paste** grabs it from FSL), then pick the **Work order**
+1. First launch only: enter your name and dealer name (both required, both stamped on every photo;
+   change them in Settings).
+2. Each work order: enter the **SA-#** (required, 7 digits; **Paste** grabs it from FSL), then pick the **Work order**
    (Install / Conversion / Repair) and the **Platform** (Fibre existing drop / drop required /
    drop only (Install only), Fixed Wireless, Satellite, VAS (Install and Repair)). VAS then asks **XTV, XWH or XWR**. That's all that's
    needed to start shooting.
@@ -45,13 +46,13 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
    the viewfinder (items still needed have an amber edge; done ones show ✓ and a count). There is
    no set order and the shutter always works.
    - **Pick first:** tap a tile, then shoot. Tap more tiles for **one photo, several items** (the
-     stamp lists them all and the file name joins them, e.g. `Cable Run + Grounding Overview`); tap
+     stamp lists them all and the file name joins them, e.g. `Outdoor Cable Run + Grounding Overview`); tap
      a lit tile again to drop it. After every shot the tiles un-select, so each photo is labelled on
      purpose (**Retake** puts the same labels back). Picked tiles are lit green.
    - **Shoot first:** with no tile picked, photos go to **To label**. Tap **To label (n)** (or the
      button in the gallery) to sort them: each photo shows full screen, tap what's in it (one or
      more), then **Next**. Photos can't be saved until they're labelled.
-   - After each shot a small note shows for a few seconds (`✓ Cable Run · Change`, or
+   - After each shot a small note shows for a few seconds (`✓ Outdoor Cable Run · Change`, or
      `Saved to To label · Label`). It never blocks the next shot; ignore it or tap to fix.
    - **Wrong label later:** open the photo in the gallery and tap **Change label**. The stamp is
      redrawn with the new label (the app keeps a clean copy of each photo until the job is
@@ -75,7 +76,7 @@ Previous jobs stay on the phone (gallery › Previous jobs) until deleted.
 
 ## File names
 Plain and readable:
-- `2026-10-27 1541 SA-123456 - CPE Line of Sight (43.3601 -80.3123).jpg`
+- `2026-10-27 1541 SA-1234567 - CPE Line of Sight (43.3601 -80.3123).jpg`
 - `2026-10-27 1543 - LOS POVs 2 (43.3601 -80.3123).jpg`
 
 = date and time taken, SA-# (if entered), photo name (numbered only when there's more than one),
@@ -85,12 +86,12 @@ A few long checklist items get a short name in the file (`FILE_LABEL` in `index.
 Names are built at save time, so they follow the SA-# and labels as last set.
 
 ## SA-# (required)
-Every job needs its SA-# (6 digits, e.g. `SA-123456`) before it can start; account numbers aren't
-used. Typing `123456`, `sa 123456` or `SA123456` is tidied to `SA-123456`; anything that isn't 6 digits
+Every job needs its SA-# (7 digits, e.g. `SA-1234567`) before it can start; account numbers aren't
+used. The box opens the number pad and adds `SA-` as you type: type just the 7 digits, or the full `SA-1234567`, and it ends up the same; anything that isn't 7 digits
 is refused with a message. It can be corrected later in the job sheet (tap the job name), but not cleared.
 
 The **Paste** button next to the box picks the SA-# out of whatever was copied (FSL, a text, an
-email): `SA-` + 6 digits (also written `SA 123456`, `SA#123456`), or just the 6 digits copied on their
+email): `SA-` + 7 digits (also written `SA 1234567`, `SA#1234567`), or just the 7 digits copied on their
 own. It won't guess from other numbers (work orders, phone numbers, account numbers). iPhones show a
 small "Paste" bubble to confirm the first time.
 
@@ -159,8 +160,8 @@ the band is cropped:
 - **XMP** (iPhone/Mac Photos caption and keywords, Lightroom, etc.): title, description, keywords.
 
 The band text reads like:
-`Cable Run + Surge | SA-123456 | Job: Install · Fixed Wireless · Complete | When: … | GPS: … |
-Facing: 264° W · tilt +2.0° | Tech: … | S/N: … | Address: …`
+`Outdoor Cable Run + Surge | SA-1234567 | Job: Install · Fixed Wireless · Complete | When: … | GPS: … |
+Facing: 264° W · tilt +2.0° | Tech: … | Dealer: … | S/N: … | Address: …`
 
 ## Info band
 Every saved image has the same layout: a 4:3 photo area (camera photos fill it; imports are scaled
@@ -168,7 +169,7 @@ to fit, centred) and the band below it ("label chips" layout):
 - **Top row:** each label as its own green chip (more labels wrap onto a second row), SA-# at the
   right. Unlabelled photos show an amber "Not labelled yet" chip.
 - **Job** on its own row (work order · platform · outcome · reason).
-- **Facts grid:** When, GPS, Facing (direction · tilt), Tech, plus Elev / Zoom / Source when they
+- **Facts grid:** When, GPS, Facing (direction · tilt), Tech, Dealer, plus Elev / Zoom / Source when they
   apply, each as a grey key and white value, 2 or 3 across, whichever lets the text be biggest.
 - **Address** on its own row at the bottom.
 
