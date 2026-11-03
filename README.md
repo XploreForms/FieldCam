@@ -1,4 +1,4 @@
-# Field Cam (v3.22.6)
+# Field Cam (v3.22.7)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -123,6 +123,10 @@ CPEs, Hughes and SurfBeam modems and radios, Zyxel, set-top boxes). A slim strip
 picture shows what was added. Scan as many as needed, then **Done** (or the barcode button again) and
 the shutter takes photos again. MAC address barcodes and repeats are caught.
 
+Each successful scan also saves a photo of the label (the whole camera frame at that moment), named
+after the device, e.g. `Adtran Wi-Fi 6 router SN`, with `Note: Scanned S/N …` on its info band. A failed
+read, a MAC barcode or a repeat saves no photo. Removing a serial in the job sheet doesn't delete its
+photo (delete it in the gallery if needed).
 Scanned serials are stamped on every photo in the job as an **S/N** row, only while the outcome is
 Complete. They're listed in the job sheet (tap the job name) with **Remove**. If the outcome changes
 to Cannot Complete or Not Required the scanner hides and the serials come off the stamp (they're

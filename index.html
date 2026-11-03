@@ -666,7 +666,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.22.6";
+const VERSION = "3.22.7";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1796,7 +1796,7 @@ async function restamp(rec) {
 
 /* ================= capture ================= */
 function outputRotation() { return (360 - extraTurn()) % 360; }   // turn the saved photo upright
-async function capture(force = false) {
+async function capture(force = false, opts = {}) {
   const v = $("video");
   if (!current || S.busy) return;
   if (!force && povBlocked()) {
@@ -1821,7 +1821,8 @@ async function capture(force = false) {
     const rec = await storePhoto(out, meta);
     S.note = "";
     clearSel(); renderLabels();          // labels un-select after every shot; Retake brings them back
-    showSnack(rec);
+    if (!opts.quiet) showSnack(rec);
+    return rec;
   } catch (e) { console.error(e); toast("Couldn’t save that photo. Try again."); }
   finally { S.busy = false; $("shutter").classList.remove("busy"); }
 }
@@ -2411,7 +2412,19 @@ async function scanOnce() {
   const item = snItem(code);
   j.serials = [...(j.serials || []), { code, item }]; jobChanged();
   aimFlash("hit"); try { navigator.vibrate && navigator.vibrate(40); } catch {}
-  scanMsg(`Added <b>${esc(code)}</b>${item ? " · " + esc(item) : ""}. Scan another or tap Done`);
+  const shot = await snPhoto(code, item);
+  scanMsg(`Added <b>${esc(code)}</b>${item ? " · " + esc(item) : ""}${shot ? " + photo" : ""}. Scan another or tap Done`);
+}
+// Every scanned serial also saves a photo of its label: named after the device ("Adtran Router SN"),
+// with the scanned number on the info band, so FSL gets the picture and the stamp gets the text.
+async function snPhoto(code, item) {
+  const keepSel = S.sel, keepNote = S.note;
+  S.sel = [`${item || "Device"} SN`]; S.note = `Scanned S/N ${code}`;
+  let rec = null;
+  try { rec = await capture(true, { quiet:true }); } catch {}
+  S.sel = keepSel; S.note = keepNote; if (current) { current.sel = keepSel; save(); }
+  renderLabels();
+  return rec;
 }
 $("scanCancel").addEventListener("click", stopScan);
 $("snBtn").addEventListener("click", () => SC.on ? stopScan() : startScan());
