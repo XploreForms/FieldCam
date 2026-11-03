@@ -1,4 +1,4 @@
-# Field Cam (v3.22.7)
+# Field Cam (v3.22.9)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -332,3 +332,7 @@ app files (never photos) and reloads. Photos and the current job are kept.
   Outcomes are Complete, Cannot Complete and Not Required, with no reasons yet (set them in the Outcomes tool).
 - Install, Conversion and Repair Complete lists on Fibre, Fixed Wireless and Satellite have an optional
   **VAS** photo for when XWH or XTV is deployed on the same visit.
+
+## Version line
+The start screen shows `Field Cam v<VERSION> · Updated <date>` at the bottom of the start screen. On each release bump
+`VERSION` and `UPDATED` in `index.html` and `VERSION` in `sw.js`.
