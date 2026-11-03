@@ -516,7 +516,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 <section class="sheet" id="jobSheet" aria-label="Job">
   <header><h2>This job</h2><button class="btn" data-close>Done</button></header>
   <div class="body">
-    <div><label for="inRefEdit">SA-#</label><div class="refrow"><input id="inRefEdit" class="refin" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="numeric" placeholder="SA-1234567"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
+    <div><label for="inRefEdit">SA-#######</label><div class="refrow"><input id="inRefEdit" class="refin" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="numeric" placeholder="SA-1234567"><button type="button" class="btn pastebtn" data-paste="inRefEdit">Paste</button></div></div>
     <div class="picker" id="sheetPicker"></div>
     <div class="picker" id="sheetOutcome"></div>
     <div id="snBlock" hidden><label>Serial numbers (stamped on this job’s photos)</label><div id="snList" class="snlist"></div></div>
@@ -588,7 +588,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
     <div><label>Job start &amp; end cards</label><div class="seg two" id="divSeg" role="group"><button type="button" data-d="on"><b>On</b><span>Saved around each job’s photos</span></button><button type="button" data-d="off"><b>Off</b><span>Photos only</span></button></div></div>
     <div><label>Text size</label><div class="seg two" id="textSeg" role="group"><button type="button" data-x="normal"><b>Normal</b></button><button type="button" data-x="large"><b>Large</b><span>Bigger text and buttons</span></button></div></div>
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"></div>
-    <div><label for="inDealer">Dealer name</label><input id="inDealer" autocomplete="organization" placeholder="Company you install for"><p class="hint" style="margin-top:6px">Both are stamped on every photo.</p></div>
+    <div><label for="inDealer">Dealer name</label><input id="inDealer" autocomplete="organization" placeholder="Location XCI Tech"><p class="hint" style="margin-top:6px">Both are stamped on every photo.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="install" id="installHelp"></div>
     <div class="btnrow" style="align-items:center"><p class="stats" style="flex:1;margin:0">Field Cam v<span id="verTxt"></span> · compass corrected to true north when there’s a GPS fix</p><button class="btn sm" id="updCheck" style="flex:none">Check for updates</button></div>
@@ -643,13 +643,13 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
       <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#002B2B"/><circle cx="32" cy="32" r="17" fill="none" stroke="#58C774" stroke-width="5"/><circle cx="32" cy="32" r="5" fill="#00FF57"/><path d="M32 6v9M32 49v9M6 32h9M49 32h9" stroke="#58C774" stroke-width="4" stroke-linecap="round"/></svg>
       <h1>Field Cam</h1><p class="hello" id="hello"></p>
     </div>
-    <div id="nameBlock"><div id="nameRow"><label for="inName0">Your name</label><input id="inName0" autocomplete="name" placeholder="First Last"></div><div id="dealerRow" style="margin-top:10px"><label for="inDealer0">Dealer name</label><input id="inDealer0" autocomplete="organization" placeholder="Company you install for"></div><p class="hint" style="margin-top:6px">Asked once and stamped on every photo. Change them any time in Settings.</p></div>
+    <div id="nameBlock"><div id="nameRow"><label for="inName0">Your name</label><input id="inName0" autocomplete="name" placeholder="First Last"></div><div id="dealerRow" style="margin-top:10px"><label for="inDealer0">Dealer name</label><input id="inDealer0" autocomplete="organization" placeholder="Location XCI Tech"></div><p class="hint" style="margin-top:6px">Asked once and stamped on every photo. Change them any time in Settings.</p></div>
     <div class="resume" id="resumeBlock" hidden>
       <div style="min-width:0"><div class="rjob" id="resumeJob"></div><div class="rmeta" id="resumeMeta"></div></div>
       <button class="btn primary" id="resumeBtn">Continue</button>
     </div>
     <h2 id="newJobH">New job</h2>
-    <div><label for="inRef">SA-#</label><div class="refrow"><input id="inRef" class="refin" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="numeric" placeholder="SA-1234567"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div><p class="hint" style="margin-top:6px">Type the 7 digits, SA- is added for you. Typing or pasting the full SA-1234567 works too.</p></div>
+    <div><label for="inRef">SA-#######</label><div class="refrow"><input id="inRef" class="refin" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="numeric" placeholder="SA-1234567"><button type="button" class="btn pastebtn" data-paste="inRef">Paste</button></div><p class="hint" style="margin-top:6px">Type the 7 digits or paste the full SA number.</p></div>
     <div class="picker" id="startPicker"></div>
     <div><label>Outcome <span style="text-transform:none;letter-spacing:0">(optional, can be set later)</span></label><button type="button" class="btn startout" id="startOutBtn" disabled>Select later</button></div>
     <div class="install" id="installTip" hidden></div>
@@ -662,7 +662,7 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.22.0";
+const VERSION = "3.22.3";
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -2122,7 +2122,7 @@ async function downloadPhotos(items) {
         toast(`Saved ${plural(list.length, "photo")}${all.length ? ` + ${all.length === 1 ? "job " + all[0].kind + " card" : "job start and end cards"}` : ""}`, 2600);
         return true;
       } catch (e) {
-        if (e && e.name === "AbortError") { toast("Not saved. Tap Save Images (Photos) or Save to Files.", 3200); return false; }
+        if (e && e.name === "AbortError") { toast("Not saved. Tap Save again, then “Save Images” to put them in Photos.", 3200); return false; }
         // share sheet unavailable here: fall through to plain downloads
       } finally { dlBusy = false; renderAll(); }
     }
@@ -2882,7 +2882,7 @@ async function renderStorage() {
   $("storageStats").textContent = txt + ` · saved photos are cleared from Field Cam after ${CLEAN_DAYS} days (they stay in Photos / Files)`;
 }
 const SAVE_HINT = isIOS
-  ? "Save opens the iPhone share sheet: tap “Save N Images” to put them in Photos, or “Save to Files” to keep the file names. Then attach them in FSL."
+  ? "Save opens the iPhone share sheet: tap “Save N Images” to put them in Photos (don’t use Save to Files). Then attach them in FSL from Photos."
   : "Each photo downloads as its own file, named with the date, SA-# and label, ready to attach in FSL.";
 function installText() {
   if (standalone) return "Installed on this phone. It opens full-screen and works with no signal.";

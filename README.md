@@ -1,4 +1,4 @@
-# Field Cam (v3.22.0)
+# Field Cam (v3.22.3)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -59,8 +59,8 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
      finished, then deletes it to save space).
    - **Other…** asks what the photo is of; the text becomes the label.
 4. Tap the **save button** (right of the shutter). On iPhone this opens the share sheet with
-   every new photo: tap **Save N Images** to put them in Photos (the gallery), or **Save to Files**
-   to keep the readable file names. iPhone web apps can't write into Photos any other way; a plain
+   every new photo: techs tap **Save N Images** to put them in Photos (the gallery), then attach
+   them in FSL from Photos. Don't use Save to Files. iPhone web apps can't write into Photos any other way; a plain
    download only opens a preview. On Android/computers each photo downloads as its own file.
    Tap a gallery photo to view it full screen; **swipe left/right** (or the arrows) to flip
    through the job's photos, pinch or double-tap to zoom. Save or Delete applies to the photo shown.
