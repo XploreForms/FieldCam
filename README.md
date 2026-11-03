@@ -1,4 +1,4 @@
-# Field Cam (v3.22.3)
+# Field Cam (v3.22.6)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -28,8 +28,8 @@ always the full 4:3 frame, so it shows a little more at the edges than the viewf
 1. First launch only: enter your name and dealer name (both required, both stamped on every photo;
    change them in Settings).
 2. Each work order: enter the **SA-#** (required, 7 digits; **Paste** grabs it from FSL), then pick the **Work order**
-   (Install / Conversion / Repair) and the **Platform** (Fibre existing drop / drop required /
-   drop only (Install only), Fixed Wireless, Satellite, VAS (Install and Repair)). VAS then asks **XTV, XWH or XWR**. That's all that's
+   (Install / Conversion / Repair / Recovery) and the **Platform** (Fibre existing drop / drop required /
+   drop only (Install only); Repair and Recovery use a single Fibre), Fixed Wireless, Satellite, VAS (Install, Repair and Recovery)). VAS then asks **XTV, XWH or XWR**. That's all that's
    needed to start shooting.
    **Same spot every time:** every platform and every Not Required reason keep
    the same position whatever the work order or platform. Options that don't apply are greyed out
@@ -320,3 +320,11 @@ couple of minutes (GitHub Pages itself takes about a minute to publish). A bar t
 app files (never photos) and reloads. Photos and the current job are kept.
 
 **Settings › Check for updates** does the same check on demand and shows the version in use.
+
+## Recovery and the optional VAS photo
+- **Recovery** (equipment removal): Fixed Wireless and Satellite Complete jobs need Overview of Structure,
+  Mount and CPE Before Removal, Mount and CPE After Removal, and Cable Entry Hole Sealed (tiles and file
+  names shorten the middle two to "CPE Before/After Removal"). Fibre and VAS recoveries have no set photos.
+  Outcomes are Complete, Cannot Complete and Not Required, with no reasons yet (set them in the Outcomes tool).
+- Install, Conversion and Repair Complete lists on Fibre, Fixed Wireless and Satellite have an optional
+  **VAS** photo for when XWH or XTV is deployed on the same visit.
