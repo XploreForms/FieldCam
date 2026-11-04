@@ -458,15 +458,17 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 .sidewarn b{font-size:17px}
 .sidewarn span{font-size:13px;color:var(--muted);line-height:1.35}
 .sidewarn .btn{margin-top:4px}
-.hud.side .sidewarn{display:flex}
-.hud.side .tiltbox,.hud.side .zeroline,.hud.side .reticle{display:none}
 .hud.side.r90 .sidewarn{transform:translate(-50%,-50%) rotate(90deg)}
 .hud.side.r270 .sidewarn{transform:translate(-50%,-50%) rotate(-90deg)}
-.shutter.sideoff{opacity:.35}
 .hud.r90 .tiltbox{top:50%;left:calc(100% - 44px);transform:translate(-50%,-50%) rotate(90deg)}
 .hud.r270 .tiltbox{top:50%;left:calc(44px + env(safe-area-inset-left,0px));transform:translate(-50%,-50%) rotate(-90deg)}
 .hud.r90 .zoomread{transform:translate(-50%,-50%) rotate(90deg)}
 .hud.r270 .zoomread{transform:translate(-50%,-50%) rotate(-90deg)}
+/* Phone held sideways: the layout stays put (like the iPhone Camera app) and the buttons turn to face the tech */
+.vfctl button,.zoombar button,.thumbbtn,.dlbtn svg,.shutter svg,.zoomread{transition:transform .25s}
+html.s90 .vfctl button,html.s90 .zoombar button,html.s90 .thumbbtn,html.s90 .dlbtn svg,html.s90 .shutter svg{transform:rotate(90deg)}
+html.s270 .vfctl button,html.s270 .zoombar button,html.s270 .thumbbtn,html.s270 .dlbtn svg,html.s270 .shutter svg{transform:rotate(-90deg)}
+html.s90 .thumbbtn .badge,html.s270 .thumbbtn .badge{transform:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -669,8 +671,8 @@ html.rot270 body{transform:rotate(90deg) translateY(-100%)}
 
 <script>
 "use strict";
-const VERSION = "3.22.9";
-const UPDATED = "2026-11-03";   // release date shown under Start Job; change it with VERSION
+const VERSION = "3.23.1";
+const UPDATED = "2026-11-04T14:10:00-05:00";   // release date and time shown at the bottom of the start screen; change it with VERSION
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1349,14 +1351,16 @@ const measureVf = () => {
   frameTurn = extraTurn() % 180;
   const W0 = Math.round(vfEl.clientWidth), H0 = Math.round(vfH);
   // Fill the width, but never crop the sides past a square: a tall viewfinder gets black bars above and below
-  const W = W0, H = Math.min(H0, W0), side = Math.min(W, H);
+  // Sideways the photo area is tall on screen: allow up to its full 3:4 height and show all of it
+  const W = W0, H = frameTurn === 90 ? Math.min(H0, Math.round(W0 * 4 / 3)) : Math.min(H0, W0), side = Math.min(W, H);
   const f = $("frame"); f.style.width = W + "px"; f.style.height = H + "px";
   const zc = $("zclip"); zc.style.width = W + "px"; zc.style.height = H + "px";
   const bar = Math.round((H0 - H) / 2), ctl = document.querySelector(".vfctl");
   if (ctl) ctl.style.top = (bar + 12) + "px";
   const st0 = $("scanTop"); if (st0) st0.style.top = (bar + 12) + "px";   // HQ + flashlight stay in the picture's top-right corner
   const v = $("video"), vw = v.videoWidth || 3, vh = v.videoHeight || 4, { w0, h0 } = capArea(vw, vh);
-  const k = Math.max(W / w0, H / h0);   // fill the whole viewfinder edge to edge (like object-fit: cover on the 4:3 area)
+  // Upright: fill the viewfinder edge to edge (cover). Sideways: fit the whole photo area (contain) so the tech sees every edge.
+  const k = frameTurn === 90 ? Math.min(W / w0, H / h0) : Math.max(W / w0, H / h0);
   v.style.width = (vw * k).toFixed(1) + "px"; v.style.height = (vh * k).toFixed(1) + "px";
   FRAME.w = Math.round(w0 * k); FRAME.h = Math.round(h0 * k); FRAME.k = k; FRAME.side = side;
 };
@@ -1397,7 +1401,7 @@ function fastTick() {
   E.hud.classList.toggle("free", !strict); E.hud.classList.toggle("lvl", lvl); E.hud.classList.toggle("near", near);
   if (lvl !== S.wasLvl) {                                  // short buzz when a line-of-sight shot becomes level (Android)
     const t = Date.now();
-    if (lvl && !S.sideways && t - (S.lvlOffAt || 0) > 600 && navigator.vibrate) { try { navigator.vibrate(35); } catch {} }
+    if (lvl && t - (S.lvlOffAt || 0) > 600 && navigator.vibrate) { try { navigator.vibrate(35); } catch {} }
     if (!lvl) S.lvlOffAt = t;
     S.wasLvl = lvl;
   }
@@ -1406,7 +1410,11 @@ function fastTick() {
   const sw = xt % 180 === 90, now = Date.now();
   if (sw !== sideRaw) { sideRaw = sw; sideAt = now; }
   const side = sideRaw && now - sideAt > 400;
-  if (side !== S.sideways) { S.sideways = side; E.hud.classList.toggle("side", side); E.shutter.classList.toggle("sideoff", side); if (side) hideSnack(); }
+  if (side !== S.sideways) { S.sideways = side; E.hud.classList.toggle("side", side); }
+  // Sideways photos are allowed (they come out the same landscape 4:3); the controls turn to face the tech
+  const de = document.documentElement, s90 = side && xt === 90, s270 = side && xt === 270;
+  if (de.classList.contains("s90") !== s90) de.classList.toggle("s90", s90);
+  if (de.classList.contains("s270") !== s270) de.classList.toggle("s270", s270);
   if (xt % 180 !== frameTurn) { measureVf(); lastHz = ""; }   // phone turned: reshape the frame
   if (p == null) { setText(E.tilt, "—"); setText(E.level, "NO TILT DATA"); }
   else { setText(E.tilt, fmtTilt(p)); setText(E.level, Math.abs(p) <= LEVEL_TOL ? "LEVEL ✓" : p > 0 ? "AIM LOWER" : "AIM HIGHER"); }
@@ -1809,7 +1817,6 @@ async function capture(force = false, opts = {}) {
     return;
   }
   if (!v.videoWidth) { toast("Camera isn’t ready yet."); return; }
-  if (S.sideways) { try { navigator.vibrate && navigator.vibrate([30, 60, 30]); } catch {} return; }   // the card on screen explains
   S.busy = true; $("shutter").classList.add("busy");
   const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
   const meta = snapshot();
@@ -2991,7 +2998,8 @@ function beginSession() {
 $("inRef").addEventListener("input", () => { $("startErr").hidden = true; });
 $("inRef").addEventListener("blur", () => { $("inRef").value = normRef($("inRef").value); });
 $("resumeBtn").addEventListener("click", () => { S.sel = [...(current.sel || [])]; beginSession(); });
-$("verLine").textContent = `Field Cam v${VERSION} · Updated ${new Date(UPDATED + "T12:00:00").toLocaleDateString("en-CA", { month:"short", day:"numeric", year:"numeric" })}`;
+$("verLine").textContent = (() => { const d = new Date(UPDATED);
+  return `Field Cam v${VERSION} · Updated ${d.toLocaleDateString("en-CA", { month:"short", day:"numeric", year:"numeric" })}, ${d.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" })}`; })();
 $("startBtn").addEventListener("click", () => {
   const name = settings.name.trim() || $("inName0").value.trim();
   const dealer = (settings.dealer || "").trim() || $("inDealer0").value.trim();

@@ -1,4 +1,4 @@
-# Field Cam (v3.22.9)
+# Field Cam (v3.23.1)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -277,16 +277,17 @@ whether there's a fix: green good, amber fair, red none). Line-of-sight shots ad
   the form needs hasn't been taken, Save lists them first: **Take them now** or **Save anyway**.
 - **Missing shots:** Finish job lists photos still to label, labels with no photo yet, and photos not saved.
 
-## Hold the phone upright
-Field Cam is used with the phone upright (portrait) so every job's photos look the same; the saved
-photo is always the same wide 4:3 frame. If the phone is turned sideways for more than a moment, the
-camera shows **Turn your phone upright** and the shutter won't fire. For a shot that really needs
-the phone sideways (or anything else the app can't take), use the phone's Camera app and bring it in
-with **Import from photo library** (button on that card, or in the gallery). Imported photos get the
-info band and labels like any other.
-
-The app layout never turns sideways either: Android keeps it upright through the install settings,
-and on iPhone the app turns itself back upright if the screen rotates.
+## Upright or sideways
+Photos can be taken with the phone upright or sideways. Either way the saved photo is the same
+landscape 4:3 frame with the info band along the bottom, already the right way up for FSL.
+- **Upright** (normal): the frame is a landscape slice of the camera's view.
+- **Sideways**: the frame is the camera's whole view, about a third wider and taller than upright
+  (like zooming out to about 0.75×) with more pixels, not fewer. Use it when you can't step back far
+  enough. The preview shows the whole frame; the buttons (HQ, scanner, flashlight, zoom, shutter,
+  save, gallery) turn to face you, the layout stays put, like the iPhone Camera app.
+- The ultra-wide (0.5×) lens is still never used: its soft, bent edges don't hold up for audits.
+The app layout itself never turns: Android keeps it upright through the install settings, and on
+iPhone the app turns itself back upright if the screen rotates.
 
 ## Tilt
 On level-guided photos the top readout shows tilt large (+ = aimed up) with LEVEL ✓ / AIM LOWER /
@@ -334,5 +335,5 @@ app files (never photos) and reloads. Photos and the current job are kept.
   **VAS** photo for when XWH or XTV is deployed on the same visit.
 
 ## Version line
-The start screen shows `Field Cam v<VERSION> · Updated <date>` at the bottom of the start screen. On each release bump
+The start screen shows `Field Cam v<VERSION> · Updated <date, time>` at the bottom of the start screen. On each release bump
 `VERSION` and `UPDATED` in `index.html` and `VERSION` in `sw.js`.
