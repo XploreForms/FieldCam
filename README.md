@@ -1,4 +1,4 @@
-# Field Cam (v3.25.0)
+# Field Cam (v3.25.1)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -289,6 +289,10 @@ landscape 4:3 frame with the info band along the bottom, already the right way u
   turns amber and lasts for one photo only, then the camera goes back to 1× (edges are softer and
   straight lines bend, so it's not for everyday shots). Those photos show `Zoom: 0.5× ultra-wide` on
   the info band so reviewers know. Pinch zoom never goes below 1×.
+  Android lenses aren't named: phones that zoom below 1× use that; otherwise the first **.5×** tap tries
+  another back camera, and tapping **.5×** again tries the next one. The lens a photo is taken with is
+  remembered as that phone's ultra-wide. **Settings** lists the cameras the phone reports and whether
+  ultra-wide is available, set or still to try.
 The app layout itself never turns: Android keeps it upright through the install settings, and on
 iPhone the app turns itself back upright if the screen rotates.
 

@@ -612,6 +612,7 @@ html.s90 .thumbbtn .badge,html.s270 .thumbbtn .badge{transform:none}
       <div class="btnrow"><label class="btn sm" for="twFile" style="display:inline-flex;align-items:center;cursor:pointer">Load tower list</label><input type="file" id="twFile" accept=".csv,text/csv,text/comma-separated-values,text/plain" hidden><button type="button" class="btn sm" id="twClear" hidden>Remove</button></div>
       <p class="hint" style="margin-top:6px">Shows towers within 30 km on line-of-sight shots. The list is kept on this phone only; get the file from your manager.</p></div>
     <div class="stats" id="storageStats"></div>
+    <div class="stats" id="camInfo"></div>
     <div class="install" id="installHelp"></div>
     <div class="btnrow" style="align-items:center"><p class="stats" style="flex:1;margin:0">Field Cam v<span id="verTxt"></span> · compass corrected to true north when there’s a GPS fix</p><button class="btn sm" id="updCheck" style="flex:none">Check for updates</button></div>
   </div>
@@ -685,8 +686,8 @@ html.s90 .thumbbtn .badge,html.s270 .thumbbtn .badge{transform:none}
 
 <script>
 "use strict";
-const VERSION = "3.25.0";
-const UPDATED = "2026-11-04T14:45:00-05:00";   // release date and time shown at the bottom of the start screen; change it with VERSION
+const VERSION = "3.25.1";
+const UPDATED = "2026-11-04T15:35:00-05:00";   // release date and time shown at the bottom of the start screen; change it with VERSION
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1062,9 +1063,11 @@ $("vfMsg").addEventListener("click", () => startCamera());
 /* ================= zoom: real lenses + pinch ================= */
 const MAX_DIGITAL = 5;
 async function detectLenses() {
-  S.lensesScanned = true; S.lens = "wide"; S.lenses = { wide:S.deviceId };
+  S.lensesScanned = true; S.lens = "wide"; S.lenses = { wide:S.deviceId, alts:[] };
   try {
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    // Android names lenses "camera2 0, facing back" etc.: the other back cameras are ultra-wide candidates
+    S.lenses.alts = devs.filter(d => /back|environment|rear/i.test(d.label || "") && !/ultra ?wide|tele|front/i.test(d.label) && d.deviceId && d.deviceId !== S.deviceId && !/^back camera$/i.test(d.label.trim())).map(d => d.deviceId);
     for (const d of devs) {
       const L = (d.label || "").toLowerCase();
       if (!L || /front|user|facetime/.test(L)) continue;
@@ -1079,13 +1082,28 @@ const curZoom = () => S.caps.zoom ? S.zoom : S.digitalZoom;
 // the next photo only, then the camera goes back to 1× (its soft, bent edges aren't for everyday shots).
 // iPhones give Safari either a separate "Ultra Wide" camera or one combined camera that can zoom below 1×.
 const hwUltra = () => !!(S.caps.zoom && S.caps.zoom.min && S.caps.zoom.min < 0.95);
-const canUltra = () => S.lens === "ultra" || hwUltra() || !!(S.lenses && S.lenses.ultra);
+// Android: one of the other back cameras is usually the ultra-wide, but they aren't named. The first .5× tap
+// tries a candidate; tapping .5× again tries the next. The one a photo is taken with is remembered for this phone.
+const ALT_KEY = "fieldcam.ultraLens";
+const altPick = () => { try { const id = localStorage.getItem(ALT_KEY); return id && S.lenses && S.lenses.alts && S.lenses.alts.includes(id) ? id : null; } catch { return null; } };
+const canUltra = () => S.lens === "ultra" || hwUltra() || !!(S.lenses && (S.lenses.ultra || (S.lenses.alts && S.lenses.alts.length)));
 const isUltra = () => S.lens === "ultra" || (S.ultra && S.caps.zoom && S.zoom < 0.95);
 const zoomRange = () => S.caps.zoom ? [Math.max(S.ultra ? S.caps.zoom.min : 1, S.caps.zoom.min || 1), Math.max(1, Math.min(S.caps.zoom.max || 1, 10))] : [1, MAX_DIGITAL];
 async function goUltra() {
   if (hwUltra() && S.lens === "wide") { S.ultra = true; setZoom(Math.max(0.5, S.caps.zoom.min)); flashZoomRead(); }
   else if (S.lenses.ultra) { await selectLens("ultra", 1); }
+  else if (S.lenses.alts && S.lenses.alts.length) {
+    const known = altPick(), id = known || S.lenses.alts[0];
+    S.lenses.ultra = id; S.altTry = known ? -1 : 0; await selectLens("ultra", 1);
+    if (!known) { toast(S.lenses.alts.length > 1 ? "Trying the wide lens. Not wider? Tap .5× again for the next lens." : "Trying the wide lens. Not wider? Tap 1× to go back.", 3200); return; }
+  }
   toast("Ultra-wide for the next photo, then back to 1×", 2200);
+}
+async function nextAlt() {   // Android: .5× tapped again while trying lenses -> the next back camera
+  const a = S.lenses.alts || [], i = (S.altTry || 0) + 1;
+  if (S.altTry < 0 || i >= a.length) { await leaveUltra(); if (S.altTry >= 0) { S.lenses.ultra = null; toast("No wider lens found on this phone.", 2600); } return; }
+  S.altTry = i; S.lenses.ultra = a[i]; S.switching = true; await startCamera(a[i]); S.switching = false; setZoom(1); flashZoomRead();
+  toast(`Trying lens ${i + 1} of ${a.length}. Not wider? Tap .5× again.`, 2800);
 }
 async function leaveUltra() {
   if (S.lens === "ultra") await selectLens("wide", 1);
@@ -1132,7 +1150,7 @@ function applyZoomUI() {
 $("zoomBar").addEventListener("click", e => {
   const b = e.target.closest("[data-z]"); if (!b) return;
   const k = b.dataset.z, z = k === "w2" ? 2 : k === "w3" ? 3 : 1;
-  if (k === "uw") { if (isUltra()) leaveUltra(); else goUltra(); return; }
+  if (k === "uw") { if (isUltra()) { if (S.lens === "ultra" && S.altTry >= 0 && !hwUltra()) nextAlt(); else leaveUltra(); } else goUltra(); return; }
   S.ultra = false;
   if (k === "tele") selectLens(k, 1);
   else selectLens("wide", z).then(() => { if (S.lens === "wide") { setZoom(z); flashZoomRead(); } });
@@ -1974,7 +1992,10 @@ async function capture(force = false, opts = {}) {
     S.note = "";
     clearSel(); renderLabels();          // labels un-select after every shot; Retake brings them back
     if (!opts.quiet) showSnack(rec);
-    if (isUltra()) leaveUltra();          // ultra-wide is for one photo only
+    if (isUltra()) {                      // ultra-wide is for one photo only
+      if (S.lens === "ultra" && S.altTry >= 0 && S.lenses.ultra) { try { localStorage.setItem(ALT_KEY, S.lenses.ultra); } catch {} S.altTry = -1; }
+      leaveUltra();
+    }
     return rec;
   } catch (e) { console.error(e); toast("Couldn’t save that photo. Try again."); }
   finally { S.busy = false; $("shutter").classList.remove("busy"); }
@@ -2952,7 +2973,13 @@ function closeSheets() { document.documentElement.classList.remove("overstart");
 $("scrim").addEventListener("click", closeSheets);
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeSheets));
 $("galBtn").addEventListener("click", () => { renderGallery(); openSheet("galSheet"); });
-$("setBtn").addEventListener("click", () => { twStatus(); $("inName").value = settings.name; $("inDealer").value = settings.dealer || ""; renderStorage(); openSheet("setSheet"); });
+async function camInfo() {
+  let names = [];
+  try { names = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput").map(d => d.label || "camera"); } catch {}
+  const z0 = S.caps && S.caps.zoom ? `zoom ${+(S.caps.zoom.min || 1).toFixed(2)}–${+(S.caps.zoom.max || 1).toFixed(1)}` : "no hardware zoom";
+  $("camInfo").textContent = `Cameras: ${names.join(", ") || "none listed"} · ${z0} · ultra-wide ${canUltra() ? (hwUltra() || (S.lenses && S.lenses.ultra && !S.lenses.alts.includes(S.lenses.ultra)) ? "available" : altPick() ? "set" : "to try") : "not available"}`;
+}
+$("setBtn").addEventListener("click", () => { twStatus(); camInfo(); $("inName").value = settings.name; $("inDealer").value = settings.dealer || ""; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
 $("inDealer").addEventListener("input", () => { settings.dealer = $("inDealer").value; save(); });
 $("sizeSeg").addEventListener("click", e => { const b = e.target.closest("[data-z]"); if (!b) return; settings.size = b.dataset.z; save(); applyTheme(); renderLabels(); });
