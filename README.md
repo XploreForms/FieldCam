@@ -1,4 +1,4 @@
-# Field Cam (v3.23.1)
+# Field Cam (v3.25.0)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -285,7 +285,10 @@ landscape 4:3 frame with the info band along the bottom, already the right way u
   (like zooming out to about 0.75×) with more pixels, not fewer. Use it when you can't step back far
   enough. The preview shows the whole frame; the buttons (HQ, scanner, flashlight, zoom, shutter,
   save, gallery) turn to face you, the layout stays put, like the iPhone Camera app.
-- The ultra-wide (0.5×) lens is still never used: its soft, bent edges don't hold up for audits.
+- **Ultra-wide (.5×)**: on iPhones that have one, a **.5×** button sits left of 1× in the zoom bar. It
+  turns amber and lasts for one photo only, then the camera goes back to 1× (edges are softer and
+  straight lines bend, so it's not for everyday shots). Those photos show `Zoom: 0.5× ultra-wide` on
+  the info band so reviewers know. Pinch zoom never goes below 1×.
 The app layout itself never turns: Android keeps it upright through the install settings, and on
 iPhone the app turns itself back upright if the screen rotates.
 
@@ -337,3 +340,16 @@ app files (never photos) and reloads. Photos and the current job are kept.
 ## Version line
 The start screen shows `Field Cam v<VERSION> · Updated <date, time>` at the bottom of the start screen. On each release bump
 `VERSION` and `UPDATED` in `index.html` and `VERSION` in `sw.js`.
+
+## Towers on line-of-sight shots
+- The tower list is **not** part of the app or its website (the site is public). The manager shares a
+  `Field Cam Towers.csv` file (columns: name, lat, lon) with the team only; each tech saves it to Files
+  and taps **Settings › Tower list › Load tower list** once. It's kept on that phone only (works offline);
+  **Remove** deletes it. Load a new file to update.
+- On line-of-sight shots (the 0° level line), towers within 30 km are drawn on the 0° line where they
+  should be: a diamond, a stem and a tag with the name and distance. Tags stack when towers are close.
+  The tower nearest the centre (within 6°) turns green and the readout adds "toward <tower> <km>".
+  The nearest tower off each side shows as an arrow at the edge (◀ / ▶).
+- Placement uses GPS, the compass corrected to true north, and the camera's field of view (zoom and
+  sideways included). Phone compasses are typically 5–15° off (worse near metal), so markers are a
+  guide, not a survey. Nothing about towers is stamped on the photo.
