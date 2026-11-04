@@ -101,16 +101,6 @@ label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase
 .zeroline i{position:absolute;left:-39vmin;width:78vmin;top:-0.75px;height:1.5px;background:rgba(255,255,255,.9);box-shadow:0 0 0 .5px rgba(0,0,0,.45),0 0 4px rgba(0,0,0,.35)}
 .zeroline span{position:absolute;left:calc(39vmin + 6px);top:-8px;font:600 11px var(--sans);color:rgba(255,255,255,.92);white-space:nowrap}
 .hud.lvl .zeroline i{background:var(--signal)}
-/* Towers on line-of-sight shots: a diamond on the 0° line, a stem, and a name + distance tag above it */
-.twlayer{position:absolute;left:0;top:0}
-.tw{position:absolute;left:0;top:0;width:0;height:0}
-.tw .twd{position:absolute;left:-6px;top:-6px;width:12px;height:12px;background:#fff;border:1.5px solid rgba(0,0,0,.55);transform:rotate(45deg);border-radius:2px}
-.tw .tws{position:absolute;left:-.75px;bottom:6px;width:1.5px;background:rgba(255,255,255,.75)}
-.tw .twt{position:absolute;left:0;transform:translate(-50%,-100%);white-space:nowrap;text-align:center;font:600 10.5px/1.25 var(--sans);color:#fff;background:rgba(10,18,17,.8);border:1px solid rgba(255,255,255,.35);padding:3px 7px;border-radius:8px}
-.tw .twt div{font-weight:700;font-size:11.5px}
-.tw.hit .twd,.tw.hit .tws{background:var(--signal)}
-.tw.hit .twt{background:var(--signal);color:#000;border-color:var(--signal)}
-.twedge{position:absolute;top:16px;white-space:nowrap;font:600 10px var(--sans);color:#fff;background:rgba(10,18,17,.72);padding:3px 6px;border-radius:7px}
 .hud.lvl .zeroline span{color:var(--signal)}
 .grid3{position:absolute;inset:0;pointer-events:none;display:none}
 html[data-grid="on"] .grid3{display:block}
@@ -496,7 +486,7 @@ html.s90 .thumbbtn .badge,html.s270 .thumbbtn .badge{transform:none}
     <div class="frame" id="frame"><video id="video" playsinline muted autoplay></video></div>
     <div class="vfmsg" id="vfMsg" hidden></div>
     <div class="hud" id="hud">
-      <div class="zclip" id="zclip"><div class="grid3" id="grid3" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="zeroline" id="zeroLine"><i></i><span>0°</span><div class="twlayer" id="twLayer"></div></div>
+      <div class="zclip" id="zclip"><div class="grid3" id="grid3" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="zeroline" id="zeroLine"><i></i><span>0°</span></div>
       <div class="reticle"></div><div class="aim" id="aim" hidden><i></i></div></div>
       <div class="tiltbox"><div class="tiltval"><span id="hTilt">—</span><em id="hLevel">TILT</em></div><div class="sub" id="hHead">—</div></div>
       <div class="zoomread" id="zoomRead">1×</div>
@@ -608,9 +598,6 @@ html.s90 .thumbbtn .badge,html.s270 .thumbbtn .badge{transform:none}
     <div><label>Text size</label><div class="seg two" id="textSeg" role="group"><button type="button" data-x="normal"><b>Normal</b></button><button type="button" data-x="large"><b>Large</b><span>Bigger text and buttons</span></button></div></div>
     <div><label for="inName">Technician name</label><input id="inName" autocomplete="name" placeholder="First Last"></div>
     <div><label for="inDealer">Dealer name</label><input id="inDealer" autocomplete="organization" placeholder="Location XCI Tech"><p class="hint" style="margin-top:6px">Both are stamped on every photo.</p></div>
-    <div><label>Tower list</label><p class="hint" id="twStatus" style="margin:0 0 8px">Not loaded</p>
-      <div class="btnrow"><label class="btn sm" for="twFile" style="display:inline-flex;align-items:center;cursor:pointer">Load tower list</label><input type="file" id="twFile" accept=".csv,text/csv,text/comma-separated-values,text/plain" hidden><button type="button" class="btn sm" id="twClear" hidden>Remove</button></div>
-      <p class="hint" style="margin-top:6px">Shows towers within 30 km on line-of-sight shots. The list is kept on this phone only; get the file from your manager.</p></div>
     <div class="stats" id="storageStats"></div>
     <div class="stats" id="camInfo"></div>
     <div class="install" id="installHelp"></div>
@@ -686,8 +673,8 @@ html.s90 .thumbbtn .badge,html.s270 .thumbbtn .badge{transform:none}
 
 <script>
 "use strict";
-const VERSION = "3.25.1";
-const UPDATED = "2026-11-04T15:35:00-05:00";   // release date and time shown at the bottom of the start screen; change it with VERSION
+const VERSION = "3.25.2";
+const UPDATED = "2026-11-04T18:05:00-05:00";   // release date and time shown at the bottom of the start screen; change it with VERSION
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* Keep the app upright. ROT = how far the screen has turned that the app turns back (0, 90 or 270). */
@@ -1483,10 +1470,9 @@ function fastTick() {
       E.line.style.transform = `translate(${dx}px,${dy}px) rotate(${rot}deg)`;
       lastHz = t;
     }
-    drawTowers();
-  } else if (TW.shown) clearTowers();
+  }
   const head = S.heading == null ? "no compass" : `Facing ${Math.round(S.heading)}° ${cardinal(S.heading)}`;
-  setText(E.head, head + (TW.hitTxt || "") + (S.levelDev == null ? "" : ` · skew ${Math.round(Math.abs(S.levelDev))}°`));
+  setText(E.head, head + (S.levelDev == null ? "" : ` · skew ${Math.round(Math.abs(S.levelDev))}°`));
   E.shutter.classList.toggle("locked", povBlocked());
   if (S.paused) { loopOn = false; loopFast = false; return; }
   // Line-of-sight shots: every screen frame (the 0° line must track smoothly). Everything else: 4 times a second.
@@ -1859,111 +1845,8 @@ async function restamp(rec) {
   if ($("viewer").classList.contains("open") && S.viewing === rec) openViewer(rec.id);
 }
 
-/* ================= towers (line-of-sight shots) =================
-   The tower list is loaded from a file the manager shares (Settings › Load tower list) and kept on this
-   phone only: it is never part of the app or its website. On line-of-sight shots, towers within 30 km are
-   drawn on the 0° line where they should be (from GPS, true compass heading and the camera's field of view),
-   with name and distance; the one nearest the centre is highlighted. Compass error is typically 5–15°. */
-var TW = { list:null, near:[], at:null, shown:false, els:new Map(), key:"" };
-const TW_KM = 30;
-try { TW.list = JSON.parse(localStorage.getItem("fieldcam.towers") || "null"); } catch {}
-function kmBearing(a, b, c, d) {
-  const p1 = rad(a), p2 = rad(c), dl = rad(d - b);
-  const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
-  const km = 12742 * Math.asin(Math.min(1, Math.sqrt(h)));
-  const y = Math.sin(dl) * Math.cos(p2), x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
-  return [km, (deg(Math.atan2(y, x)) + 360) % 360];
-}
-function towersNear() {
-  if (!TW.list || !S.pos) return [];
-  const { latitude:la, longitude:lo } = S.pos;
-  if (TW.at && kmBearing(TW.at[0], TW.at[1], la, lo)[0] < 0.05) return TW.near;   // recompute after moving 50 m
-  TW.at = [la, lo];
-  TW.near = TW.list.map(([n, a, b]) => { const [km, br] = kmBearing(la, lo, a, b); return { n, km, br }; })
-    .filter(t => t.km <= TW_KM).sort((x, y) => x.km - y.km);
-  return TW.near;
-}
-const twShort = n => n.replace(/\s*\((SO|NS|CCI|YL)\)/g, "").trim();
-const fmtKm = km => km < 10 ? km.toFixed(1) + " km" : Math.round(km) + " km";
-function clearTowers() { $("twLayer").innerHTML = ""; TW.els.clear(); TW.key = ""; TW.shown = false; TW.hitTxt = ""; }
-function drawTowers() {
-  const near = towersNear();
-  if (!near.length || S.heading == null) { if (TW.shown || TW.hitTxt) clearTowers(); return; }
-  if (TW.decAt !== TW.at) { TW.decAt = TW.at; TW.dec = declination(S.pos.latitude, S.pos.longitude, yearNow(new Date())); }
-  const H = (S.heading + (TW.dec || 0) + 360) % 360;                    // compass is magnetic; tower bearings are true north
-  const fpx = focalSrc() * (FRAME.k || 1) * (S.digitalZoom || 1);      // screen px per unit of tan(angle)
-  const fr = $("frame"), sw = extraTurn() % 180 === 90;              // half the visible picture along the 0° line
-  const half = Math.min(sw ? FRAME.h : FRAME.w, sw ? fr.clientHeight : fr.clientWidth) / 2 || 180;
-  const vis = [], left = [], right = [];
-  for (const t of near) {
-    const d = ((t.br - H + 540) % 360) - 180;                            // degrees right of where the camera points
-    const x = Math.abs(d) < 80 ? fpx * Math.tan(rad(d)) : d * 99;
-    if (Math.abs(x) <= half - 6) vis.push({ ...t, d, x }); else (d < 0 ? left : right).push(t);
-  }
-  // stack the tags so neighbours don't overlap; nearest tower to the centre (within 6°) is highlighted
-  const hit = vis.filter(t => Math.abs(t.d) <= 6).sort((a, b) => Math.abs(a.d) - Math.abs(b.d))[0];
-  const placed = [], html = [], key = vis.map(t => t.n).join("|") + "#" + (hit ? hit.n : "") + "#" + (left[0] ? left[0].n : "") + (right[0] ? right[0].n : "");
-  for (const t of [...vis].sort((a, b) => a.km - b.km)) {
-    let lv = 0; while (placed.some(p => p.lv === lv && Math.abs(p.x - t.x) < 92)) lv++;
-    placed.push({ x:t.x, lv }); t.lv = Math.min(lv, 3);
-  }
-  if (key !== TW.key) {
-    html.push(...vis.map(t => `<div class="tw${hit && t.n === hit.n ? " hit" : ""}" data-n="${esc(t.n)}"><div class="tws"></div><div class="twd"></div><div class="twt">${esc(twShort(t.n))}<div>${fmtKm(t.km)}</div></div></div>`));
-    if (left[0]) html.push(`<div class="twedge" data-e="l">◀ ${esc(twShort(left[0].n))} ${fmtKm(left[0].km)}</div>`);
-    if (right[0]) html.push(`<div class="twedge" data-e="r">${esc(twShort(right[0].n))} ${fmtKm(right[0].km)} ▶</div>`);
-    $("twLayer").innerHTML = html.join(""); TW.key = key; TW.shown = true;
-  }
-  const layer = $("twLayer");
-  for (const t of vis) {
-    const el = layer.querySelector(`[data-n="${CSS.escape(t.n)}"]`); if (!el) continue;
-    const up = 16 + t.lv * 40;
-    el.style.transform = `translateX(${t.x.toFixed(1)}px)`;
-    el.querySelector(".tws").style.height = up - 6 + "px";
-    const tg = el.querySelector(".twt"), tw2 = (tg.offsetWidth || 80) / 2;          // keep the tag inside the picture
-    const sh = clamp(t.x, -half + 4 + tw2, half - 4 - tw2) - t.x;
-    tg.style.top = -up + "px"; tg.style.left = sh.toFixed(1) + "px";
-  }
-  const el = layer.querySelector('[data-e="l"]'), er = layer.querySelector('[data-e="r"]');
-  if (el) el.style.left = (-half + 6) + "px";
-  if (er) er.style.left = (half - 6 - er.offsetWidth) + "px";
-  TW.hitTxt = hit ? ` · toward ${twShort(hit.n)} ${fmtKm(hit.km)}` : "";
-}
-function twStatus() {
-  const n = TW.list ? TW.list.length : 0, at = localStorage.getItem("fieldcam.towersAt");
-  $("twStatus").textContent = n ? `${n.toLocaleString()} towers loaded${at ? " · " + new Date(+at).toLocaleDateString("en-CA", { month:"short", day:"numeric", year:"numeric" }) : ""}` : "Not loaded";
-  $("twClear").hidden = !n;
-}
-function parseTowers(text) {
-  const rows = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(l => l.trim()).map(l => {
-    const out = []; let cur = "", q = false;
-    for (let i = 0; i < l.length; i++) { const c = l[i];
-      if (q) { if (c === '"' && l[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
-      else if (c === '"') q = true; else if (c === ",") { out.push(cur); cur = ""; } else cur += c; }
-    out.push(cur); return out.map(x => x.trim());
-  });
-  if (!rows.length) return [];
-  const hd = rows[0].map(h => h.toLowerCase());
-  let ni = hd.findIndex(h => /name|site/.test(h) && !/lat|lon/.test(h)), ai = hd.findIndex(h => /lat/.test(h)), oi = hd.findIndex(h => /lon|lng/.test(h));
-  const body = ai >= 0 && oi >= 0 ? rows.slice(1) : rows;
-  if (ai < 0 || oi < 0) { ni = 0; ai = 1; oi = 2; }
-  if (ni < 0) ni = 0;
-  return body.map(r => [r[ni], +r[ai], +r[oi]]).filter(([n, a, b]) => n && isFinite(a) && isFinite(b) && Math.abs(a) <= 90 && Math.abs(b) <= 180 && (a || b));
-}
-$("twFile").addEventListener("change", async e => {
-  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
-  let list = [];
-  try { list = parseTowers(await f.text()); } catch {}
-  if (!list.length) { toast("That file has no towers in it. Load the Field Cam Towers file (name, latitude, longitude).", 3600); return; }
-  try { localStorage.setItem("fieldcam.towers", JSON.stringify(list)); localStorage.setItem("fieldcam.towersAt", Date.now()); }
-  catch { toast("Couldn’t save the tower list on this phone.", 3000); return; }
-  TW.list = list; TW.at = null; clearTowers(); twStatus();
-  toast(`Loaded ${list.length.toLocaleString()} towers. They show on line-of-sight shots.`, 2800);
-});
-$("twClear").addEventListener("click", e => {
-  if (!arm(e.currentTarget, "Tap again to remove")) return;
-  try { localStorage.removeItem("fieldcam.towers"); localStorage.removeItem("fieldcam.towersAt"); } catch {}
-  TW.list = null; TW.at = null; clearTowers(); twStatus(); toast("Tower list removed from this phone.", 2200);
-});
+// The tower markers were removed (v3.25.2); clear any tower list a phone still holds
+try { localStorage.removeItem("fieldcam.towers"); localStorage.removeItem("fieldcam.towersAt"); } catch {}
 
 /* ================= capture ================= */
 function outputRotation() { return (360 - extraTurn()) % 360; }   // turn the saved photo upright
@@ -2979,7 +2862,7 @@ async function camInfo() {
   const z0 = S.caps && S.caps.zoom ? `zoom ${+(S.caps.zoom.min || 1).toFixed(2)}–${+(S.caps.zoom.max || 1).toFixed(1)}` : "no hardware zoom";
   $("camInfo").textContent = `Cameras: ${names.join(", ") || "none listed"} · ${z0} · ultra-wide ${canUltra() ? (hwUltra() || (S.lenses && S.lenses.ultra && !S.lenses.alts.includes(S.lenses.ultra)) ? "available" : altPick() ? "set" : "to try") : "not available"}`;
 }
-$("setBtn").addEventListener("click", () => { twStatus(); camInfo(); $("inName").value = settings.name; $("inDealer").value = settings.dealer || ""; renderStorage(); openSheet("setSheet"); });
+$("setBtn").addEventListener("click", () => { camInfo(); $("inName").value = settings.name; $("inDealer").value = settings.dealer || ""; renderStorage(); openSheet("setSheet"); });
 $("inName").addEventListener("input", () => { settings.name = $("inName").value; save(); });
 $("inDealer").addEventListener("input", () => { settings.dealer = $("inDealer").value; save(); });
 $("sizeSeg").addEventListener("click", e => { const b = e.target.closest("[data-z]"); if (!b) return; settings.size = b.dataset.z; save(); applyTheme(); renderLabels(); });

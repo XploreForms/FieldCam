@@ -1,4 +1,4 @@
-# Field Cam (v3.25.1)
+# Field Cam (v3.25.2)
 
 Installable web app for job-site photos. One session = one work order. The tech picks the job
 type, takes labelled photos, downloads them as individual files, then attaches them in FSL.
@@ -345,15 +345,3 @@ app files (never photos) and reloads. Photos and the current job are kept.
 The start screen shows `Field Cam v<VERSION> · Updated <date, time>` at the bottom of the start screen. On each release bump
 `VERSION` and `UPDATED` in `index.html` and `VERSION` in `sw.js`.
 
-## Towers on line-of-sight shots
-- The tower list is **not** part of the app or its website (the site is public). The manager shares a
-  `Field Cam Towers.csv` file (columns: name, lat, lon) with the team only; each tech saves it to Files
-  and taps **Settings › Tower list › Load tower list** once. It's kept on that phone only (works offline);
-  **Remove** deletes it. Load a new file to update.
-- On line-of-sight shots (the 0° level line), towers within 30 km are drawn on the 0° line where they
-  should be: a diamond, a stem and a tag with the name and distance. Tags stack when towers are close.
-  The tower nearest the centre (within 6°) turns green and the readout adds "toward <tower> <km>".
-  The nearest tower off each side shows as an arrow at the edge (◀ / ▶).
-- Placement uses GPS, the compass corrected to true north, and the camera's field of view (zoom and
-  sideways included). Phone compasses are typically 5–15° off (worse near metal), so markers are a
-  guide, not a survey. Nothing about towers is stamped on the photo.
